@@ -6,6 +6,7 @@ import 'package:geolocator_platform_interface/src/models/position.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:google_maps_flutter_platform_interface/src/types/bitmap.dart';
 import 'package:google_maps_flutter_platform_interface/src/types/marker.dart';
+import 'package:sis_patrullaje_cusco/src/domain/entities/location_entity.dart';
 import 'package:sis_patrullaje_cusco/src/domain/models/placemarkData.dart';
 import 'package:sis_patrullaje_cusco/src/domain/repositories/geolocator_repository.dart';
 
@@ -136,6 +137,43 @@ class GeolocatorRepositoryImpl implements GeolocatorRepository {
     } catch (e) {
       print('ERROR POLYLINE: $e');
       return [];
+    }
+  }
+
+  @override
+  Stream<LocationEntity> getLocationStream() async* {
+    // 1. Verificar permisos
+    LocationPermission permission = await Geolocator.checkPermission();
+
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      throw Exception('Permisos de ubicación denegados permanentemente');
+    }
+
+    // 2. Configuración del stream
+    const LocationSettings locationSettings = LocationSettings(
+      accuracy: LocationAccuracy.high, // precisión alta
+      distanceFilter: 5, // metros (envía cada 5m de movimiento)
+    );
+
+    // 3. Stream del GPS
+    Stream<Position> positionStream = Geolocator.getPositionStream(
+      locationSettings: locationSettings,
+    );
+
+    // 4. Convertir Position → LocationEntity
+    await for (final position in positionStream) {
+      yield LocationEntity(
+        latitud: position.latitude,
+        longitud: position.longitude,
+        velocidad: position.speed,
+        precision: position.accuracy,
+        tipo: 'TRACKING',
+        fechaHora: position.timestamp,
+      );
     }
   }
 }

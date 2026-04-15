@@ -8,7 +8,9 @@ import 'package:sis_patrullaje_cusco/src/presentation/screens/auth/login/bloc/lo
 import 'package:sis_patrullaje_cusco/src/presentation/screens/auth/login/bloc/login_event.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/auth/register/bloc/register_bloc.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/auth/register/bloc/register_event.dart';
-import 'package:sis_patrullaje_cusco/src/presentation/screens/home/bloc/home_bloc.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/home/home_bloc.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/home/home_event.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/tracking/tracking_bloc.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/mapa/blocs/gps/gps_bloc.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/mapa/blocs/mapa/mapa_bloc.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/mapa/blocs/mapa_incident/mapa_incident_bloc.dart';
@@ -57,6 +59,14 @@ List<BlocProvider> blocProviders = [
 
   // Home
   BlocProvider<HomeBloc>(
-    create: (BuildContext context) => HomeBloc(locator<PatrullajeUseCases>()),
+    create: (BuildContext context) =>
+        HomeBloc(locator<PatrullajeUseCases>())..add(LoadPatrullajeActivo()),
+  ),
+
+  BlocProvider<TrackingBloc>(
+    create: (BuildContext context) => TrackingBloc(
+      locator<GeolocatorUseCases>(),
+      locator<PatrullajeUseCases>(),
+    ),
   ),
 ];

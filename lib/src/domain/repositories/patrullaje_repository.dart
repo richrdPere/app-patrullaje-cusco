@@ -6,5 +6,4 @@ abstract class PatrullajeRepository {
   Future<void> startPatrullaje(int patrullajeId);
   Future<void> endPatrullaje(int patrullajeId);
   Future<void> sendLocation(LocationEntity location);
-  Stream<LocationEntity> getLocationStream();
 }

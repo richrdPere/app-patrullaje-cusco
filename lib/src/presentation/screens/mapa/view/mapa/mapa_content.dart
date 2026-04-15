@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:sis_patrullaje_cusco/src/domain/entities/incident_data_entity.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/tracking/tracking_bloc.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/tracking/tracking_state.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/mapa/blocs/mapa/mapa_bloc.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/mapa/blocs/mapa/mapa_event.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/mapa/blocs/mapa/mapa_state.dart';
@@ -63,32 +65,68 @@ class MapaContent extends StatelessWidget {
   }
 
   Widget _googleMaps(BuildContext context) {
-    return GoogleMap(
-      mapType: MapType.normal,
-      initialCameraPosition: state.cameraPosition,
+    return BlocBuilder<TrackingBloc, TrackingState>(
+      builder: (context, trackingState) {
+        return GoogleMap(
+          mapType: MapType.normal,
+          initialCameraPosition: state.cameraPosition,
 
-      onMapCreated: (controller) {
-        if (!state.controller!.isCompleted) {
-          state.controller?.complete(controller);
-        }
-      },
+          onMapCreated: (controller) {
+            if (!state.controller!.isCompleted) {
+              state.controller?.complete(controller);
+            }
+          },
 
-      markers: Set<Marker>.of(state.markers.values),
+          markers: Set<Marker>.of(state.markers.values),
 
-      onCameraMove: (cameraPosition) {
-        context.read<MapaBloc>().add(
-          OnCameraMove(cameraPosition: cameraPosition),
+          // 🟢 AGREGAR POLÍGONOS
+          polygons: state.polygons,
+
+          // 🔵 TRACKING (opcional si luego agregas marker dinámico)
+          // markers: _buildTrackingMarkers(trackingState),
+          onCameraMove: (cameraPosition) {
+            context.read<MapaBloc>().add(
+              OnCameraMove(cameraPosition: cameraPosition),
+            );
+          },
+
+          onCameraIdle: () {
+            context.read<MapaBloc>().add(OnCameraIdle());
+          },
+
+          myLocationEnabled: true,
+          myLocationButtonEnabled: true,
         );
       },
-
-      onCameraIdle: () {
-        context.read<MapaBloc>().add(OnCameraIdle());
-      },
-
-      myLocationEnabled: true,
-      myLocationButtonEnabled: true,
     );
   }
+  // Widget _googleMaps(BuildContext context) {
+  //   return GoogleMap(
+  //     mapType: MapType.normal,
+  //     initialCameraPosition: state.cameraPosition,
+
+  //     onMapCreated: (controller) {
+  //       if (!state.controller!.isCompleted) {
+  //         state.controller?.complete(controller);
+  //       }
+  //     },
+
+  //     markers: Set<Marker>.of(state.markers.values),
+
+  //     onCameraMove: (cameraPosition) {
+  //       context.read<MapaBloc>().add(
+  //         OnCameraMove(cameraPosition: cameraPosition),
+  //       );
+  //     },
+
+  //     onCameraIdle: () {
+  //       context.read<MapaBloc>().add(OnCameraIdle());
+  //     },
+
+  //     myLocationEnabled: true,
+  //     myLocationButtonEnabled: true,
+  //   );
+  // }
 
   Widget _iconMyLocation() {
     return Container(

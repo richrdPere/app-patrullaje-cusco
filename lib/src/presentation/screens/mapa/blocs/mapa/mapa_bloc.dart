@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:bloc/bloc.dart';
+import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:sis_patrullaje_cusco/src/domain/models/placemarkData.dart';
@@ -120,6 +121,22 @@ class MapaBloc extends Bloc<MapaEvent, MapaState> {
           destinationDescription: event.destinationDescription,
         ),
       );
+    });
+
+    on<DrawZonaEvent>((event, emit) {
+      final List<LatLng> points = event.coordenadas.map((coord) {
+        return LatLng(coord.lat, coord.lng);
+      }).toList();
+
+      final polygon = Polygon(
+        polygonId: const PolygonId("zona"),
+        points: points,
+        strokeWidth: 3,
+        strokeColor: Colors.blue,
+        fillColor: Colors.blue.withOpacity(0.2),
+      );
+
+      emit(state.copyWith(polygons: {polygon}));
     });
   }
 }

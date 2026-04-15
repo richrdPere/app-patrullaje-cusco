@@ -17,11 +17,15 @@ import 'package:sis_patrullaje_cusco/src/domain/use_cases/auth/auth_use_cases/Sa
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/geolocator/GeolocatorUseCases.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/geolocator/geolocator_use_cases/CreateMarkerUseCase.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/geolocator/geolocator_use_cases/FindPositionUseCase.dart';
+import 'package:sis_patrullaje_cusco/src/domain/use_cases/geolocator/geolocator_use_cases/GetLocationStreamUseCase.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/geolocator/geolocator_use_cases/GetMarkerUseCase.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/geolocator/geolocator_use_cases/GetPlaceMarkDataUseCase.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/geolocator/geolocator_use_cases/GetPolyLineUseCase.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/patrullaje/PatrullajeUseCases.dart';
+import 'package:sis_patrullaje_cusco/src/domain/use_cases/patrullaje/patrullaje_use_cases/EndPatrullajeUseCase.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/patrullaje/patrullaje_use_cases/GetPatrullajeActivoUseCase.dart';
+import 'package:sis_patrullaje_cusco/src/domain/use_cases/patrullaje/patrullaje_use_cases/SendLocationUseCase.dart';
+import 'package:sis_patrullaje_cusco/src/domain/use_cases/patrullaje/patrullaje_use_cases/StartPatrullajeUseCase.dart';
 
 @module
 abstract class AppModule {
@@ -46,7 +50,13 @@ abstract class AppModule {
 
   @injectable
   PatrullajeService get patrullajeService => PatrullajeService(authRepository);
+
+  // @injectable
+  // TrackingRepository get trackingRepository => TrackingRepositoryImpl();
+
   // USES CASES
+
+  // - Auth
   @injectable
   AuthUsesCases get authUseCases => AuthUsesCases(
     login: LoginUseCase(authRepository),
@@ -56,6 +66,7 @@ abstract class AppModule {
     logoutSession: LogoutUseCase(authRepository),
   );
 
+  // - Geolocator
   @injectable
   GeolocatorUseCases get geolocatorUseCases => GeolocatorUseCases(
     findPosition: FindPositionUseCase(geolocatorRepository),
@@ -63,10 +74,23 @@ abstract class AppModule {
     getMarker: GetMarkerUseCase(geolocatorRepository),
     getPlaceMarkData: GetPlaceMarkDataUseCase(geolocatorRepository),
     getPolyline: GetPolylineUseCase(geolocatorRepository),
+    getLocationStream: GetLocationStreamUseCase(geolocatorRepository),
   );
 
+  // Patrullaje
   @injectable
   PatrullajeUseCases get patrullajeUseCases => PatrullajeUseCases(
     getPatrullajeActivo: GetPatrullajeActivoUseCase(patrullajeRepository),
+    endPatrullaje: EndPatrullajeUseCase(patrullajeRepository),
+    startPatrullaje: StartPatrullajeUseCase(patrullajeRepository),
+    sendLocation: SendLocationUseCase(patrullajeRepository),
   );
+
+  // Tracking
+  // @injectable
+  // TrackingUseCases get trackingUseCases => TrackingUseCases(
+  //   getLocationStream: GetLocationStreamUseCase(trackingRepository),
+  //   startTracking: StartTrackingUseCase(trackingRepository),
+  //   stopTracking: StopTrackingUseCase(trackingRepository),
+  // );
 }

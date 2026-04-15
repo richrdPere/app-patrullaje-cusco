@@ -1,4 +1,5 @@
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:sis_patrullaje_cusco/src/domain/entities/patrullaje_entity.dart';
 
 class MapaEvent {}
 
@@ -43,4 +44,12 @@ class OnAutoCompleteDestinationSelected extends MapaEvent {
     required this.lng,
     required this.destinationDescription,
   });
+}
+
+class DrawZonaEvent extends MapaEvent {
+  final List<Coordenada> coordenadas;
+
+ 
+
+  DrawZonaEvent(this.coordenadas);
 }

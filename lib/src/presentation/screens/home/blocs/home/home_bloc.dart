@@ -1,7 +1,7 @@
 import 'package:bloc/bloc.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/patrullaje/PatrullajeUseCases.dart';
-import 'package:sis_patrullaje_cusco/src/presentation/screens/home/bloc/home_event.dart';
-import 'package:sis_patrullaje_cusco/src/presentation/screens/home/bloc/home_state.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/home/home_event.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/home/home_state.dart';
 
 class HomeBloc extends Bloc<HomeEvent, HomeState> {
   PatrullajeUseCases patrullajeUseCases;
@@ -20,6 +20,8 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
 
     try {
       final patrullaje = await patrullajeUseCases.getPatrullajeActivo.run();
+
+      print("ZONA PATRULLAJE: ${patrullaje.zona.coordenadas}");
 
       // SUCCESS
       emit(state.copyWith(isLoading: false, patrullaje: patrullaje));

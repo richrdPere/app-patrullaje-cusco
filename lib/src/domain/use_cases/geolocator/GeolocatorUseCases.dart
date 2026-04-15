@@ -1,8 +1,10 @@
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/geolocator/geolocator_use_cases/CreateMarkerUseCase.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/geolocator/geolocator_use_cases/FindPositionUseCase.dart';
+import 'package:sis_patrullaje_cusco/src/domain/use_cases/geolocator/geolocator_use_cases/GetLocationStreamUseCase.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/geolocator/geolocator_use_cases/GetMarkerUseCase.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/geolocator/geolocator_use_cases/GetPlaceMarkDataUseCase.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/geolocator/geolocator_use_cases/GetPolyLineUseCase.dart';
+
 
 class GeolocatorUseCases {
   FindPositionUseCase findPosition;
@@ -10,6 +12,7 @@ class GeolocatorUseCases {
   GetMarkerUseCase getMarker;
   GetPlaceMarkDataUseCase getPlaceMarkData;
   GetPolylineUseCase getPolyline;
+  GetLocationStreamUseCase getLocationStream;
 
   GeolocatorUseCases({
     required this.findPosition,
@@ -17,5 +20,6 @@ class GeolocatorUseCases {
     required this.getMarker,
     required this.getPlaceMarkData,
     required this.getPolyline,
+    required this.getLocationStream
   });
 }

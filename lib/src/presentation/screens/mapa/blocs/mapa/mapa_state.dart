@@ -16,6 +16,8 @@ class MapaState extends Equatable {
   final String pickUpDescription;
   final String destinationDescription;
 
+  final Set<Polygon> polygons;
+
   const MapaState({
     this.position,
     this.controller,
@@ -29,6 +31,8 @@ class MapaState extends Equatable {
     this.pickUpDescription = '',
     this.destinationDescription = '',
     this.markers = const <MarkerId, Marker>{},
+
+    this.polygons = const {},
   });
 
   MapaState copyWith({
@@ -41,6 +45,7 @@ class MapaState extends Equatable {
     LatLng? destinationLatLng,
     String? pickUpDescription,
     String? destinationDescription,
+    Set<Polygon>? polygons,
   }) {
     return MapaState(
       position: position ?? this.position,
@@ -53,6 +58,8 @@ class MapaState extends Equatable {
       pickUpDescription: pickUpDescription ?? this.pickUpDescription,
       destinationDescription:
           destinationDescription ?? this.destinationDescription,
+
+      polygons: polygons ?? this.polygons,
     );
   }
 
@@ -67,5 +74,6 @@ class MapaState extends Equatable {
     destinationLatLng,
     pickUpDescription,
     destinationDescription,
+    polygons,
   ];
 }

@@ -1,5 +1,6 @@
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:sis_patrullaje_cusco/src/domain/entities/location_entity.dart';
 import 'package:sis_patrullaje_cusco/src/domain/models/placemarkData.dart';
 
 abstract class GeolocatorRepository {
@@ -15,6 +16,10 @@ abstract class GeolocatorRepository {
   );
 
   Future<PlacemarkData?> getPlacemarkData(CameraPosition cameraPosition);
+  Future<List<LatLng>> getPolyline(
+    LatLng pickUpLatLng,
+    LatLng destinationLatLng,
+  );
 
-  Future<List<LatLng>> getPolyline(LatLng pickUpLatLng, LatLng destinationLatLng);
+  Stream<LocationEntity> getLocationStream();
 }
