@@ -1,13 +1,31 @@
 import 'package:bloc/bloc.dart';
-import 'package:equatable/equatable.dart';
-
-part 'home_event.dart';
-part 'home_state.dart';
+import 'package:sis_patrullaje_cusco/src/domain/use_cases/patrullaje/PatrullajeUseCases.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/home/bloc/home_event.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/home/bloc/home_state.dart';
 
 class HomeBloc extends Bloc<HomeEvent, HomeState> {
-  HomeBloc() : super(HomeInitial()) {
-    on<HomeEvent>((event, emit) {
-      // TODO: implement event handler
-    });
+  PatrullajeUseCases patrullajeUseCases;
+
+  HomeBloc(this.patrullajeUseCases) : super(HomeState()) {
+    on<LoadPatrullajeActivo>(_onLoadPatrullajeActivo);
+  }
+
+  // HANDLER LIMPIO
+  Future<void> _onLoadPatrullajeActivo(
+    LoadPatrullajeActivo event,
+    Emitter<HomeState> emit,
+  ) async {
+    // LOADING
+    emit(state.copyWith(isLoading: true, error: null));
+
+    try {
+      final patrullaje = await patrullajeUseCases.getPatrullajeActivo.run();
+
+      // SUCCESS
+      emit(state.copyWith(isLoading: false, patrullaje: patrullaje));
+    } catch (e) {
+      //  ERROR
+      emit(state.copyWith(isLoading: false, error: e.toString()));
+    }
   }
 }

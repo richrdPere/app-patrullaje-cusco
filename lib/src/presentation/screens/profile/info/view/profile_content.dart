@@ -1,8 +1,11 @@
 // ignore_for_file: must_be_immutable
 
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sis_patrullaje_cusco/src/domain/models/usuarios.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/profile/info/bloc/profile_bloc.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/profile/info/bloc/profile_event.dart';
 
 class ProfileContent extends StatelessWidget {
   Usuario? user;
@@ -11,24 +14,31 @@ class ProfileContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        Column(
-          children: [
-            _headerProfile(context),
+    final screenHeight = MediaQuery.of(context).size.height;
 
-            Spacer(),
-            _actionProfile('EDITAR PERFIL', Icons.edit, () {
-              context.goNamed('profile-update', extra: user);
-            }),
-            _actionProfile('CERRAR SESION', Icons.settings_power, () {}),
+    return SafeArea(
+      child: Stack(
+        children: [
+          Column(
+            children: [
+              _headerProfile(context, screenHeight),
 
-            SizedBox(height: 35),
-          ],
-        ),
+              Spacer(),
+              _actionProfile('EDITAR PERFIL', Icons.edit, () {
+                context.goNamed('profile-update', extra: user);
+              }),
+              _actionProfile('CERRAR SESION', Icons.settings_power, () {
+                context.read<ProfileBloc>().add(Logout());
+                context.goNamed('login');
+              }),
 
-        _cardUserInfo(context),
-      ],
+              SizedBox(height: 35),
+            ],
+          ),
+
+          _cardUserInfo(context),
+        ],
+      ),
     );
   }
 
@@ -107,12 +117,14 @@ class ProfileContent extends StatelessWidget {
     );
   }
 
-  Widget _headerProfile(BuildContext context) {
+  Widget _headerProfile(BuildContext context, double screenHeight) {
     return Container(
       alignment: Alignment.topCenter,
       padding: EdgeInsets.only(top: 40),
-      height: MediaQuery.of(context).size.height * 0.35,
-      width: MediaQuery.of(context).size.width,
+      // height: MediaQuery.of(context).size.height * 0.35,
+      height: screenHeight * 0.30,
+      // width: MediaQuery.of(context).size.width,
+      width: double.infinity,
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topRight,
@@ -123,14 +135,41 @@ class ProfileContent extends StatelessWidget {
           ],
         ),
       ),
+      child: Stack(
+        children: [
+          // BOTÓN BACK (IOS STYLE)
+          Positioned(
+            top: -10,
+            left: 10,
+            child: IconButton(
+              icon: const Icon(
+                Icons.arrow_back_ios_new,
+                color: Colors.white,
+                size: 22,
+              ),
+              onPressed: () {
+                if (context.canPop()) {
+                  context.pop();
+                } else {
+                  context.go('/home');
+                }
+              },
+            ),
+          ),
 
-      child: Text(
-        'PERFIL DE USUARIO',
-        style: TextStyle(
-          color: Colors.white,
-          fontWeight: FontWeight.bold,
-          fontSize: 20,
-        ),
+          // 🧾 TÍTULO
+          const Align(
+            alignment: Alignment.topCenter,
+            child: Text(
+              'PERFIL DE USUARIO',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 20,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

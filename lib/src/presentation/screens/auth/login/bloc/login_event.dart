@@ -49,3 +49,4 @@ class PasswordChanged extends LoginEvent {
 class LoginSubmit extends LoginEvent {
   const LoginSubmit();
 }
+

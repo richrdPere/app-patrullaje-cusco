@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:go_router/go_router.dart';
+import 'package:sis_patrullaje_cusco/src/domain/entities/auth_response.dart';
 import 'package:sis_patrullaje_cusco/src/domain/utils/Resource.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/auth/login/bloc/login_bloc.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/auth/login/bloc/login_event.dart';
@@ -44,16 +45,16 @@ class _LoginPageState extends State<LoginPage> {
               toastLength: Toast.LENGTH_LONG,
             );
           } else if (responseState is Success) {
-            // Fluttertoast.showToast(
-            //   msg: "Login Exitoso",
-            //   toastLength: Toast.LENGTH_LONG,
-            // );
+            Fluttertoast.showToast(
+              msg: "Login Exitoso",
+              toastLength: Toast.LENGTH_LONG,
+            );
 
-            // final authResponse = responseState.data as AuthResponse;
+            final authResponse = responseState.data as AuthResponse;
 
-            // context.read<LoginBloc>().add(
-            //   SaveUserSession(authResponse: authResponse),
-            // );
+            context.read<LoginBloc>().add(
+              SaveUserSession(authResponse: authResponse),
+            );
 
             // SOLO NAVEGAR (la sesión ya debe guardarse en el Bloc)
             context.go('/home');

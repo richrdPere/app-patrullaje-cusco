@@ -22,7 +22,6 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
   final formKey = GlobalKey<FormState>();
 
   // FUNCIONES
-
   Future<void> _onInitEvent(InitEvent event, Emitter<LoginState> emit) async {
     AuthResponse? authResponse = await authUsesCases.getUserSession.run();
     emit(state.copyWith(formKey: formKey));

@@ -16,7 +16,7 @@ class MapaState extends Equatable {
   final String pickUpDescription;
   final String destinationDescription;
 
-  MapaState({
+  const MapaState({
     this.position,
     this.controller,
     this.placemarkData,

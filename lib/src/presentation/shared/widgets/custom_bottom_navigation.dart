@@ -26,7 +26,7 @@ class CustomBottomNavigation extends StatelessWidget {
           icon: Icon(Icons.add_circle, size: 35), // 🔥 más grande
           label: 'Reporte',
         ),
-        BottomNavigationBarItem(icon: Icon(Icons.chat), label: 'Chat'),
+        BottomNavigationBarItem(icon: Icon(Icons.chat), label: 'Chats'),
         BottomNavigationBarItem(
           icon: Icon(Icons.notifications),
           label: 'Alertas',

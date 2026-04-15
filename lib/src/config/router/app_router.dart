@@ -15,7 +15,7 @@ import 'package:sis_patrullaje_cusco/src/presentation/screens/usuarios/usuarios_
 import 'package:sis_patrullaje_cusco/src/presentation/shared/screens/loading_page.dart';
 
 final GoRouter appRouter = GoRouter(
-  initialLocation: '/home',
+  initialLocation: '/login',
   debugLogDiagnostics: true,
   routes: [
     GoRoute(
