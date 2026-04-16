@@ -38,3 +38,9 @@ class LocationUpdatedEvent extends TrackingEvent {
   final LocationEntity location;
   const LocationUpdatedEvent(this.location);
 }
+
+
+// Enviar boton de alerta
+class SendAlertEvent extends TrackingEvent {
+  
+}

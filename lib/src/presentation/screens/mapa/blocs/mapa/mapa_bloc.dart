@@ -22,37 +22,71 @@ class MapaBloc extends Bloc<MapaEvent, MapaState> {
     });
 
     on<FindPosition>((event, emit) async {
-      Position position = await geolocatorUseCases.findPosition.run();
+      try {
+        Position position = await geolocatorUseCases.findPosition.run();
 
-      add(
-        ChangeMapCameraPosition(
-          lat: position.latitude,
-          lng: position.longitude,
-        ),
-      );
+        final latLng = LatLng(position.latitude, position.longitude);
 
-      // BitmapDescriptor imageMarker = await geolocatorUseCases.createMarker.run(
-      //   'assets/img/location_blue.png',
-      // );
+        // Obtener dirección real
+        final placemarkData = await geolocatorUseCases.getPlaceMarkData.run(
+          CameraPosition(target: latLng, zoom: 15),
+        );
 
-      // Marker marker = await geolocatorUseCases.getMarker.run(
-      //   'MyLocation',
-      //   position.latitude,
-      //   position.longitude,
-      //   'Mi Posicion',
-      //   '',
-      //   imageMarker,
-      // );
+        // Mover cámara
+        add(
+          ChangeMapCameraPosition(
+            lat: position.latitude,
+            lng: position.longitude,
+          ),
+        );
 
-      emit(
-        state.copyWith(
-          position: position,
-          // markers: {marker.markerId: marker},
-        ),
-      );
+        // BitmapDescriptor imageMarker = await geolocatorUseCases.createMarker.run(
+        //   'assets/img/location_blue.png',
+        // );
 
-      print('Position LAT ${position.latitude}');
-      print('Position lng ${position.longitude}');
+        // Marker marker = await geolocatorUseCases.getMarker.run(
+        //   'MyLocation',
+        //   position.latitude,
+        //   position.longitude,
+        //   'Mi Posicion',
+        //   '',
+        //   imageMarker,
+        // );
+
+        emit(
+          state.copyWith(
+            position: position,
+
+            // ORIGEN INICIAL
+            // markers: {marker.markerId: marker},
+            pickUpLatLng: LatLng(position.latitude, position.longitude),
+            pickUpDescription: placemarkData.address,
+            placemarkData: placemarkData,
+
+            // DESTINO LIMPIO
+            destinationLatLng: null,
+            destinationDescription: '',
+
+            // IMPORTANTE
+            isPickingLocation: false,
+          ),
+        );
+
+        print('Position LAT ${position.latitude}');
+        print('Position lng ${position.longitude}');
+        
+      } catch (e) {
+        print("ERROR INIT POSITION: $e");
+
+        // fallback mínimo
+        emit(
+          state.copyWith(
+            pickUpDescription: 'Mi ubicación actual',
+            destinationDescription: '',
+            isPickingLocation: false,
+          ),
+        );
+      }
     });
 
     on<ChangeMapCameraPosition>((event, emit) async {
@@ -73,9 +107,12 @@ class MapaBloc extends Bloc<MapaEvent, MapaState> {
     });
 
     on<OnCameraIdle>((event, emit) async {
+      // NO actualizar si no está en modo selección
+      if (!state.isPickingLocation) return;
+
       if (_isLoadingAddress) return;
 
-      // 🔥 evitar llamadas innecesarias
+      // Evitar llamadas innecesarias
       if (state.cameraPosition.zoom < 15) return;
 
       _isLoadingAddress = true;
@@ -84,13 +121,22 @@ class MapaBloc extends Bloc<MapaEvent, MapaState> {
         PlacemarkData placemarkData = await geolocatorUseCases.getPlaceMarkData
             .run(state.cameraPosition);
 
+        final destinationLatLng = LatLng(placemarkData.lat, placemarkData.lng);
+
         emit(
           state.copyWith(
             placemarkData: placemarkData,
-            pickUpLatLng: LatLng(placemarkData.lat, placemarkData.lng),
-            pickUpDescription: placemarkData.address,
+            // pickUpLatLng: LatLng(placemarkData.lat, placemarkData.lng),
+            // pickUpDescription: placemarkData.address,
+
+            // AHORA SE GUARDA COMO DESTINO
+            destinationLatLng: destinationLatLng,
+            destinationDescription: placemarkData.address,
           ),
         );
+
+        // DIBUJAR RUTA AUTOMÁTICAMENTE
+        add(DrawRouteEvent());
       } catch (e) {
         print('ERROR GEOCODING: $e');
 
@@ -110,6 +156,9 @@ class MapaBloc extends Bloc<MapaEvent, MapaState> {
         state.copyWith(
           pickUpLatLng: LatLng(event.lat, event.lng),
           pickUpDescription: event.pickUpDescription,
+
+          // Vuelve a activar selección manual
+          isPickingLocation: true,
         ),
       );
     });
@@ -119,8 +168,14 @@ class MapaBloc extends Bloc<MapaEvent, MapaState> {
         state.copyWith(
           destinationLatLng: LatLng(event.lat, event.lng),
           destinationDescription: event.destinationDescription,
+
+          // BLOQUEA actualización por cámara
+          isPickingLocation: false,
         ),
       );
+
+      // DISPARA LA RUTA
+      add(DrawRouteEvent());
     });
 
     on<DrawZonaEvent>((event, emit) {
@@ -137,6 +192,67 @@ class MapaBloc extends Bloc<MapaEvent, MapaState> {
       );
 
       emit(state.copyWith(polygons: {polygon}));
+    });
+
+    on<DrawRouteEvent>((event, emit) async {
+      if (state.pickUpLatLng == null || state.destinationLatLng == null) return;
+
+      try {
+        final polylineCoordinates = await geolocatorUseCases.getPolyline.run(
+          state.pickUpLatLng!,
+          state.destinationLatLng!,
+        );
+
+        final id = const PolylineId("route");
+
+        final polyline = Polyline(
+          polylineId: id,
+          color: Colors.blueAccent,
+          width: 6,
+          points: polylineCoordinates,
+        );
+
+        emit(
+          state.copyWith(
+            polylines: {id: polyline}, // Reemplaza la anterior
+          ),
+        );
+      } catch (e) {
+        print("ERROR DRAW ROUTE: $e");
+      }
+    });
+
+    on<UseCurrentLocationEvent>((event, emit) async {
+      final position = await geolocatorUseCases.findPosition.run();
+
+      final latLng = LatLng(position.latitude, position.longitude);
+
+      // Obtener dirección real
+      final placemarkData = await geolocatorUseCases.getPlaceMarkData.run(
+        CameraPosition(target: latLng, zoom: 15),
+      );
+
+      emit(
+        state.copyWith(
+          position: position,
+          pickUpLatLng: latLng,
+          pickUpDescription: placemarkData.address, // Dirección real
+          placemarkData: placemarkData,
+          isPickingLocation: false,
+          destinationDescription: '',
+          polylines: {},
+        ),
+      );
+
+      add(ChangeMapCameraPosition(lat: latLng.latitude, lng: latLng.longitude));
+    });
+
+    on<TogglePickingLocationEvent>((event, emit) {
+      emit(state.copyWith(isPickingLocation: !state.isPickingLocation));
+    });
+
+    on<ToggleAutoCenterEvent>((event, emit) {
+      emit(state.copyWith(isAutoCentering: !state.isAutoCentering));
     });
   }
 }

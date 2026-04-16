@@ -51,6 +51,7 @@ class AuthService with ChangeNotifier {
       final resp = await http.post(url, headers: headers, body: body);
       final data = json.decode(resp.body);
 
+      // print("AQUI ESTA");
       if (resp.statusCode == 200 || resp.statusCode == 201) {
         AuthResponse authResponse = AuthResponse.fromJson(data);
 

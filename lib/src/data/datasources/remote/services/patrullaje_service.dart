@@ -27,7 +27,7 @@ class PatrullajeService {
 
   String get API_PATRULLAJE_ACTIVO => '$API_BASE/patrullaje/activo';
   String get API_START_PATRULLAJE => '$API_BASE/patrullaje/';
-  String get API_END_PATRULLAJE => '$API_BASE/patrullaje/end';
+  String get API_END_PATRULLAJE => '$API_BASE/patrullaje/';
   String get API_LOCATION => '$API_BASE/patrullaje/location';
 
   // ============================
@@ -112,7 +112,7 @@ class PatrullajeService {
     try {
       final headers = await _getHeaders();
 
-      Uri url = Uri.parse(API_END_PATRULLAJE);
+      Uri url = Uri.parse(API_END_PATRULLAJE + '$patrullajeId/END');
 
       final resp = await http.post(
         url,

@@ -48,8 +48,13 @@ class OnAutoCompleteDestinationSelected extends MapaEvent {
 
 class DrawZonaEvent extends MapaEvent {
   final List<Coordenada> coordenadas;
-
- 
-
   DrawZonaEvent(this.coordenadas);
 }
+
+class DrawRouteEvent extends MapaEvent {}
+
+class UseCurrentLocationEvent extends MapaEvent {}
+
+class TogglePickingLocationEvent extends MapaEvent {}
+
+class ToggleAutoCenterEvent extends MapaEvent {}

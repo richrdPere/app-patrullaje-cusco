@@ -17,6 +17,9 @@ class MapaState extends Equatable {
   final String destinationDescription;
 
   final Set<Polygon> polygons;
+  final Map<PolylineId, Polyline> polylines;
+  final bool isPickingLocation;
+  final bool isAutoCentering;
 
   const MapaState({
     this.position,
@@ -33,6 +36,9 @@ class MapaState extends Equatable {
     this.markers = const <MarkerId, Marker>{},
 
     this.polygons = const {},
+    this.polylines = const {},
+    this.isPickingLocation = true,
+    this.isAutoCentering = true,
   });
 
   MapaState copyWith({
@@ -46,6 +52,9 @@ class MapaState extends Equatable {
     String? pickUpDescription,
     String? destinationDescription,
     Set<Polygon>? polygons,
+    Map<PolylineId, Polyline>? polylines,
+    bool? isPickingLocation,
+    bool? isAutoCentering,
   }) {
     return MapaState(
       position: position ?? this.position,
@@ -60,6 +69,9 @@ class MapaState extends Equatable {
           destinationDescription ?? this.destinationDescription,
 
       polygons: polygons ?? this.polygons,
+      polylines: polylines ?? this.polylines,
+      isPickingLocation: isPickingLocation ?? this.isPickingLocation,
+      isAutoCentering: isAutoCentering ?? this.isAutoCentering,
     );
   }
 
@@ -75,5 +87,8 @@ class MapaState extends Equatable {
     pickUpDescription,
     destinationDescription,
     polygons,
+    polylines,
+    isPickingLocation,
+    isAutoCentering,
   ];
 }
