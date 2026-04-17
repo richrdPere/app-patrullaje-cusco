@@ -50,3 +50,6 @@ class LoginSubmit extends LoginEvent {
   const LoginSubmit();
 }
 
+
+// Logout 
+class LogoutEvent extends LoginEvent {}

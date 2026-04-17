@@ -1,27 +1,72 @@
 import 'dart:async';
 
 import 'package:bloc/bloc.dart';
+// import 'package:sis_patrullaje_cusco/src/domain/entities/auth_response.dart';
 import 'package:sis_patrullaje_cusco/src/domain/entities/location_entity.dart';
+// import 'package:sis_patrullaje_cusco/src/domain/repositories/auth_repository.dart';
+import 'package:sis_patrullaje_cusco/src/domain/use_cases/auth/AuthUseCases.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/geolocator/GeolocatorUseCases.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/patrullaje/PatrullajeUseCases.dart';
+import 'package:sis_patrullaje_cusco/src/domain/use_cases/socket/SocketUseCases.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/tracking/tracking_event.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/tracking/tracking_state.dart';
+// import 'package:socket_io_client/socket_io_client.dart';
 
 class TrackingBloc extends Bloc<TrackingEvent, TrackingState> {
   final GeolocatorUseCases geolocatorUseCases;
   final PatrullajeUseCases patrullajeUseCases;
+  final AuthUsesCases authUsesCases;
+  final SocketUseCases socketUseCases;
 
   StreamSubscription<LocationEntity>? _locationSubscription;
 
-  TrackingBloc(this.geolocatorUseCases, this.patrullajeUseCases)
-    : super(TrackingState()) {
+  TrackingBloc(
+    this.geolocatorUseCases,
+    this.patrullajeUseCases,
+    this.socketUseCases,
+    this.authUsesCases,
+  ) : super(TrackingState()) {
     on<StartPatrullajeEvent>(_onStartPatrullaje);
     on<EndPatrullajeEvent>(_onEndPatrullaje);
     on<StartTrackingEvent>(_onStartTracking);
     on<StopTrackingEvent>(_onStopTracking);
 
     on<LocationUpdatedEvent>(_onLocationUpdatedEvent);
+    // on<ConnectSocketIO>(_onConnectSocketIO);
+    // on<DisconnectSocketIO>(_onDisconnectSocketIO);
+    // on<EmitPosicionSocketIO>(_onEmitPosicionSocketIO);
   }
+
+  // =====================================================
+  // SOCKET
+  // =====================================================
+  // Future<void> _onConnectSocketIO(
+  //   ConnectSocketIO event,
+  //   Emitter<TrackingState> emit,
+  // ) async {
+  //   Socket socket = await socketUseCases.connectSocket.run();
+  //   emit(state.copyWith(socket: socket));
+  // }
+
+  // Future<void> _onDisconnectSocketIO(
+  //   DisconnectSocketIO event,
+  //   Emitter<TrackingState> emit,
+  // ) async {
+  //   Socket socket = await socketUseCases.disconnetSocket.run();
+  //   emit(state.copyWith(socket: socket));
+  // }
+
+  // Future<void> _onEmitPosicionSocketIO(
+  //   EmitPosicionSocketIO event,
+  //   Emitter<TrackingState> emit,
+  // ) async {
+  //   AuthResponse authResponse = await authUsesCases.getUserSession.run();
+  //   state.socket?.emit('position', {
+  //     'id': authResponse.usuario.id,
+  //     'lat': state.lastLocation?.latitud,
+  //     'lng': state.lastLocation?.longitud,
+  //   });
+  // }
 
   // =====================================================
   // 1. INICIAR PATRULLAJE
@@ -149,6 +194,8 @@ class TrackingBloc extends Bloc<TrackingEvent, TrackingState> {
     try {
       // 2. enviar backend (sin bloquear stream principal)
       await patrullajeUseCases.sendLocation.run(event.location);
+
+      // add(EmitPosicionSocketIO());
     } catch (e) {
       print("Error enviando ubicación: $e");
     }

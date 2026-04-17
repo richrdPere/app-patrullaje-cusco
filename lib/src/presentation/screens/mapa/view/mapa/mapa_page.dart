@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/mapa/blocs/alerta/alerta_bloc.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/mapa/blocs/alerta/alerta_state.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/mapa/blocs/mapa/mapa_bloc.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/mapa/blocs/mapa/mapa_event.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/mapa/blocs/mapa/mapa_state.dart';
@@ -33,12 +35,35 @@ class _MapaPageState extends State<MapaPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: BlocListener<MapaBloc, MapaState>(
-        listenWhen: (prev, curr) => prev.placemarkData != curr.placemarkData,
-        listener: (context, state) {
-          //  if (state.placemarkData != null) {}
-        },
+      // appBar: AppBar(),
+      body: MultiBlocListener(
+        listeners: [
+          // Listener de mapa
+          BlocListener<MapaBloc, MapaState>(
+            listenWhen: (prev, curr) =>
+                prev.placemarkData != curr.placemarkData,
+            listener: (context, state) {
+              //  if (state.placemarkData != null) {}
+            },
+          ),
 
+          // Listener de alertas
+          BlocListener<AlertBloc, AlertState>(
+            listener: (context, state) {
+              if (state.success) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("🚨 Alerta enviada")),
+                );
+              }
+
+              if (state.error != null) {
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(SnackBar(content: Text("❌ ${state.error}")));
+              }
+            },
+          ),
+        ],
         child: BlocBuilder<MapaBloc, MapaState>(
           builder: (context, state) {
             return MapaContent(state: state);

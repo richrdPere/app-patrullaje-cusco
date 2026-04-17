@@ -6,11 +6,14 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/tracking/tracking_bloc.dart';
 // import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/tracking/tracking_event.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/tracking/tracking_state.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/mapa/blocs/alerta/alerta_bloc.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/mapa/blocs/alerta/alerta_event.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/mapa/blocs/mapa/mapa_bloc.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/mapa/blocs/mapa/mapa_event.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/mapa/blocs/mapa/mapa_state.dart';
 // import 'package:sis_patrullaje_cusco/src/presentation/shared/widgets/defaulds/default_button.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/shared/widgets/map_templates/google_places_auto_complete.dart';
+// import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 
 class MapaContent extends StatelessWidget {
   final MapaState state;
@@ -37,17 +40,18 @@ class MapaContent extends StatelessWidget {
 
         Container(
           height: 120,
-          margin: const EdgeInsets.symmetric(horizontal: 30, vertical: 30),
+          margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 70),
           child: _googlePlacesAutocomplete(context),
         ),
 
         _iconMyLocation(),
 
-        _alertButton(context),
-
+        // _speedDial(context),
         _useCurrentLocationButton(context),
 
         _togglePickingButton(context),
+
+        _alertButton(context),
 
         // _recenterButton(context),
 
@@ -106,8 +110,15 @@ class MapaContent extends StatelessWidget {
             context.read<MapaBloc>().add(OnCameraIdle());
           },
 
+          // CONTROLES UI
           myLocationEnabled: true,
-          myLocationButtonEnabled: true,
+          myLocationButtonEnabled: false, // Position defauld
+          zoomControlsEnabled: false, // Quita botones + -
+          // compassEnabled: true,           // puedes dejarlo
+
+          // GESTOS
+          rotateGesturesEnabled: false, // evita rotación accidental
+          tiltGesturesEnabled: false, // No necesitas inclinación
         );
       },
     );
@@ -141,41 +152,54 @@ class MapaContent extends StatelessWidget {
   // }
 
   Widget _alertButton(BuildContext context) {
-    return Container(
-      alignment: Alignment.bottomCenter,
-      margin: EdgeInsets.only(bottom: 15),
-      child: GestureDetector(
-        onLongPress: () {
-          // context.read<TrackingBloc>().add(SendAlertEvent());
+    return Positioned(
+      bottom: 30,
+      right: 20,
+      child: SizedBox(
+        width: 60,
+        height: 60,
+        child: FloatingActionButton(
+          heroTag: "btnAlert",
+          backgroundColor: Colors.red,
+          elevation: 8,
 
-          // 🔔 Feedback inmediato
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('🚨 Alerta enviada'),
-              duration: Duration(seconds: 2),
-            ),
-          );
-        },
+          // onPressed: () {
+          //   final mapaState = context.read<MapaBloc>().state;
 
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          width: 75,
-          height: 75,
-          decoration: BoxDecoration(
-            color: Colors.red,
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.red.withOpacity(0.6),
-                blurRadius: 15,
-                spreadRadius: 2,
-              ),
-            ],
-          ),
+          //   final position = mapaState.position;
+
+          //   if (position == null) {
+          //     ScaffoldMessenger.of(context).showSnackBar(
+          //       const SnackBar(content: Text("No hay ubicación disponible")),
+          //     );
+          //     return;
+          //   }
+
+          //   context.read<AlertBloc>().add(
+          //     SendAlertEvent(lat: position.latitude, lng: position.longitude),
+          //   );
+          // },
+          onPressed: () {
+            final mapaState = context.read<MapaBloc>().state;
+
+            final position = mapaState.position;
+
+            if (position == null) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("No hay ubicación disponible")),
+              );
+              return;
+            }
+
+            context.read<AlertBloc>().add(
+              SendAlertEvent(lat: position.latitude, lng: position.longitude),
+            );
+          },
+
           child: const Icon(
             Icons.warning_rounded,
             color: Colors.white,
-            size: 38,
+            size: 34,
           ),
         ),
       ),
@@ -283,6 +307,37 @@ class MapaContent extends StatelessWidget {
       },
     );
   }
+
+  // Widget _speedDial(BuildContext context) {
+  //   return Positioned(
+  //     bottom: 100,
+  //     right: 20,
+  //     child: SpeedDial(
+  //       icon: Icons.menu,
+  //       activeIcon: Icons.close,
+  //       backgroundColor: Colors.blue,
+  //       foregroundColor: Colors.white,
+  //       overlayOpacity: 0.2,
+
+  //       children: [
+  //         SpeedDialChild(
+  //           child: const Icon(Icons.my_location),
+  //           label: 'Mi ubicación',
+  //           onTap: () {
+  //             context.read<MapaBloc>().add(UseCurrentLocationEvent());
+  //           },
+  //         ),
+  //         SpeedDialChild(
+  //           child: const Icon(Icons.place),
+  //           label: 'Fijar punto',
+  //           onTap: () {
+  //             context.read<MapaBloc>().add(TogglePickingLocationEvent());
+  //           },
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   // Recentrar automaticamente
   // Widget _recenterButton(BuildContext context) {

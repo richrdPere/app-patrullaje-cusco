@@ -13,9 +13,5 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
 
       emit(state.copyWith(user: authResponse.usuario));
     });
-
-    on<Logout>((event, emit) async {
-      await authUsesCases.logoutSession.run();
-    });
   }
 }

@@ -17,6 +17,7 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
     on<LoginSubmit>(_onLoginSubmit);
     on<LoginFormReset>(_onLoginFormReset);
     on<SaveUserSession>(_onSaveUserSession);
+    on<LogoutEvent>(_onLogoutEvent);
   }
 
   final formKey = GlobalKey<FormState>();
@@ -26,18 +27,24 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
     AuthResponse? authResponse = await authUsesCases.getUserSession.run();
     emit(state.copyWith(formKey: formKey));
 
-    print("Auth response session: ${authResponse?.toJson()}");
+    // print("Auth response session: ${authResponse?.toJson()}");
 
     // Usuario Inicio sesion
     if (authResponse != null) {
+      // Usuario con sesión
       emit(
         state.copyWith(
           response: Success(authResponse), // AuthResponse -> user, token
           formKey: formKey,
+          isLoggedOut: false,
         ),
       );
     }
     // Usuario no inicio sesion
+    else {
+      // Usuario SIN sesión (CLAVE)
+      emit(state.copyWith(response: null, isLoggedOut: true, formKey: formKey));
+    }
   }
 
   Future<void> _onSaveUserSession(
@@ -98,6 +105,23 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
       state.password.value,
     );
 
-    emit(state.copyWith(response: response, formKey: formKey));
+    if (response is Success<AuthResponse>) {
+      // Guardar sesión automáticamente
+      await authUsesCases.saveUserSession.run(response.data);
+    }
+
+    emit(
+      state.copyWith(response: response, formKey: formKey, isLoggedOut: false),
+    );
+  }
+
+  Future<void> _onLogoutEvent(
+    LogoutEvent event,
+    Emitter<LoginState> emit,
+  ) async {
+    await authUsesCases.logoutSession.run();
+
+    // emit(state.copyWith(response: null, isLoggedOut: true));
+    emit(LoginState(formKey: formKey, isLoggedOut: true));
   }
 }

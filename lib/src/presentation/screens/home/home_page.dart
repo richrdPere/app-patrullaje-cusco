@@ -4,7 +4,7 @@ import 'package:sis_patrullaje_cusco/src/presentation/screens/home/home_content.
 import 'package:sis_patrullaje_cusco/src/presentation/screens/mapa/view/mapa/mapa_page.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/reporte_incidente/view/reporte_incidente_page.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/usuarios/usuarios_page.dart';
-import 'package:sis_patrullaje_cusco/src/presentation/shared/widgets/custom_appbar.dart';
+// import 'package:sis_patrullaje_cusco/src/presentation/shared/widgets/custom_appbar.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/shared/widgets/custom_bottom_navigation.dart';
 
 class HomePage extends StatefulWidget {
@@ -37,7 +37,7 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CustomAppBar(),
+      // appBar: CustomAppBar(),
       // body: pages[currentIndex],
       body: IndexedStack(
         index: currentIndex,

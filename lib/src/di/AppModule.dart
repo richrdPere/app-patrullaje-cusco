@@ -1,13 +1,26 @@
 import 'package:injectable/injectable.dart';
+// import 'package:sis_patrullaje_cusco/injection.dart';
+import 'package:sis_patrullaje_cusco/src/data/repositories/socket_repository_impl.dart';
+import 'package:sis_patrullaje_cusco/src/domain/repositories/socket_repository.dart';
+import 'package:sis_patrullaje_cusco/src/domain/use_cases/socket/SocketUseCases.dart';
+import 'package:sis_patrullaje_cusco/src/domain/use_cases/socket/socket_use_Cases/ConnectSocketUseCase.dart';
+import 'package:sis_patrullaje_cusco/src/domain/use_cases/socket/socket_use_Cases/DisconnetSocketUseCase.dart';
+import 'package:sis_patrullaje_cusco/src/domain/use_cases/socket/socket_use_Cases/GetSocketUseCase.dart';
+// import 'package:socket_io_client/socket_io_client.dart';
+
 import 'package:sis_patrullaje_cusco/src/data/datasources/local/SharefPref.dart';
 import 'package:sis_patrullaje_cusco/src/data/datasources/remote/services/auth_service.dart';
 import 'package:sis_patrullaje_cusco/src/data/datasources/remote/services/patrullaje_service.dart';
+import 'package:sis_patrullaje_cusco/src/data/repositories/alert_repository_impl.dart';
 import 'package:sis_patrullaje_cusco/src/data/repositories/auth_repository_impl.dart';
 import 'package:sis_patrullaje_cusco/src/data/repositories/geolocator_repository_impl.dart';
 import 'package:sis_patrullaje_cusco/src/data/repositories/patrullaje_repository_impl.dart';
+import 'package:sis_patrullaje_cusco/src/domain/repositories/alert_repository.dart';
 import 'package:sis_patrullaje_cusco/src/domain/repositories/auth_repository.dart';
 import 'package:sis_patrullaje_cusco/src/domain/repositories/geolocator_repository.dart';
 import 'package:sis_patrullaje_cusco/src/domain/repositories/patrullaje_repository.dart';
+import 'package:sis_patrullaje_cusco/src/domain/use_cases/alerta/AlertUseCases.dart';
+import 'package:sis_patrullaje_cusco/src/domain/use_cases/alerta/alerta_use_case/SendAlertUseCase.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/auth/AuthUseCases.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/auth/auth_use_cases/GetUserSessionUseCase.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/auth/auth_use_cases/LoginUseCase.dart';
@@ -26,9 +39,13 @@ import 'package:sis_patrullaje_cusco/src/domain/use_cases/patrullaje/patrullaje_
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/patrullaje/patrullaje_use_cases/GetPatrullajeActivoUseCase.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/patrullaje/patrullaje_use_cases/SendLocationUseCase.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/patrullaje/patrullaje_use_cases/StartPatrullajeUseCase.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/socket/socket_bloc.dart';
 
 @module
 abstract class AppModule {
+  @lazySingleton
+  SocketRepository socketRepository() => SocketRepositoryImpl();
+
   // SERVICES
   @injectable
   AuthService get authService => AuthService();
@@ -36,7 +53,7 @@ abstract class AppModule {
   @injectable
   SharefPref get sharedPref => SharefPref();
 
-  // REPOSYTORY IMPL
+  // REPOSITORY IMPL
   @injectable
   AuthRepository get authRepository =>
       AuthRepositoryImpl(authService, sharedPref);
@@ -50,9 +67,6 @@ abstract class AppModule {
 
   @injectable
   PatrullajeService get patrullajeService => PatrullajeService(authRepository);
-
-  // @injectable
-  // TrackingRepository get trackingRepository => TrackingRepositoryImpl();
 
   // USES CASES
 
@@ -86,6 +100,11 @@ abstract class AppModule {
     sendLocation: SendLocationUseCase(patrullajeRepository),
   );
 
+  // Alert
+  @injectable
+  AlertUseCases get alertUseCases =>
+      AlertUseCases(sendAlert: SendAlertUseCase(alertRepository));
+
   // Tracking
   // @injectable
   // TrackingUseCases get trackingUseCases => TrackingUseCases(
@@ -93,4 +112,29 @@ abstract class AppModule {
   //   startTracking: StartTrackingUseCase(trackingRepository),
   //   stopTracking: StopTrackingUseCase(trackingRepository),
   // );
+
+  @injectable
+  AlertRepository get alertRepository =>
+      AlertRepositoryImpl(geolocatorUseCases);
+
+  // Socket
+  @lazySingleton
+  SocketUseCases socketUseCases(SocketRepository socketRepository) =>
+      SocketUseCases(
+        connectSocket: ConnectSocketUseCase(socketRepository),
+        disconnetSocket: DisconnetSocketUseCase(socketRepository),
+        getSocket: GetSocketUseCase(socketRepository),
+      );
+  // @injectable
+  // SocketUseCases get socketUseCases => SocketUseCases(
+  //   connectSocket: ConnectSocketUseCase(socketRepository),
+  //   disconnetSocket: DisconnetSocketUseCase(socketRepository),
+  //   getSocket: GetSocketUseCase(socketRepository),
+  // );
+
+  @lazySingleton
+  SocketBloc socketBloc(
+    SocketUseCases socketUseCases,
+    AuthUsesCases authUsesCases,
+  ) => SocketBloc(socketUseCases, authUsesCases);
 }

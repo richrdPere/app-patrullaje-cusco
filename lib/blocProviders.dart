@@ -1,16 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:sis_patrullaje_cusco/injection.dart';
+// import 'package:sis_patrullaje_cusco/src/domain/use_cases/alerta/AlertUseCases.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/auth/AuthUseCases.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/geolocator/GeolocatorUseCases.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/patrullaje/PatrullajeUseCases.dart';
+import 'package:sis_patrullaje_cusco/src/domain/use_cases/socket/SocketUseCases.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/auth/login/bloc/login_bloc.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/auth/login/bloc/login_event.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/auth/register/bloc/register_bloc.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/auth/register/bloc/register_event.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/home/home_bloc.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/home/home_event.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/socket/socket_bloc.dart';
+// import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/socket/socket_event.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/tracking/tracking_bloc.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/mapa/blocs/alerta/alerta_bloc.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/mapa/blocs/gps/gps_bloc.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/mapa/blocs/mapa/mapa_bloc.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/mapa/blocs/mapa_incident/mapa_incident_bloc.dart';
@@ -34,6 +39,13 @@ List<BlocProvider> blocProviders = [
   //   create: (BuildContext context) => RolesBloc(locator<AuthUsesCases>()),
   // ),
 
+  // Socket (SIN AUTOCONECTAR)
+  BlocProvider<SocketBloc>.value(value: locator<SocketBloc>()),
+  // BlocProvider<SocketBloc>(
+  //   create: (_) =>
+  //       SocketBloc(locator<SocketUseCases>(), locator<AuthUsesCases>()),
+  // ),
+
   // Profile
   // - Info
   BlocProvider<ProfileBloc>(
@@ -46,7 +58,7 @@ List<BlocProvider> blocProviders = [
     create: (BuildContext context) => UpdateProfileBloc(),
   ),
 
-  // GPS
+  // GPS y Mapa
   BlocProvider<GpsBloc>(create: (BuildContext context) => GpsBloc()),
   BlocProvider<MapaBloc>(
     create: (BuildContext context) => MapaBloc(locator<GeolocatorUseCases>()),
@@ -57,7 +69,7 @@ List<BlocProvider> blocProviders = [
         MapaIncidentBloc(locator<GeolocatorUseCases>()),
   ),
 
-  // Home
+  // Home y Tracking
   BlocProvider<HomeBloc>(
     create: (BuildContext context) =>
         HomeBloc(locator<PatrullajeUseCases>())..add(LoadPatrullajeActivo()),
@@ -67,6 +79,12 @@ List<BlocProvider> blocProviders = [
     create: (BuildContext context) => TrackingBloc(
       locator<GeolocatorUseCases>(),
       locator<PatrullajeUseCases>(),
+      locator<SocketUseCases>(),
+      locator<AuthUsesCases>(),
     ),
+  ),
+
+  BlocProvider<AlertBloc>(
+    create: (BuildContext context) => AlertBloc(locator<SocketUseCases>()),
   ),
 ];

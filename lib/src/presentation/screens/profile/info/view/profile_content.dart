@@ -4,8 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sis_patrullaje_cusco/src/domain/models/usuarios.dart';
-import 'package:sis_patrullaje_cusco/src/presentation/screens/profile/info/bloc/profile_bloc.dart';
-import 'package:sis_patrullaje_cusco/src/presentation/screens/profile/info/bloc/profile_event.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/auth/login/bloc/login_bloc.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/auth/login/bloc/login_event.dart';
+// import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/socket/socket_bloc.dart';
+// import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/socket/socket_event.dart';
+// import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/socket/socket_bloc.dart';
+// import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/socket/socket_event.dart';
 
 class ProfileContent extends StatelessWidget {
   Usuario? user;
@@ -28,7 +32,13 @@ class ProfileContent extends StatelessWidget {
                 context.goNamed('profile-update', extra: user);
               }),
               _actionProfile('CERRAR SESION', Icons.settings_power, () {
-                context.read<ProfileBloc>().add(Logout());
+                // 1. DESCONECTAR SOCKET PRIMERO
+                // context.read<SocketBloc>().add(DisconnectSocketEvent());
+
+                // 2. LOGOUT
+                context.read<LoginBloc>().add(LogoutEvent());
+
+                // 3. REDIRIGIR
                 context.goNamed('login');
               }),
 

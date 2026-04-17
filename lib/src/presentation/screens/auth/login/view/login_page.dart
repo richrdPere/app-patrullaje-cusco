@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:go_router/go_router.dart';
-import 'package:sis_patrullaje_cusco/src/domain/entities/auth_response.dart';
+// import 'package:sis_patrullaje_cusco/src/domain/entities/auth_response.dart';
 import 'package:sis_patrullaje_cusco/src/domain/utils/Resource.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/auth/login/bloc/login_bloc.dart';
-import 'package:sis_patrullaje_cusco/src/presentation/screens/auth/login/bloc/login_event.dart';
+// import 'package:sis_patrullaje_cusco/src/presentation/screens/auth/login/bloc/login_event.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/auth/login/bloc/login_state.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/auth/login/view/login_content.dart';
+// import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/socket/socket_bloc.dart';
+// import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/socket/socket_event.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -22,9 +24,9 @@ class _LoginPageState extends State<LoginPage> {
     super.initState();
 
     // Verificar sesión al iniciar
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<LoginBloc>().add(InitEvent());
-    });
+    // WidgetsBinding.instance.addPostFrameCallback((_) {
+    //   context.read<LoginBloc>().add(InitEvent());
+    // });
   }
 
   @override
@@ -50,14 +52,16 @@ class _LoginPageState extends State<LoginPage> {
               toastLength: Toast.LENGTH_LONG,
             );
 
-            final authResponse = responseState.data as AuthResponse;
+            context.go('/home');
+            // CONECTAR SOCKET
+            // context.read<SocketBloc>().add(ConnectSocketEvent());
+            // final authResponse = responseState.data as AuthResponse;
 
-            context.read<LoginBloc>().add(
-              SaveUserSession(authResponse: authResponse),
-            );
+            // context.read<LoginBloc>().add(
+            //   SaveUserSession(authResponse: authResponse),
+            // );
 
             // SOLO NAVEGAR (la sesión ya debe guardarse en el Bloc)
-            context.go('/home');
           }
         },
         child: BlocBuilder<LoginBloc, LoginState>(
