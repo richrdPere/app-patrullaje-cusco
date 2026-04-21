@@ -84,7 +84,7 @@ class ProfileContent extends StatelessWidget {
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
             Text(
-              user?.username ?? '',
+              user?.correo ?? '',
               style: TextStyle(color: Colors.grey[700]),
             ),
             Text(

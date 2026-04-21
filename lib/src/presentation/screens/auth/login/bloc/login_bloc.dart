@@ -24,6 +24,8 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
 
   // FUNCIONES
   Future<void> _onInitEvent(InitEvent event, Emitter<LoginState> emit) async {
+    await authUsesCases.logoutSession.run();
+
     AuthResponse? authResponse = await authUsesCases.getUserSession.run();
     emit(state.copyWith(formKey: formKey));
 

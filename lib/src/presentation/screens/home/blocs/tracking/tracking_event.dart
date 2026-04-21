@@ -42,11 +42,3 @@ class LocationUpdatedEvent extends TrackingEvent {
 // Enviar boton de alerta
 class SendAlertEvent extends TrackingEvent {}
 
-// // Conectar a Socket
-// class ConnectSocketIO extends TrackingEvent {}
-
-// // Desconectar a Socket
-// class DisconnectSocketIO extends TrackingEvent {}
-
-// // Emitir posicion
-// class EmitPosicionSocketIO extends TrackingEvent {}

@@ -4,6 +4,7 @@ import 'package:sis_patrullaje_cusco/injection.dart';
 // import 'package:sis_patrullaje_cusco/src/domain/use_cases/alerta/AlertUseCases.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/auth/AuthUseCases.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/geolocator/GeolocatorUseCases.dart';
+import 'package:sis_patrullaje_cusco/src/domain/use_cases/incidente/IncidenteUseCases.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/patrullaje/PatrullajeUseCases.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/socket/SocketUseCases.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/auth/login/bloc/login_bloc.dart';
@@ -22,6 +23,7 @@ import 'package:sis_patrullaje_cusco/src/presentation/screens/mapa/blocs/mapa_in
 import 'package:sis_patrullaje_cusco/src/presentation/screens/profile/info/bloc/profile_bloc.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/profile/info/bloc/profile_event.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/profile/update/bloc/update_profile_bloc.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/bloc/incidente_bloc.dart';
 
 // import 'package:sirh_mob/injection.dart';
 
@@ -78,13 +80,19 @@ List<BlocProvider> blocProviders = [
   BlocProvider<TrackingBloc>(
     create: (BuildContext context) => TrackingBloc(
       locator<GeolocatorUseCases>(),
-      locator<PatrullajeUseCases>(),
       locator<SocketUseCases>(),
-      locator<AuthUsesCases>(),
+      locator<PatrullajeUseCases>(),
     ),
   ),
 
+  // Alert
   BlocProvider<AlertBloc>(
     create: (BuildContext context) => AlertBloc(locator<SocketUseCases>()),
+  ),
+
+  // Incident
+  BlocProvider<IncidenteBloc>(
+    create: (BuildContext context) =>
+        IncidenteBloc(locator<IncidenteUseCases>()),
   ),
 ];

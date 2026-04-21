@@ -3,6 +3,7 @@ class Usuario {
   String nombre;
   String apellidos;
   String username;
+  String correo;
   String telefono;
   String direccion;
   String distrito;
@@ -16,6 +17,7 @@ class Usuario {
     this.nombre = "",
     this.apellidos = "",
     this.username = "",
+    this.correo = "",
     this.telefono = "",
     this.direccion = "",
     this.distrito = "",
@@ -25,11 +27,15 @@ class Usuario {
     this.fotoPerfil,
   });
 
+  // =========================
+  // FROM JSON (RESPUESTA BACKEND)
+  // =========================
   factory Usuario.fromJson(Map<String, dynamic> json) => Usuario(
     id: json["id"],
     nombre: json["nombre"],
     apellidos: json["apellidos"],
     username: json["username"],
+    correo: json["correo"],
     telefono: json["telefono"],
     direccion: json["direccion"],
     distrito: json["distrito"],
@@ -44,6 +50,7 @@ class Usuario {
     "nombre": nombre,
     "apellidos": apellidos,
     "username": username,
+    "correo": correo,
     "telefono": telefono,
     "direccion": direccion,
     "distrito": distrito,

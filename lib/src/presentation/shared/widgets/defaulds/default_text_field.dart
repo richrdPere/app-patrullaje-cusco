@@ -40,6 +40,7 @@ class DefaultTextField extends StatelessWidget {
         onChanged: (text) {
           onChanged(text);
         },
+        style: TextStyle(fontSize: 13),
         initialValue: initialValue,
         decoration: InputDecoration(
           label: Text(label),

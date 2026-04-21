@@ -1,7 +1,13 @@
 import 'package:injectable/injectable.dart';
+import 'package:sis_patrullaje_cusco/src/data/datasources/remote/services/incidente_service.dart';
+import 'package:sis_patrullaje_cusco/src/data/datasources/remote/services/users_service.dart';
+import 'package:sis_patrullaje_cusco/src/data/repositories/incidente_repository_impl.dart';
 // import 'package:sis_patrullaje_cusco/injection.dart';
 import 'package:sis_patrullaje_cusco/src/data/repositories/socket_repository_impl.dart';
+import 'package:sis_patrullaje_cusco/src/domain/repositories/incidente_repository.dart';
 import 'package:sis_patrullaje_cusco/src/domain/repositories/socket_repository.dart';
+import 'package:sis_patrullaje_cusco/src/domain/use_cases/incidente/IncidenteUseCases.dart';
+import 'package:sis_patrullaje_cusco/src/domain/use_cases/incidente/incidente_use_cases/CreateIncidenteUseCase.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/socket/SocketUseCases.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/socket/socket_use_Cases/ConnectSocketUseCase.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/socket/socket_use_Cases/DisconnetSocketUseCase.dart';
@@ -68,6 +74,18 @@ abstract class AppModule {
   @injectable
   PatrullajeService get patrullajeService => PatrullajeService(authRepository);
 
+  @injectable
+  IncidenteRepository get incidenteRepository =>
+      IncidenteRepositoryImpl(incidenteService);
+
+  @injectable
+  IncidenteService get incidenteService => IncidenteService(authRepository);
+
+  @injectable
+  UsersService get usersService => UsersService(authRepository);
+  
+  
+  
   // USES CASES
 
   // - Auth
@@ -105,13 +123,11 @@ abstract class AppModule {
   AlertUseCases get alertUseCases =>
       AlertUseCases(sendAlert: SendAlertUseCase(alertRepository));
 
-  // Tracking
-  // @injectable
-  // TrackingUseCases get trackingUseCases => TrackingUseCases(
-  //   getLocationStream: GetLocationStreamUseCase(trackingRepository),
-  //   startTracking: StartTrackingUseCase(trackingRepository),
-  //   stopTracking: StopTrackingUseCase(trackingRepository),
-  // );
+  // Incident
+  @injectable
+  IncidenteUseCases get incidentUseCases => IncidenteUseCases(
+    createIncidente: CreateIncidenteUseCase(incidenteRepository),
+  );
 
   @injectable
   AlertRepository get alertRepository =>
@@ -125,12 +141,6 @@ abstract class AppModule {
         disconnetSocket: DisconnetSocketUseCase(socketRepository),
         getSocket: GetSocketUseCase(socketRepository),
       );
-  // @injectable
-  // SocketUseCases get socketUseCases => SocketUseCases(
-  //   connectSocket: ConnectSocketUseCase(socketRepository),
-  //   disconnetSocket: DisconnetSocketUseCase(socketRepository),
-  //   getSocket: GetSocketUseCase(socketRepository),
-  // );
 
   @lazySingleton
   SocketBloc socketBloc(

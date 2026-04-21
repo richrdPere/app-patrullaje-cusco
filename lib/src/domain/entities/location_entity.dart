@@ -25,3 +25,18 @@ Map<String, dynamic> locationToJson(LocationEntity location) {
     "tipo": location.tipo,
   };
 }
+
+Map<String, dynamic> locationToSocketJson(
+  LocationEntity location,
+  int? patrullajeId,
+) {
+  return {
+    "lat": location.latitud,
+    "lng": location.longitud,
+    "velocidad": location.velocidad,
+    "precision": location.precision,
+    "tipo": location.tipo,
+    "timestamp": location.fechaHora.toIso8601String(),
+    "patrullaje_id": patrullajeId,
+  };
+}

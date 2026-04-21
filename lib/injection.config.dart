@@ -15,6 +15,8 @@ import 'package:sis_patrullaje_cusco/src/data/datasources/local/SharefPref.dart'
     as _i118;
 import 'package:sis_patrullaje_cusco/src/data/datasources/remote/services/auth_service.dart'
     as _i501;
+import 'package:sis_patrullaje_cusco/src/data/datasources/remote/services/incidente_service.dart'
+    as _i822;
 import 'package:sis_patrullaje_cusco/src/data/datasources/remote/services/patrullaje_service.dart'
     as _i647;
 import 'package:sis_patrullaje_cusco/src/di/AppModule.dart' as _i1038;
@@ -24,6 +26,8 @@ import 'package:sis_patrullaje_cusco/src/domain/repositories/auth_repository.dar
     as _i606;
 import 'package:sis_patrullaje_cusco/src/domain/repositories/geolocator_repository.dart'
     as _i175;
+import 'package:sis_patrullaje_cusco/src/domain/repositories/incidente_repository.dart'
+    as _i590;
 import 'package:sis_patrullaje_cusco/src/domain/repositories/patrullaje_repository.dart'
     as _i313;
 import 'package:sis_patrullaje_cusco/src/domain/repositories/socket_repository.dart'
@@ -34,6 +38,8 @@ import 'package:sis_patrullaje_cusco/src/domain/use_cases/auth/AuthUseCases.dart
     as _i422;
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/geolocator/GeolocatorUseCases.dart'
     as _i549;
+import 'package:sis_patrullaje_cusco/src/domain/use_cases/incidente/IncidenteUseCases.dart'
+    as _i125;
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/patrullaje/PatrullajeUseCases.dart'
     as _i1030;
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/socket/SocketUseCases.dart'
@@ -59,10 +65,13 @@ extension GetItInjectableX on _i174.GetIt {
       () => appModule.patrullajeRepository,
     );
     gh.factory<_i647.PatrullajeService>(() => appModule.patrullajeService);
+    gh.factory<_i590.IncidenteRepository>(() => appModule.incidenteRepository);
+    gh.factory<_i822.IncidenteService>(() => appModule.incidenteService);
     gh.factory<_i422.AuthUsesCases>(() => appModule.authUseCases);
     gh.factory<_i549.GeolocatorUseCases>(() => appModule.geolocatorUseCases);
     gh.factory<_i1030.PatrullajeUseCases>(() => appModule.patrullajeUseCases);
     gh.factory<_i607.AlertUseCases>(() => appModule.alertUseCases);
+    gh.factory<_i125.IncidenteUseCases>(() => appModule.incidentUseCases);
     gh.factory<_i574.AlertRepository>(() => appModule.alertRepository);
     gh.lazySingleton<_i481.SocketRepository>(
       () => appModule.socketRepository(),
