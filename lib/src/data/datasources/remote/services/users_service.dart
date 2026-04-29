@@ -13,16 +13,15 @@ import 'package:sis_patrullaje_cusco/src/config/constants/environment.dart'
     as url_backend;
 
 class UsersService {
- final AuthRepository authRepository;
+  final AuthRepository authRepository;
 
- UsersService(this.authRepository);
+  UsersService(this.authRepository);
 
-
-// APIS
+  // APIS
   String get API_BASE => url_backend.Environment.mainUrl + '/usuario';
   String get API_UPDATE_USER => '$API_BASE/editar/';
 
- // ============================
+  // ============================
   // HEADERS
   // ============================
   Future<Map<String, String>> _getHeaders() async {
@@ -38,20 +37,18 @@ class UsersService {
     };
   }
 
-// =====================================================
+  // =====================================================
   // 1. ACTUALIZAR USUARIO
   // =====================================================
-  Future<Resource<Usuario>> updateUsuario(int id, Usuario user) async{
-
+  Future<Resource<Usuario>> updateUsuario(int id, Usuario user) async {
     try {
-
-   // 1.- Header
+      // 1.- Header
       final headers = await _getHeaders();
 
-            // 2.- URL Base
+      // 2.- URL Base
       Uri url = Uri.http("$API_UPDATE_USER$id");
 
-  // 3.- Body 
+      // 3.- Body
       String body = json.encode({
         'nombre': user.nombre,
         'apellidos': user.apellidos,
@@ -62,27 +59,23 @@ class UsersService {
         'distrito': user.distrito,
       });
 
-// 4.- Request
+      // 4.- Request
       final resp = await http.put(url, headers: headers, body: body);
       final data = json.decode(resp.body);
 
-// 5.- Response
-if (resp.statusCode == 200 ) {
+      // 5.- Response
+      if (resp.statusCode == 200) {
         Usuario userResponse = Usuario.fromJson(data);
         // return patrullajeResp;
         return Success(userResponse);
       } else {
-      return Error(data['message'] ?? "Error al actualizar usuario");
-       //  return ErrorData(listToString(data['message']));
+        return ErrorData(data['message'] ?? "Error al actualizar usuario");
+        //  return ErrorData(listToString(data['message']));
       }
-
-
-
-    }catch (e){
+    } catch (e) {
       print("Error: $e");
-    return Error("Error de conexión: $e");
+      return ErrorData("Error de conexión: $e");
       // return data['message'];
     }
-
   }
 }

@@ -59,19 +59,27 @@ class PatrullajeService {
 
       // 3.- Request
       final resp = await http.get(url, headers: headers);
-      final data = json.decode(resp.body);
+      final response = json.decode(resp.body);
 
-      // 4.- Response
-      if (resp.statusCode == 200 && data != null) {
-        PatrullajeModel patrullajeResp = PatrullajeModel.fromJson(data);
-        return patrullajeResp;
-        //  return Success(patrullajeResp);
-      } else {
-        return data['message'];
-        //  return Error(data['message']);
+      print("Patrullaje activo: $response");
+
+      // ERROR REAL HTTP
+      if (resp.statusCode != 200) {
+        throw Exception(response['message'] ?? 'Error desconocido');
       }
+
+      // NULL SAFE
+      if (response == null) return null;
+
+      // OK RESPONSE
+      final data = response['data'];
+
+      if (data == null) return null;
+
+      return PatrullajeModel.fromJson(data);
     } catch (error) {
-      throw Exception('Error al iniciar session: $error');
+      print('ERROR PATRULLAJE: $error');
+      throw Exception('Error al obtener patrullaje activo: $error');
     }
   }
 

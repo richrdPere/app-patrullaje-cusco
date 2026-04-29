@@ -129,6 +129,8 @@ class TrackingBloc extends Bloc<TrackingEvent, TrackingState> {
       await _gpsSubscription?.cancel();
       _gpsSubscription = null;
 
+      print("Finalizando patrullaje ID: ${event.patrullajeId}");
+
       await patrullajeUseCases.endPatrullaje.run(event.patrullajeId);
 
       emit(const TrackingState());

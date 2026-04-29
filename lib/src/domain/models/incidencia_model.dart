@@ -30,9 +30,11 @@ class IncidenteModel {
   // =========================
   factory IncidenteModel.fromJson(Map<String, dynamic> json) {
     return IncidenteModel(
-      id: json['id'],
-      usuarioId: json['usuario_id'],
-      patrullajeId: json['patrullaje_id'],
+      id: int.tryParse(json['id'].toString()),
+      usuarioId: int.parse(json['usuario_id'].toString()),
+      patrullajeId: json['patrullaje_id'] != null
+          ? int.tryParse(json['patrullaje_id'].toString())
+          : null,
       tipo: json['tipo'],
       descripcion: json['descripcion'],
       latitud: double.parse(json['latitud'].toString()),

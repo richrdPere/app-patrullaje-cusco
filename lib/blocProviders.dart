@@ -5,14 +5,16 @@ import 'package:sis_patrullaje_cusco/injection.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/auth/AuthUseCases.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/geolocator/GeolocatorUseCases.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/incidente/IncidenteUseCases.dart';
+import 'package:sis_patrullaje_cusco/src/domain/use_cases/multimedias/MultimediasUsesCases.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/patrullaje/PatrullajeUseCases.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/socket/SocketUseCases.dart';
+import 'package:sis_patrullaje_cusco/src/domain/use_cases/users/UsersUseCases.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/auth/login/bloc/login_bloc.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/auth/login/bloc/login_event.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/auth/register/bloc/register_bloc.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/auth/register/bloc/register_event.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/home/home_bloc.dart';
-import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/home/home_event.dart';
+// import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/home/home_event.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/socket/socket_bloc.dart';
 // import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/socket/socket_event.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/tracking/tracking_bloc.dart';
@@ -57,7 +59,8 @@ List<BlocProvider> blocProviders = [
 
   // - Edit
   BlocProvider<UpdateProfileBloc>(
-    create: (BuildContext context) => UpdateProfileBloc(),
+    create: (BuildContext context) =>
+        UpdateProfileBloc(locator<UsersUseCases>()),
   ),
 
   // GPS y Mapa
@@ -73,8 +76,7 @@ List<BlocProvider> blocProviders = [
 
   // Home y Tracking
   BlocProvider<HomeBloc>(
-    create: (BuildContext context) =>
-        HomeBloc(locator<PatrullajeUseCases>())..add(LoadPatrullajeActivo()),
+    create: (BuildContext context) => HomeBloc(locator<PatrullajeUseCases>()),
   ),
 
   BlocProvider<TrackingBloc>(
@@ -92,7 +94,10 @@ List<BlocProvider> blocProviders = [
 
   // Incident
   BlocProvider<IncidenteBloc>(
-    create: (BuildContext context) =>
-        IncidenteBloc(locator<IncidenteUseCases>()),
+    create: (BuildContext context) => IncidenteBloc(
+      locator<IncidenteUseCases>(),
+      locator<GeolocatorUseCases>(),
+      locator<MultimediasUseCases>(),
+    ),
   ),
 ];

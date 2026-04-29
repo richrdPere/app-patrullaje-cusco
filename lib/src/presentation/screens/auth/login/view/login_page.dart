@@ -41,7 +41,7 @@ class _LoginPageState extends State<LoginPage> {
 
         listener: (context, state) {
           final responseState = state.response;
-          if (responseState is Error) {
+          if (responseState is ErrorData) {
             Fluttertoast.showToast(
               msg: responseState.error,
               toastLength: Toast.LENGTH_LONG,

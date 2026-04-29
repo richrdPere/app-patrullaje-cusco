@@ -1,13 +1,29 @@
+import 'package:image_picker/image_picker.dart';
 import 'package:injectable/injectable.dart';
 import 'package:sis_patrullaje_cusco/src/data/datasources/remote/services/incidente_service.dart';
 import 'package:sis_patrullaje_cusco/src/data/datasources/remote/services/users_service.dart';
 import 'package:sis_patrullaje_cusco/src/data/repositories/incidente_repository_impl.dart';
+import 'package:sis_patrullaje_cusco/src/data/repositories/media_repository_impl.dart';
 // import 'package:sis_patrullaje_cusco/injection.dart';
 import 'package:sis_patrullaje_cusco/src/data/repositories/socket_repository_impl.dart';
+import 'package:sis_patrullaje_cusco/src/data/repositories/users_repository_impl.dart';
+// import 'package:sis_patrullaje_cusco/src/domain/entities/auth_response.dart';
 import 'package:sis_patrullaje_cusco/src/domain/repositories/incidente_repository.dart';
+import 'package:sis_patrullaje_cusco/src/domain/repositories/media_repository.dart';
 import 'package:sis_patrullaje_cusco/src/domain/repositories/socket_repository.dart';
+import 'package:sis_patrullaje_cusco/src/domain/repositories/users_repository.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/incidente/IncidenteUseCases.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/incidente/incidente_use_cases/CreateIncidenteUseCase.dart';
+import 'package:sis_patrullaje_cusco/src/domain/use_cases/multimedias/MultimediasUsesCases.dart';
+import 'package:sis_patrullaje_cusco/src/domain/use_cases/multimedias/multimedias_use_case/PickImageUseCase.dart';
+import 'package:sis_patrullaje_cusco/src/domain/use_cases/multimedias/multimedias_use_case/RecordVideoUseCase.dart';
+import 'package:sis_patrullaje_cusco/src/domain/use_cases/multimedias/multimedias_use_case/TakePhotoUseCase.dart';
+import 'package:sis_patrullaje_cusco/src/domain/use_cases/patrullaje/patrullaje_use_cases/EndPatrullajeSocketUseCase.dart';
+import 'package:sis_patrullaje_cusco/src/domain/use_cases/patrullaje/patrullaje_use_cases/JoinPatrullajeUseCase.dart';
+import 'package:sis_patrullaje_cusco/src/domain/use_cases/patrullaje/patrullaje_use_cases/LeavePatrullajeUseCase.dart';
+import 'package:sis_patrullaje_cusco/src/domain/use_cases/patrullaje/patrullaje_use_cases/ListenNewPatrullajeUseCase.dart';
+import 'package:sis_patrullaje_cusco/src/domain/use_cases/patrullaje/patrullaje_use_cases/ListenPatrullajeEndUseCase.dart';
+import 'package:sis_patrullaje_cusco/src/domain/use_cases/patrullaje/patrullaje_use_cases/StartPatrullajeSocketUseCase.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/socket/SocketUseCases.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/socket/socket_use_Cases/ConnectSocketUseCase.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/socket/socket_use_Cases/DisconnetSocketUseCase.dart';
@@ -45,6 +61,8 @@ import 'package:sis_patrullaje_cusco/src/domain/use_cases/patrullaje/patrullaje_
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/patrullaje/patrullaje_use_cases/GetPatrullajeActivoUseCase.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/patrullaje/patrullaje_use_cases/SendLocationUseCase.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/patrullaje/patrullaje_use_cases/StartPatrullajeUseCase.dart';
+import 'package:sis_patrullaje_cusco/src/domain/use_cases/users/UsersUseCases.dart';
+import 'package:sis_patrullaje_cusco/src/domain/use_cases/users/users_uses_cases/UpdateUserUseCase.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/socket/socket_bloc.dart';
 
 @module
@@ -52,14 +70,45 @@ abstract class AppModule {
   @lazySingleton
   SocketRepository socketRepository() => SocketRepositoryImpl();
 
-  // SERVICES
   @injectable
-  AuthService get authService => AuthService();
+  ImagePicker get imagePicker => ImagePicker();
 
   @injectable
   SharefPref get sharedPref => SharefPref();
 
+  // =============================================================
+  // TOKEN
+  // =============================================================
+  // @injectable
+  // Future<String> get token async {
+  //   String token = '';
+  //   final userSession = await sharedPref.read('user');
+
+  //   if (userSession != null) {
+  //     AuthResponse authResponse = AuthResponse.fromJson(userSession);
+  //     token = authResponse.token;
+  //   }
+  //   return token;
+  // }
+
+  // =============================================================
+  // SERVICES (DATA SOURCE REMOTO)
+  // =============================================================
+  @injectable
+  AuthService get authService => AuthService();
+
+  @injectable
+  UsersService get usersService => UsersService(authRepository);
+
+  @injectable
+  PatrullajeService get patrullajeService => PatrullajeService(authRepository);
+
+  @injectable
+  IncidenteService get incidenteService => IncidenteService(authRepository);
+
+  // =============================================================
   // REPOSITORY IMPL
+  // =============================================================
   @injectable
   AuthRepository get authRepository =>
       AuthRepositoryImpl(authService, sharedPref);
@@ -68,25 +117,30 @@ abstract class AppModule {
   GeolocatorRepository get geolocatorRepository => GeolocatorRepositoryImpl();
 
   @injectable
-  PatrullajeRepository get patrullajeRepository =>
-      PatrullajeRepositoryImpl(patrullajeService);
-
-  @injectable
-  PatrullajeService get patrullajeService => PatrullajeService(authRepository);
+  PatrullajeRepository patrullajeRepository(
+    PatrullajeService patrullajeService,
+    SocketRepository socketRepository,
+  ) => PatrullajeRepositoryImpl(patrullajeService, socketRepository);
+  // PatrullajeRepository get patrullajeRepository =>
+  //     PatrullajeRepositoryImpl(patrullajeService, socketRepository());
 
   @injectable
   IncidenteRepository get incidenteRepository =>
       IncidenteRepositoryImpl(incidenteService);
 
   @injectable
-  IncidenteService get incidenteService => IncidenteService(authRepository);
+  UsersRepository get usersRepository => UsersRepositoryImpl(usersService);
 
   @injectable
-  UsersService get usersService => UsersService(authRepository);
-  
-  
-  
+  MediaRepository get mediaRepository => MediaRepositoryImpl(imagePicker);
+
+  @injectable
+  AlertRepository get alertRepository =>
+      AlertRepositoryImpl(geolocatorUseCases);
+
+  // =============================================================
   // USES CASES
+  // =============================================================
 
   // - Auth
   @injectable
@@ -111,11 +165,19 @@ abstract class AppModule {
 
   // Patrullaje
   @injectable
-  PatrullajeUseCases get patrullajeUseCases => PatrullajeUseCases(
+  PatrullajeUseCases patrullajeUseCases(
+    PatrullajeRepository patrullajeRepository,
+  ) => PatrullajeUseCases(
     getPatrullajeActivo: GetPatrullajeActivoUseCase(patrullajeRepository),
     endPatrullaje: EndPatrullajeUseCase(patrullajeRepository),
     startPatrullaje: StartPatrullajeUseCase(patrullajeRepository),
     sendLocation: SendLocationUseCase(patrullajeRepository),
+    listenNewPatrullaje: ListenNewPatrullajeUseCase(patrullajeRepository),
+    listenPatrullajeEnd: ListenPatrullajeEndUseCase(patrullajeRepository),
+    startPatrullajeSocket: StartPatrullajeSocketUseCase(patrullajeRepository),
+    endPatrullajeSocket: EndPatrullajeSocketUseCase(patrullajeRepository),
+    joinPatrullaje: JoinPatrullajeUseCase(patrullajeRepository),
+    leavePatrullaje: LeavePatrullajeUseCase(patrullajeRepository),
   );
 
   // Alert
@@ -129,9 +191,18 @@ abstract class AppModule {
     createIncidente: CreateIncidenteUseCase(incidenteRepository),
   );
 
+  // Users
   @injectable
-  AlertRepository get alertRepository =>
-      AlertRepositoryImpl(geolocatorUseCases);
+  UsersUseCases get usersUseCases =>
+      UsersUseCases(updateUser: UpdateUserUseCase(usersRepository));
+
+  // Multimedias
+  @injectable
+  MultimediasUseCases get multimediasUseCases => MultimediasUseCases(
+    takePhoto: TakePhotoUseCase(mediaRepository),
+    recordVideo: RecordVideoUseCase(mediaRepository),
+    pickImage: PickImageUseCase(mediaRepository),
+  );
 
   // Socket
   @lazySingleton

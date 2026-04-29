@@ -4,7 +4,6 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
-
 // Environment
 import 'package:sis_patrullaje_cusco/src/config/constants/environment.dart'
     as url_backend;
@@ -28,7 +27,6 @@ class AuthService with ChangeNotifier {
   // }
 
   // Storage
-
 
   // *********************************************************
   // 1.- Login
@@ -57,9 +55,10 @@ class AuthService with ChangeNotifier {
 
         return Success(authResponse);
       } else {
-        return Error(data['message']);
+        return ErrorData(data['message']);
       }
     } catch (error) {
+      print('ERROR: $error');
       throw Exception('Error al iniciar session: $error');
     }
   }

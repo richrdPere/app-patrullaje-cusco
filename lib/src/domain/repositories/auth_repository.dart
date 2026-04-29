@@ -18,4 +18,7 @@ abstract class AuthRepository {
 
   /// Eliminar sesión
   Future<bool> logout();
+
+  /// Token
+  Future<String?> getToken();
 }

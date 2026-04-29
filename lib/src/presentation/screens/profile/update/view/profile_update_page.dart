@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:sis_patrullaje_cusco/src/domain/models/usuarios.dart';
+import 'package:sis_patrullaje_cusco/src/domain/utils/Resource.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/profile/update/bloc/update_profile_bloc.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/profile/update/bloc/update_profile_event.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/profile/update/bloc/update_profile_state.dart';
@@ -36,10 +38,38 @@ class _ProfileUpdatePageState extends State<ProfileUpdatePage> {
   Widget build(BuildContext context) {
     // SEGUNDO - CTRL + S
     return Scaffold(
-      body: BlocBuilder<UpdateProfileBloc, UpdateProfileState>(
-        builder: (context, state) {
-          return ProfileUpdateContent(state, user: widget.user!);
+      body: BlocListener<UpdateProfileBloc, UpdateProfileState>(
+        listener: (context, state) {
+          final response = state.response;
+          if (response is ErrorData) {
+            Fluttertoast.showToast(
+              msg: response.error,
+              toastLength: Toast.LENGTH_LONG,
+            );
+          } else if (response is Success) {
+            Fluttertoast.showToast(
+              msg: "Actualizacion exitosa",
+              toastLength: Toast.LENGTH_LONG,
+            );
+          }
         },
+        child: BlocBuilder<UpdateProfileBloc, UpdateProfileState>(
+          builder: (context, state) {
+            final response = state.response;
+
+            if (response is Loading) {
+              return Stack(
+                children: [
+                  ProfileUpdateContent(state, user: widget.user!),
+
+                  Center(child: CircularProgressIndicator()),
+                ],
+              );
+            }
+
+            return ProfileUpdateContent(state, user: widget.user!);
+          },
+        ),
       ),
     );
   }

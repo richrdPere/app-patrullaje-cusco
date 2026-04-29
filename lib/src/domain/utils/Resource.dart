@@ -8,9 +8,9 @@ class Success<T> extends Resource<T> {
   final T data;
   Success(this.data);
 }
-class Error<T> extends Resource<T>{
+class ErrorData<T> extends Resource<T>{
   final String error;
-  Error(this.error);
+  ErrorData(this.error);
 
   @override
   String toString() => 'Error: $error';

@@ -46,13 +46,13 @@ class IncidenteService {
   // =====================================================
   Future<IncidenteModel?> newIncidente(IncidenteModel params) async {
     try {
+      print("📦 INICIANDO ENVÍO DE INCIDENTE");
       final headers = await _getHeaders();
 
       Uri url = Uri.parse(API_NEW_INCIDENTE);
 
       var request = http.MultipartRequest("POST", url);
 
-  
       // HEADERS (IMPORTANTE)
       request.headers.addAll(headers);
 
@@ -67,19 +67,46 @@ class IncidenteService {
         request.fields['patrullaje_id'] = params.patrullajeId.toString();
       }
 
+      print("CAMPOS: ${request.fields}");
+
       // ARCHIVOS
       if (params.archivos != null && params.archivos!.isNotEmpty) {
+        print("Archivos a enviar: ${params.archivos!.length}");
+
         for (File file in params.archivos!) {
-          request.files.add(
-            await http.MultipartFile.fromPath('archivos', file.path),
+          if (!file.existsSync()) {
+            print("Archivo no existe: ${file.path}");
+            continue;
+          }
+
+          final size = file.lengthSync();
+          print("📸 Archivo:");
+          print("   📍 Path: ${file.path}");
+          print("   📏 Tamaño: ${size / (1024 * 1024)} MB");
+
+          if (size > 10 * 1024 * 1024) {
+            throw Exception("Archivo muy pesado: ${file.path}");
+          }
+
+          final multipartFile = await http.MultipartFile.fromPath(
+            'archivos',
+            file.path,
           );
+
+          request.files.add(multipartFile);
         }
       }
+
+      print("📦 TOTAL FILES EN REQUEST: ${request.files.length}");
 
       // ENVIAR
       final streamedResponse = await request.send();
 
+      print("📡 STATUS CODE: ${streamedResponse.statusCode}");
+
       final response = await http.Response.fromStream(streamedResponse);
+
+      print("📨 RESPONSE BODY: ${response.body}");
 
       final data = json.decode(response.body);
 
