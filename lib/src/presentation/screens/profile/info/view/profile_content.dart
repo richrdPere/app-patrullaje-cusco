@@ -80,7 +80,7 @@ class ProfileContent extends StatelessWidget {
             ),
 
             Text(
-              '${user?.nombre} ${user?.apellidos}',
+              '${user?.persona.nombres} ${user?.persona.apellidos}',
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
             Text(
@@ -88,7 +88,7 @@ class ProfileContent extends StatelessWidget {
               style: TextStyle(color: Colors.grey[700]),
             ),
             Text(
-              user?.telefono ?? '',
+              user?.persona.telefono ?? '',
               style: TextStyle(color: Colors.grey[700]),
             ),
           ],

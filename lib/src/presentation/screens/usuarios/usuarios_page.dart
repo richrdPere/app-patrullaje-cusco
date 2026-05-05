@@ -35,17 +35,18 @@ class _UsuariosPageState extends State<UsuariosPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Mi nombre', style: TextStyle(color: Colors.black87)),
+        title: const Text('Usuarios', style: TextStyle(color: Colors.black87)),
         elevation: 1,
         backgroundColor: Colors.white,
         leading: IconButton(
-          onPressed: () {},
-          icon: Icon(Icons.exit_to_app, color: Colors.black87),
+          onPressed: () {
+            // TODO: logout
+          },
+          icon: const Icon(Icons.exit_to_app, color: Colors.black87),
         ),
-        actions: [
-          Container(
-            margin: EdgeInsets.only(right: 10),
-            // child: Icon(Icons.check_circle, color: Colors.blue[400]),
+        actions: const [
+          Padding(
+            padding: EdgeInsets.only(right: 10),
             child: Icon(Icons.offline_bolt, color: Colors.red),
           ),
         ],
@@ -63,8 +64,14 @@ class _UsuariosPageState extends State<UsuariosPage> {
     );
   }
 
+  // ================================
   // Lista de usuarios
-  ListView _listViewUsuarios() {
+  // ================================
+  Widget _listViewUsuarios() {
+    if (usuarios.isEmpty) {
+      return const Center(child: Text('No hay usuarios'));
+    }
+
     return ListView.separated(
       physics: BouncingScrollPhysics(),
       itemBuilder: (_, i) => _usuarioListTile(usuarios[i]),
@@ -73,14 +80,24 @@ class _UsuariosPageState extends State<UsuariosPage> {
     );
   }
 
-  ListTile _usuarioListTile(Usuario user) {
+  // ================================
+  // ITEM
+  // ================================
+  Widget _usuarioListTile(Usuario user) {
+    final persona = user.persona;
+
+    final nombreCompleto = "${persona.nombres} ${persona.apellidos}";
+
     return ListTile(
-      title: Text(user.nombre),
+      title: Text(nombreCompleto),
+
+      subtitle: Text(user.correo),
+
       leading: CircleAvatar(
         backgroundColor: Colors.blue[100],
         child: Text(
-          user.nombre.isNotEmpty
-              ? user.nombre.substring(0, 1).toUpperCase()
+          persona.nombres.isNotEmpty
+              ? persona.nombres.substring(0, 1).toUpperCase()
               : '?',
           style: const TextStyle(
             color: Colors.black87,
@@ -88,22 +105,33 @@ class _UsuariosPageState extends State<UsuariosPage> {
           ),
         ),
       ),
+
+      // CAMBIO: ahora usamos estado en vez de online
       trailing: Container(
         width: 10,
         height: 10,
         decoration: BoxDecoration(
-          color: user.online ? Colors.green[300] : Colors.red,
+          color: user.estado ? Colors.green : Colors.red,
           borderRadius: BorderRadius.circular(100),
         ),
       ),
     );
   }
 
-  _cargarUsuarios() async {
-    await Future.delayed(Duration(milliseconds: 1000));
-    // if failed,use refreshFailed()
-    _refreshController.refreshCompleted();
+  // ================================
+  // REFRESH
+  // ================================
+  Future<void> _cargarUsuarios() async {
+    try {
+      await Future.delayed(const Duration(milliseconds: 1000));
 
-    // TODO API fetch
+      // 🔥 TODO: conectar con tu API real
+      // usuarios = response.data;
+
+      setState(() {});
+      _refreshController.refreshCompleted();
+    } catch (e) {
+      _refreshController.refreshFailed();
+    }
   }
 }

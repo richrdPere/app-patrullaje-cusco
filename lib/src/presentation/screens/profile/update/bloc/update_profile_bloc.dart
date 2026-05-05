@@ -16,9 +16,9 @@ class UpdateProfileBloc extends Bloc<UpdateProfileEvent, UpdateProfileState> {
       emit(
         state.copyWith(
           id: event.user?.id,
-          name: BlocFormItem(value: event.user?.nombre ?? ''),
-          lastname: BlocFormItem(value: event.user?.apellidos ?? ''),
-          phone: BlocFormItem(value: event.user?.telefono ?? ''),
+          name: BlocFormItem(value: event.user?.persona.nombres ?? ''),
+          lastname: BlocFormItem(value: event.user?.persona.apellidos ?? ''),
+          phone: BlocFormItem(value: event.user?.persona.telefono ?? ''),
           formKey: formKey,
         ),
       );

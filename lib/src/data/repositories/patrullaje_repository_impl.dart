@@ -41,8 +41,19 @@ class PatrullajeRepositoryImpl implements PatrullajeRepository {
     final socket = socketRepository.getSocket();
 
     void handler(data) {
+      print("RAW SOCKET DATA (nuevo_patrullaje):");
+      print(data);
+      print("🔍 TYPE: ${data.runtimeType}");
+
       try {
         final patrullaje = PatrullajeModel.fromJson(data);
+
+        print("🎯 PARSE OK:");
+        print("ID: ${patrullaje.id}");
+        print("Estado: ${patrullaje.estado}");
+        print("Descripcion: ${patrullaje.descripcion}");
+        print("Zona: ${patrullaje.zona.nombre}");
+
         controller.add(patrullaje);
       } catch (e) {
         controller.addError(e);

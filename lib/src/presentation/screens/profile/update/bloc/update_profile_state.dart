@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:sis_patrullaje_cusco/src/domain/models/persona_model.dart';
 import 'package:sis_patrullaje_cusco/src/domain/models/usuarios.dart';
 import 'package:sis_patrullaje_cusco/src/domain/utils/Resource.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/shared/utils/BlocFormItem.dart';
@@ -13,9 +14,17 @@ class UpdateProfileState extends Equatable {
   final GlobalKey<FormState>? formKey;
 
   toUser() => Usuario(
-    nombre: name.value,
-    apellidos: lastname.value,
-    telefono: phone.value,
+    id: id,
+    username: '',
+    correo: '',
+    estado: true,
+    persona: Persona(
+      id: 0,
+      documentoIdentidad: '',
+      nombres: name.value,
+      apellidos: lastname.value,
+      telefono: phone.value,
+    ),
   );
 
   const UpdateProfileState({

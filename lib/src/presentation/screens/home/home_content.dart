@@ -190,6 +190,10 @@ class _HomeContentState extends State<HomeContent> {
                   style: const TextStyle(color: Colors.white),
                 ),
                 Text(
+                  'Descripción: ${patrullaje.descripcion}',
+                  style: const TextStyle(color: Colors.white),
+                ),
+                Text(
                   getStatusText(homeState.status),
                   style: const TextStyle(color: Colors.white),
                 ),
@@ -208,7 +212,7 @@ class _HomeContentState extends State<HomeContent> {
     if (patrullaje == null) return const SizedBox();
 
     final homeBloc = context.read<HomeBloc>();
-    final trackingBloc = context.read<TrackingBloc>();
+    // final trackingBloc = context.read<TrackingBloc>();
 
     switch (homeState.status) {
       case PatrullajeStatus.asignado:

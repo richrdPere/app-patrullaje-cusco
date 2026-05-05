@@ -30,15 +30,50 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     _nuevoPatrullajeSub?.cancel();
     _finalizadoSub?.cancel();
 
-    _nuevoPatrullajeSub = patrullajeUseCases.listenNewPatrullaje.run().listen((
-      patrullaje,
-    ) {
-      add(NuevoPatrullajeRecibido(patrullaje));
-    });
+    // NUEVO PATRULLAJE
+    _nuevoPatrullajeSub = patrullajeUseCases.listenNewPatrullaje.run().listen(
+      (patrullaje) {
+        try {
+          if (patrullaje == null) {
+            print("⚠️ Patrullaje recibido es NULL");
+            return;
+          }
 
-    _finalizadoSub = patrullajeUseCases.listenPatrullajeEnd.run().listen((id) {
-      add(PatrullajeFinalizadoRecibido(id));
-    });
+          print("📡 NUEVO PATRULLAJE RECIBIDO:");
+          print("ID: ${patrullaje.id}");
+          print("Estado: ${patrullaje.estado}");
+          print("Zona: ${patrullaje.zona.nombre}");
+
+          add(NuevoPatrullajeRecibido(patrullaje));
+        } catch (e) {
+          print("❌ ERROR procesando patrullaje: $e");
+        }
+      },
+      onError: (error) {
+        print("❌ ERROR EN STREAM nuevo patrullaje: $error");
+      },
+    );
+
+    // FINALIZADO
+    _finalizadoSub = patrullajeUseCases.listenPatrullajeEnd.run().listen(
+      (id) {
+        try {
+          print("📡 PATRULLAJE FINALIZADO RECIBIDO: $id");
+
+          if (id == null) {
+            print("⚠️ ID finalizado es NULL");
+            return;
+          }
+
+          add(PatrullajeFinalizadoRecibido(id));
+        } catch (e) {
+          print("❌ ERROR procesando finalizado: $e");
+        }
+      },
+      onError: (error) {
+        print("❌ ERROR EN STREAM finalizado: $error");
+      },
+    );
   }
 
   // =========================

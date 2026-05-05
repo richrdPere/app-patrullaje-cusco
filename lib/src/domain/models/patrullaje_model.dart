@@ -7,6 +7,7 @@ class PatrullajeModel extends PatrullajeEntity {
     required super.horaInicio,
     required super.horaFin,
     required super.estado,
+    required super.descripcion,
     required super.zona,
     required super.unidad,
   });
@@ -18,7 +19,7 @@ class PatrullajeModel extends PatrullajeEntity {
       horaInicio: json['hora_inicio'] ?? '',
       horaFin: json['hora_fin'] ?? '',
       estado: json['estado'] ?? '',
-
+      descripcion: json['descripcion'] ?? '',
       zona: Zona(
         nombre: json['zona']?['nombre'] ?? '',
         descripcion: json['zona']?['descripcion'] ?? '',

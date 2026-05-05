@@ -70,7 +70,7 @@ class ProfileUpdateContent extends StatelessWidget {
               icon: Icons.person,
               backgroundColor: Colors.grey[200]!,
               margin: EdgeInsetsGeometry.only(left: 30, right: 30, top: 15),
-              initialValue: user.nombre,
+              initialValue: user.persona.nombres,
               onChanged: (String text) {
                 print("NAME: $text");
                 context.read<UpdateProfileBloc>().add(
@@ -88,7 +88,7 @@ class ProfileUpdateContent extends StatelessWidget {
               icon: Icons.person_outline,
               backgroundColor: Colors.grey[200]!,
               margin: EdgeInsetsGeometry.only(left: 30, right: 30, top: 15),
-              initialValue: user.apellidos,
+              initialValue: user.persona.apellidos,
               onChanged: (String text) {
                 context.read<UpdateProfileBloc>().add(
                   LastNameChanged(lastname: BlocFormItem(value: text)),
@@ -105,7 +105,7 @@ class ProfileUpdateContent extends StatelessWidget {
               icon: Icons.phone,
               backgroundColor: Colors.grey[200]!,
               margin: EdgeInsetsGeometry.only(left: 30, right: 30, top: 15),
-              initialValue: user.telefono,
+              initialValue: user.persona.telefono,
               onChanged: (String text) {
                 context.read<UpdateProfileBloc>().add(
                   PhoneNumberChanged(phone: BlocFormItem(value: text)),

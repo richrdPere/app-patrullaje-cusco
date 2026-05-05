@@ -4,6 +4,7 @@ class PatrullajeEntity {
   final String horaInicio;
   final String horaFin;
   final String estado;
+  final String descripcion;
   final Zona zona;
   final Unidad unidad;
 
@@ -13,6 +14,7 @@ class PatrullajeEntity {
     required this.horaInicio,
     required this.horaFin,
     required this.estado,
+    required this.descripcion,
     required this.zona,
     required this.unidad,
   });

@@ -1,3 +1,5 @@
+// ignore_for_file: non_constant_identifier_names
+
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
@@ -49,14 +51,16 @@ class UsersService {
       Uri url = Uri.http("$API_UPDATE_USER$id");
 
       // 3.- Body
-      String body = json.encode({
-        'nombre': user.nombre,
-        'apellidos': user.apellidos,
-        'telefono': user.telefono,
-        'direccion': user.direccion,
-        'departamento': user.departamento,
-        'provincia': user.provincia,
-        'distrito': user.distrito,
+      final body = json.encode({
+        "persona": {
+          "nombres": user.persona.nombres,
+          "apellidos": user.persona.apellidos,
+          "telefono": user.persona.telefono,
+          "direccion": user.persona.direccion,
+          "departamento": user.persona.departamento,
+          "provincia": user.persona.provincia,
+          "distrito": user.persona.distrito,
+        },
       });
 
       // 4.- Request
@@ -65,12 +69,18 @@ class UsersService {
 
       // 5.- Response
       if (resp.statusCode == 200) {
-        Usuario userResponse = Usuario.fromJson(data);
-        // return patrullajeResp;
-        return Success(userResponse);
+        // Tu backend devuelve solo message normalmente
+        // si no devuelve usuario → no intentes mapear directo
+
+        if (data['usuario'] != null) {
+          final userResponse = Usuario.fromJson(data['usuario']);
+          return Success(userResponse);
+        }
+
+        // fallback (si solo viene message)
+        return Success(user);
       } else {
         return ErrorData(data['message'] ?? "Error al actualizar usuario");
-        //  return ErrorData(listToString(data['message']));
       }
     } catch (e) {
       print("Error: $e");

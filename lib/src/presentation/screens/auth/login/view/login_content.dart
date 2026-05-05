@@ -74,10 +74,10 @@ class _FormState extends State<_Form> {
           children: [
             // Correo
             CustomInput(
-              icon: Icons.mail_outline,
-              placeholder: 'Correo',
+              icon: Icons.person_outline,
+              placeholder: 'Username',
               textController: emailCtrl,
-              keyboardType: TextInputType.emailAddress,
+              keyboardType: TextInputType.number,
               isPassword: false,
               onChanged: (value) {
                 bloc.add(UsernameChanged(username: BlocFormItem(value: value)));

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:sis_patrullaje_cusco/src/domain/models/usuarios.dart';
 
+
 class AuthResponse {
   String message;
   String token;
