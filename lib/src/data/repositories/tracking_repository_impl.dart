@@ -1,24 +1,35 @@
+import 'package:sis_patrullaje_cusco/src/domain/entities/location_entity.dart';
+import 'package:sis_patrullaje_cusco/src/domain/repositories/geolocator_repository.dart';
+import 'package:sis_patrullaje_cusco/src/domain/repositories/socket_repository.dart';
+import 'package:sis_patrullaje_cusco/src/domain/repositories/tracking_repository.dart';
 
+class TrackingRepositoryImpl implements TrackingRepository {
+  final GeolocatorRepository geolocatorRepository;
+  final SocketRepository socketRepository;
 
-// import 'package:sis_patrullaje_cusco/src/domain/entities/location_entity.dart';
-// import 'package:sis_patrullaje_cusco/src/domain/repositories/tracking_repository.dart';
+  TrackingRepositoryImpl(this.geolocatorRepository, this.socketRepository);
 
-// class TrackingRepositoryImpl implements TrackingRepository {
-//   @override
-//   Stream<LocationEntity> getLocationStream() {
-//     // TODO: implement getLocationStream
-//     throw UnimplementedError();
-//   }
+  @override
+  Stream<LocationEntity> getLocationStream() {
+    return geolocatorRepository.getLocationStream();
+  }
 
-//   @override
-//   Future<void> startTracking() {
-//     // TODO: implement startTracking
-//     throw UnimplementedError();
-//   }
+  @override
+  void sendLocation(LocationEntity location, int patrullajeId) {
+    final s = socketRepository.getSocket();
 
-//   @override
-//   Future<void> stopTracking() {
-//     // TODO: implement stopTracking
-//     throw UnimplementedError();
-//   }
-// }
+    s.emit("tracking", {
+      "lat": location.latitud,
+      "lng": location.longitud,
+
+      "velocidad": location.velocidad,
+      "precision": location.precision,
+
+      "patrullaje_id": patrullajeId,
+
+      "timestamp": DateTime.now().toIso8601String(),
+
+      "tipo": "TRACKING",
+    });
+  }
+}

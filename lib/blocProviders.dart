@@ -4,10 +4,12 @@ import 'package:sis_patrullaje_cusco/injection.dart';
 // import 'package:sis_patrullaje_cusco/src/domain/use_cases/alerta/AlertUseCases.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/auth/AuthUseCases.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/geolocator/GeolocatorUseCases.dart';
+import 'package:sis_patrullaje_cusco/src/domain/use_cases/historial_patrullaje/HistorialPatrullajeUseCases.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/incidente/IncidenteUseCases.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/multimedias/MultimediasUsesCases.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/patrullaje/PatrullajeUseCases.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/socket/SocketUseCases.dart';
+import 'package:sis_patrullaje_cusco/src/domain/use_cases/tracking/TrackingUseCases.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/users/UsersUseCases.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/auth/login/bloc/login_bloc.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/auth/login/bloc/login_event.dart';
@@ -81,9 +83,7 @@ List<BlocProvider> blocProviders = [
 
   BlocProvider<TrackingBloc>(
     create: (BuildContext context) => TrackingBloc(
-      locator<GeolocatorUseCases>(),
-      locator<SocketUseCases>(),
-      locator<PatrullajeUseCases>(),
+      locator<TrackingUseCases>(),
     ),
   ),
 
@@ -98,6 +98,7 @@ List<BlocProvider> blocProviders = [
       locator<IncidenteUseCases>(),
       locator<GeolocatorUseCases>(),
       locator<MultimediasUseCases>(),
+      locator<HistorialPatrullajeUseCases>(),
     ),
   ),
 ];

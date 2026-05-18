@@ -58,3 +58,14 @@ class UseCurrentLocationEvent extends MapaEvent {}
 class TogglePickingLocationEvent extends MapaEvent {}
 
 class ToggleAutoCenterEvent extends MapaEvent {}
+
+class UpdateTrackingLocationEvent extends MapaEvent {
+
+  final double lat;
+  final double lng;
+
+  UpdateTrackingLocationEvent({
+    required this.lat,
+    required this.lng,
+  });
+}

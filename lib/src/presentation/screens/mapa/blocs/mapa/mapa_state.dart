@@ -15,6 +15,7 @@ class MapaState extends Equatable {
   final LatLng? destinationLatLng;
   final String pickUpDescription;
   final String destinationDescription;
+  final LatLng? trackingLatLng;
 
   final Set<Polygon> polygons;
   final Map<PolylineId, Polyline> polylines;
@@ -33,6 +34,7 @@ class MapaState extends Equatable {
     this.destinationLatLng,
     this.pickUpDescription = '',
     this.destinationDescription = '',
+    this.trackingLatLng,
     this.markers = const <MarkerId, Marker>{},
 
     this.polygons = const {},
@@ -55,6 +57,7 @@ class MapaState extends Equatable {
     Map<PolylineId, Polyline>? polylines,
     bool? isPickingLocation,
     bool? isAutoCentering,
+    LatLng? trackingLatLng,
   }) {
     return MapaState(
       position: position ?? this.position,
@@ -67,6 +70,7 @@ class MapaState extends Equatable {
       pickUpDescription: pickUpDescription ?? this.pickUpDescription,
       destinationDescription:
           destinationDescription ?? this.destinationDescription,
+      trackingLatLng: trackingLatLng ?? this.trackingLatLng,
 
       polygons: polygons ?? this.polygons,
       polylines: polylines ?? this.polylines,
@@ -86,6 +90,7 @@ class MapaState extends Equatable {
     destinationLatLng,
     pickUpDescription,
     destinationDescription,
+    trackingLatLng,
     polygons,
     polylines,
     isPickingLocation,

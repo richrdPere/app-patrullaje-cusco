@@ -8,37 +8,20 @@ abstract class TrackingEvent extends Equatable {
   List<Object?> get props => [];
 }
 
-// Iniciar patrullaje
-class StartPatrullajeEvent extends TrackingEvent {
-  final int patrullajeId;
-
-  const StartPatrullajeEvent(this.patrullajeId);
-
-  @override
-  List<Object?> get props => [patrullajeId];
-}
-
-// Finalizar patrullaje
-class EndPatrullajeEvent extends TrackingEvent {
-  final int patrullajeId;
-
-  const EndPatrullajeEvent(this.patrullajeId);
-
-  @override
-  List<Object?> get props => [patrullajeId];
-}
-
 // Iniciar tracking
-class StartTrackingEvent extends TrackingEvent {}
+class StartTrackingEvent extends TrackingEvent {
+  final int patrullajeId;
+
+  const StartTrackingEvent(this.patrullajeId);
+}
 
 // Detener tracking
 class StopTrackingEvent extends TrackingEvent {}
 
+// Actualizar ubicacion
 class LocationUpdatedEvent extends TrackingEvent {
   final LocationEntity location;
   const LocationUpdatedEvent(this.location);
 }
 
-// Enviar boton de alerta
-class SendAlertEvent extends TrackingEvent {}
 

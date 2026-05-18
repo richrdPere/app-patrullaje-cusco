@@ -9,15 +9,17 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
   PatrullajeUseCases patrullajeUseCases;
 
   StreamSubscription? _nuevoPatrullajeSub;
-  StreamSubscription? _finalizadoSub;
+  StreamSubscription? _actualizadoSub;
 
   HomeBloc(this.patrullajeUseCases) : super(HomeState()) {
     on<LoadPatrullajeActivo>(_onLoadPatrullajeActivo);
-    on<NuevoPatrullajeRecibido>(_onNuevoPatrullaje);
-    on<PatrullajeFinalizadoRecibido>(_onPatrullajeFinalizado);
-    on<AceptarPatrullaje>(_onAceptarPatrullaje);
     // INICIAR LISTENERS
     on<InitSocketListeners>(_onInitSocketListeners);
+
+    on<NuevoPatrullajeRecibido>(_onNuevoPatrullaje);
+    on<PatrullajeActualizadoRecibido>(_onPatrullajeActualizado);
+    on<AceptarPatrullaje>(_onAceptarPatrullaje);
+    on<FinalizarPatrullaje>(_onFinalizarPatrullaje);
   }
 
   // SOCKET LISTENERS
@@ -25,55 +27,24 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     InitSocketListeners event,
     Emitter<HomeState> emit,
   ) {
-    print("Inicializando listeners de socket...");
+    // print("Inicializando listeners de socket...");
 
     _nuevoPatrullajeSub?.cancel();
-    _finalizadoSub?.cancel();
+    _actualizadoSub?.cancel();
 
     // NUEVO PATRULLAJE
-    _nuevoPatrullajeSub = patrullajeUseCases.listenNewPatrullaje.run().listen(
-      (patrullaje) {
-        try {
-          if (patrullaje == null) {
-            print("⚠️ Patrullaje recibido es NULL");
-            return;
-          }
+    _nuevoPatrullajeSub = patrullajeUseCases.listenNewPatrullaje.run().listen((
+      patrullaje,
+    ) {
+      add(NuevoPatrullajeRecibido(patrullaje));
+    });
 
-          print("📡 NUEVO PATRULLAJE RECIBIDO:");
-          print("ID: ${patrullaje.id}");
-          print("Estado: ${patrullaje.estado}");
-          print("Zona: ${patrullaje.zona.nombre}");
-
-          add(NuevoPatrullajeRecibido(patrullaje));
-        } catch (e) {
-          print("❌ ERROR procesando patrullaje: $e");
-        }
-      },
-      onError: (error) {
-        print("❌ ERROR EN STREAM nuevo patrullaje: $error");
-      },
-    );
-
-    // FINALIZADO
-    _finalizadoSub = patrullajeUseCases.listenPatrullajeEnd.run().listen(
-      (id) {
-        try {
-          print("📡 PATRULLAJE FINALIZADO RECIBIDO: $id");
-
-          if (id == null) {
-            print("⚠️ ID finalizado es NULL");
-            return;
-          }
-
-          add(PatrullajeFinalizadoRecibido(id));
-        } catch (e) {
-          print("❌ ERROR procesando finalizado: $e");
-        }
-      },
-      onError: (error) {
-        print("❌ ERROR EN STREAM finalizado: $error");
-      },
-    );
+    // ACTUALIZADO PATRULLAJE
+    _actualizadoSub = patrullajeUseCases.listenPatrullajeActualizado
+        .run()
+        .listen((patrullaje) {
+          add(PatrullajeActualizadoRecibido(patrullaje));
+        });
   }
 
   // =========================
@@ -96,9 +67,8 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
           state.copyWith(
             isLoading: false,
             patrullaje: patrullaje,
-            activo: true,
-            status: PatrullajeStatus
-                .enCurso, // OJO: si el patrullaje activo se carga desde el backend, asumimos que ya está en curso. Si queremos ser más precisos, podríamos revisar el estado del patrullaje y asignar el status correcto (asignado, aceptando, enCurso). Pero para simplificar, lo dejamos como enCurso
+            // activo: true,
+            status: mapEstado(patrullaje.estado),
           ),
         );
       } else {
@@ -134,8 +104,34 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       state.copyWith(
         patrullaje: event.patrullaje,
         status: PatrullajeStatus.asignado,
-        activo: true,
-        success: true,
+        isLoading: false,
+      ),
+    );
+  }
+
+  void _onPatrullajeActualizado(
+    PatrullajeActualizadoRecibido event,
+    Emitter<HomeState> emit,
+  ) {
+    final nuevoEstado = mapEstado(event.patrullaje.estado);
+
+    // SI FINALIZA → limpiar
+    if (nuevoEstado == PatrullajeStatus.finalizado) {
+      emit(
+        state.copyWith(
+          patrullaje: null,
+          status: PatrullajeStatus.finalizado,
+          isLoading: false,
+        ),
+      );
+      return;
+    }
+
+    emit(
+      state.copyWith(
+        patrullaje: event.patrullaje,
+        status: nuevoEstado,
+        isLoading: false,
       ),
     );
   }
@@ -148,65 +144,65 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     Emitter<HomeState> emit,
   ) async {
     emit(state.copyWith(isLoading: true, status: PatrullajeStatus.aceptando));
-    print("Aceptando patrullaje...");
 
-    try {
-      // 1. Emitir al backend
-      await patrullajeUseCases.startPatrullajeSocket.run(event.patrullajeId);
-
-      // 2. Unirse al room
-      await patrullajeUseCases.joinPatrullaje.run(event.patrullajeId);
-
-      emit(
-        state.copyWith(
-          isLoading: false,
-          status: PatrullajeStatus
-              .enCurso, // asumimos que al aceptar el patrullaje, este pasa directamente a enCurso. Si queremos ser más precisos, podríamos esperar una confirmación del backend vía socket para cambiar el estado a enCurso, pero para simplificarlo, lo hacemos de inmediato.
-          activo: true,
-        ),
-      );
-    } catch (e) {
-      emit(
-        state.copyWith(
-          isLoading: false,
-          status: PatrullajeStatus.error,
-          error: e.toString(),
-        ),
-      );
-    }
+    patrullajeUseCases.startPatrullajeSocket.run(event.patrullajeId);
+    patrullajeUseCases.joinPatrullaje.run(event.patrullajeId);
   }
 
   // =========================
-  // 4. FINALIZADO
+  // 4. FINALIZAR PATRULLAJE
   // =========================
-  void _onPatrullajeFinalizado(
-    PatrullajeFinalizadoRecibido event,
+  Future<void> _onFinalizarPatrullaje(
+    FinalizarPatrullaje event,
     Emitter<HomeState> emit,
   ) async {
-    print("Patrullaje finalizado");
+    emit(state.copyWith(isLoading: true));
 
     try {
-      await patrullajeUseCases.leavePatrullaje.run(event.patrullajeId);
+      await patrullajeUseCases.endPatrullaje.run(event.patrullajeId);
 
       emit(
         state.copyWith(
+          isLoading: false,
           patrullaje: null,
-          activo: false,
           status: PatrullajeStatus.finalizado,
         ),
       );
     } catch (e) {
-      emit(state.copyWith(status: PatrullajeStatus.error, error: e.toString()));
+      emit(
+        state.copyWith(
+          isLoading: false,
+          error: e.toString(),
+          status: PatrullajeStatus.error,
+        ),
+      );
     }
   }
 
+ 
   // =========================
   // CLEANUP
   // =========================
+
+  PatrullajeStatus mapEstado(String estado) {
+    switch (estado) {
+      case 'ASIGNADO':
+        return PatrullajeStatus.asignado;
+      case 'ACEPTADO':
+        return PatrullajeStatus.aceptando;
+      case 'EN_CURSO':
+        return PatrullajeStatus.enCurso;
+      case 'FINALIZADO':
+        return PatrullajeStatus.finalizado;
+      default:
+        return PatrullajeStatus.sinAsignacion;
+    }
+  }
+
   @override
   Future<void> close() {
     _nuevoPatrullajeSub?.cancel();
-    _finalizadoSub?.cancel();
+    _actualizadoSub?.cancel();
     return super.close();
   }
 }

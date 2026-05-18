@@ -23,15 +23,15 @@ class MapaBloc extends Bloc<MapaEvent, MapaState> {
 
     on<FindPosition>((event, emit) async {
       try {
+        // 1. OBTENER GPS
         Position position = await geolocatorUseCases.findPosition.run();
 
         final latLng = LatLng(position.latitude, position.longitude);
 
-        // Obtener dirección real
-        final placemarkData = await geolocatorUseCases.getPlaceMarkData.run(
-          CameraPosition(target: latLng, zoom: 15),
-        );
+        print('📍 Position LAT ${position.latitude}');
+        print('📍 Position LNG ${position.longitude}');
 
+        // 2. MOVER CÁMARA
         // Mover cámara
         add(
           ChangeMapCameraPosition(
@@ -39,6 +39,17 @@ class MapaBloc extends Bloc<MapaEvent, MapaState> {
             lng: position.longitude,
           ),
         );
+
+        // 3. GEOCODING SEGURO
+        PlacemarkData? placemarkData;
+
+        try {
+          placemarkData = await geolocatorUseCases.getPlaceMarkData.run(
+            CameraPosition(target: latLng, zoom: 15),
+          );
+        } catch (e) {
+          print("❌ ERROR GEOCODING: $e");
+        }
 
         // BitmapDescriptor imageMarker = await geolocatorUseCases.createMarker.run(
         //   'assets/img/location_blue.png',
@@ -60,7 +71,7 @@ class MapaBloc extends Bloc<MapaEvent, MapaState> {
             // ORIGEN INICIAL
             // markers: {marker.markerId: marker},
             pickUpLatLng: LatLng(position.latitude, position.longitude),
-            pickUpDescription: placemarkData.address,
+            pickUpDescription: placemarkData?.address ?? 'Mi ubicación actual',
             placemarkData: placemarkData,
 
             // DESTINO LIMPIO
@@ -74,7 +85,6 @@ class MapaBloc extends Bloc<MapaEvent, MapaState> {
 
         print('Position LAT ${position.latitude}');
         print('Position lng ${position.longitude}');
-        
       } catch (e) {
         print("ERROR INIT POSITION: $e");
 
@@ -253,6 +263,34 @@ class MapaBloc extends Bloc<MapaEvent, MapaState> {
 
     on<ToggleAutoCenterEvent>((event, emit) {
       emit(state.copyWith(isAutoCentering: !state.isAutoCentering));
+    });
+
+    on<UpdateTrackingLocationEvent>((event, emit) async {
+      final latLng = LatLng(event.lat, event.lng);
+
+      // - MARKER TRACKING
+      final marker = Marker(
+        markerId: const MarkerId("tracking"),
+        position: latLng,
+        infoWindow: const InfoWindow(title: "Mi ubicación"),
+      );
+
+      emit(
+        state.copyWith(
+          // TRACKING EN TIEMPO REAL
+          trackingLatLng: latLng,
+
+          // MARKER VISUAL
+          markers: {...state.markers, marker.markerId: marker},
+        ),
+      );
+
+      print("📍 MAPA actualizado: ${event.lat}, ${event.lng}");
+
+      // - AUTO CENTER
+      if (state.isAutoCentering) {
+        add(ChangeMapCameraPosition(lat: event.lat, lng: event.lng));
+      }
     });
   }
 }

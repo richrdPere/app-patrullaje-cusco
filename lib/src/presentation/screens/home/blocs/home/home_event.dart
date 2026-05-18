@@ -14,15 +14,20 @@ class NuevoPatrullajeRecibido extends HomeEvent {
   NuevoPatrullajeRecibido(this.patrullaje);
 }
 
-class PatrullajeFinalizadoRecibido extends HomeEvent {
-  final int patrullajeId;
-
-  PatrullajeFinalizadoRecibido(this.patrullajeId);
+class PatrullajeActualizadoRecibido extends HomeEvent {
+  final PatrullajeModel patrullaje;
+  PatrullajeActualizadoRecibido(this.patrullaje);
 }
 
-// ACCIONES DEL USUARIO
+// USER
 class AceptarPatrullaje extends HomeEvent {
   final int patrullajeId;
 
   AceptarPatrullaje(this.patrullajeId);
+}
+
+class FinalizarPatrullaje extends HomeEvent {
+  final int patrullajeId;
+
+  FinalizarPatrullaje(this.patrullajeId);
 }

@@ -93,6 +93,33 @@ class PatrullajeRepositoryImpl implements PatrullajeRepository {
   }
 
   @override
+  Stream<PatrullajeModel> listenPatrullajeActualizado() {
+    final controller = StreamController<PatrullajeModel>.broadcast();
+    final socket = socketRepository.getSocket();
+
+    void handler(data) {
+      try {
+        print("📡 SOCKET patrullaje_actualizado:");
+        print(data);
+
+        final patrullaje = PatrullajeModel.fromJson(data);
+
+        controller.add(patrullaje);
+      } catch (e) {
+        controller.addError(e);
+      }
+    }
+
+    socket.on('patrullaje_actualizado', handler);
+
+    controller.onCancel = () {
+      socket.off('patrullaje_actualizado', handler);
+    };
+
+    return controller.stream;
+  }
+
+  @override
   void iniciarPatrullajeSocket(int patrullajeId) {
     final socket = socketRepository.getSocket();
 

@@ -20,37 +20,44 @@ class HomeContent extends StatefulWidget {
 
 class _HomeContentState extends State<HomeContent> {
   @override
-  void initState() {
-    super.initState();
-
-    // WidgetsBinding.instance.addPostFrameCallback((_) {
-    //   context.read<HomeBloc>().add(LoadPatrullajeActivo());
-    // });
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return BlocListener<HomeBloc, HomeState>(
-      listenWhen: (prev, curr) => prev.status != curr.status,
-      listener: _handlePatrullajeListener,
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<HomeBloc, HomeState>(
+          listenWhen: (prev, curr) {
+            return prev.status != curr.status ||
+                prev.patrullaje?.id != curr.patrullaje?.id;
+          },
+          listener: _handlePatrullajeListener,
+        ),
 
+        BlocListener<TrackingBloc, TrackingState>(
+          listenWhen: (prev, curr) {
+            return prev.lastLocation != curr.lastLocation;
+          },
+          listener: (context, trackingState) {
+            final location = trackingState.lastLocation;
+
+            if (location == null) return;
+
+            print("📍 UI recibió nueva ubicación");
+
+            context.read<MapaBloc>().add(
+              UpdateTrackingLocationEvent(
+                lat: location.latitud,
+                lng: location.longitud,
+              ),
+            );
+          },
+        ),
+      ],
       child: BlocBuilder<HomeBloc, HomeState>(
         builder: (context, homeState) {
-          // LOADING
           if (homeState.isLoading) return _buildLoading();
 
-          // ERROR
           if (homeState.status == PatrullajeStatus.error) {
             return _buildError(homeState.error ?? 'Error desconocido');
           }
-
-          // DATA
-          // final patrullaje = homeState.patrullaje;
 
           return BlocBuilder<TrackingBloc, TrackingState>(
             builder: (context, trackingState) {
@@ -65,6 +72,9 @@ class _HomeContentState extends State<HomeContent> {
     );
   }
 
+  // ==========================================
+  // 🎯 ORQUESTACIÓN DESDE UI (REACTIVA)
+  // ==========================================
   void _handlePatrullajeListener(BuildContext context, HomeState state) {
     final patrullaje = state.patrullaje;
 
@@ -78,11 +88,12 @@ class _HomeContentState extends State<HomeContent> {
         break;
 
       case PatrullajeStatus.enCurso:
-        context.read<TrackingBloc>().add(StartPatrullajeEvent(patrullaje!.id));
+        // SOLO TRACKING (NO lógica de negocio)
+        context.read<TrackingBloc>().add(StartTrackingEvent(patrullaje!.id));
         break;
 
       case PatrullajeStatus.finalizado:
-        context.read<TrackingBloc>().add(EndPatrullajeEvent(patrullaje!.id));
+        context.read<TrackingBloc>().add(StopTrackingEvent());
         break;
 
       default:
@@ -90,30 +101,37 @@ class _HomeContentState extends State<HomeContent> {
     }
   }
 
+  // ==========================================
+  // UI
+  // ==========================================
   Widget _buildBody(
     BuildContext context,
     HomeState homeState,
     TrackingState trackingState,
   ) {
-    // final patrullaje = homeState.patrullaje;
-
-    if (homeState.status == PatrullajeStatus.sinAsignacion) {
-      return _buildEmptyState();
-    }
+    final isEmpty = homeState.status == PatrullajeStatus.sinAsignacion;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
-          _buildHeader(homeState, trackingState),
-          const SizedBox(height: 20),
-          _buildMainButton(context, homeState, trackingState),
-          const SizedBox(height: 20),
-          _buildLocationCard(trackingState),
-          const SizedBox(height: 20),
+          if (isEmpty) ...[
+            SizedBox(
+              height: MediaQuery.of(context).size.height * 0.3,
+              child: Center(child: _buildEmptyState()),
+            ),
+          ] else ...[
+            _buildHeader(homeState),
+            const SizedBox(height: 20),
+            _buildMainButton(context, homeState),
+            const SizedBox(height: 20),
+            _buildLocationCard(trackingState),
+            const SizedBox(height: 20),
+          ],
+
           _buildStats(),
           const SizedBox(height: 20),
-          // _quickAction(),
+
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
@@ -127,31 +145,10 @@ class _HomeContentState extends State<HomeContent> {
     );
   }
 
-  Widget _buildEmptyState() {
-    return Scaffold(
-      // appBar: CustomAppBar(),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: const [
-            Icon(Icons.directions_walk, size: 80, color: Colors.grey),
-            SizedBox(height: 20),
-            Text(
-              'Sin patrullaje asignado',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 10),
-            Text(
-              'Espera una asignación desde la central',
-              style: TextStyle(color: Colors.grey),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHeader(HomeState homeState, TrackingState trackingState) {
+  // ==========================================
+  // HEADER
+  // ==========================================
+  Widget _buildHeader(HomeState homeState) {
     final patrullaje = homeState.patrullaje;
 
     String getStatusText(PatrullajeStatus status) {
@@ -202,17 +199,15 @@ class _HomeContentState extends State<HomeContent> {
     );
   }
 
-  Widget _buildMainButton(
-    BuildContext context,
-    HomeState homeState,
-    TrackingState trackingState,
-  ) {
+  // ==========================================
+  // BOTÓN PRINCIPAL
+  // ==========================================
+  Widget _buildMainButton(BuildContext context, HomeState homeState) {
     final patrullaje = homeState.patrullaje;
 
     if (patrullaje == null) return const SizedBox();
 
     final homeBloc = context.read<HomeBloc>();
-    // final trackingBloc = context.read<TrackingBloc>();
 
     switch (homeState.status) {
       case PatrullajeStatus.asignado:
@@ -227,8 +222,8 @@ class _HomeContentState extends State<HomeContent> {
       case PatrullajeStatus.enCurso:
         return ElevatedButton.icon(
           onPressed: () {
-            //  trackingBloc.add(EndPatrullajeEvent(patrullaje.id));
-            homeBloc.add(PatrullajeFinalizadoRecibido(patrullaje.id));
+            // 👉 SOLO Home controla esto
+            homeBloc.add(FinalizarPatrullaje(patrullaje.id));
           },
           icon: const Icon(Icons.stop),
           label: const Text('Finalizar Patrullaje'),
@@ -242,6 +237,9 @@ class _HomeContentState extends State<HomeContent> {
     }
   }
 
+  // ==========================================
+  // LOCATION
+  // ==========================================
   Widget _buildLocationCard(TrackingState trackingState) {
     if (trackingState.lastLocation == null) return const SizedBox();
 
@@ -255,6 +253,25 @@ class _HomeContentState extends State<HomeContent> {
     );
   }
 
+  Widget _buildEmptyState() {
+    return const Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(Icons.directions_walk, size: 80, color: Colors.grey),
+        SizedBox(height: 20),
+        Text(
+          'Sin patrullaje asignado',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        SizedBox(height: 10),
+        Text(
+          'Espera una asignación desde la central',
+          style: TextStyle(color: Colors.grey),
+        ),
+      ],
+    );
+  }
+
   Widget _buildLoading() {
     return const Scaffold(body: Center(child: CircularProgressIndicator()));
   }
@@ -262,15 +279,19 @@ class _HomeContentState extends State<HomeContent> {
   Widget _buildError(String error) {
     return Scaffold(
       body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Text(
-            error,
-            style: const TextStyle(color: Colors.red, fontSize: 16),
-            textAlign: TextAlign.center,
-          ),
-        ),
+        child: Text(error, style: const TextStyle(color: Colors.red)),
       ),
+    );
+  }
+
+  Widget _buildStats() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        _buildStatCard('Incidencias', '3', Colors.red),
+        _buildStatCard('Alertas', '2', Colors.orange),
+        _buildStatCard('Recorrido', '75%', Colors.green),
+      ],
     );
   }
 
@@ -297,17 +318,6 @@ class _HomeContentState extends State<HomeContent> {
         CircleAvatar(radius: 25, child: Icon(icon)),
         const SizedBox(height: 5),
         Text(label),
-      ],
-    );
-  }
-
-  Widget _buildStats() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        _buildStatCard('Incidencias', '3', Colors.red),
-        _buildStatCard('Alertas', '2', Colors.orange),
-        _buildStatCard('Recorrido', '75%', Colors.green),
       ],
     );
   }

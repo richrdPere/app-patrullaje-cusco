@@ -7,33 +7,33 @@ class HomeState extends Equatable {
   final PatrullajeStatus status;
   final bool isLoading;
   final String? error;
-  final bool success;
-  final bool activo; // o estado: "INICIADO", "FINALIZADO"
+  // final bool success;
+  // final bool activo; // o estado: "INICIADO", "FINALIZADO"
 
   const HomeState({
     this.patrullaje,
     this.status = PatrullajeStatus.sinAsignacion,
     this.isLoading = false,
-    this.success = false,
-    this.activo = false,
     this.error,
+    // this.success = false,
+    // this.activo = false,
   });
 
   HomeState copyWith({
     bool? isLoading,
     PatrullajeModel? patrullaje,
     PatrullajeStatus? status,
-    bool? success,
-    bool? activo,
     String? error,
+    // bool? success,
+    // bool? activo,
   }) {
     return HomeState(
       patrullaje: patrullaje ?? this.patrullaje,
       status: status ?? this.status,
       isLoading: isLoading ?? this.isLoading,
-      success: success ?? this.success,
-      activo: activo ?? this.activo,
       error: error ?? this.error,
+      // success: success ?? this.success,
+      // activo: activo ?? this.activo,
     );
   }
 
@@ -42,8 +42,8 @@ class HomeState extends Equatable {
     patrullaje,
     status,
     isLoading,
-    success,
-    activo,
     error,
+    // success,
+    // activo,
   ];
 }

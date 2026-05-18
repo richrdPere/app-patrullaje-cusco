@@ -10,7 +10,8 @@ abstract class PatrullajeRepository {
 
   // Socket - listen
   Stream<PatrullajeModel> listenNuevoPatrullaje();
-  Stream<int> listenPatrullajeFinalizado();
+  Stream<PatrullajeModel> listenPatrullajeActualizado();
+  Stream<int> listenPatrullajeFinalizado(); // ELIMINAR
 
   // Socket - emit
   void iniciarPatrullajeSocket(int patrullajeId);

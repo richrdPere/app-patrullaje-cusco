@@ -4,6 +4,7 @@ import 'package:sis_patrullaje_cusco/src/domain/use_cases/patrullaje/patrullaje_
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/patrullaje/patrullaje_use_cases/JoinPatrullajeUseCase.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/patrullaje/patrullaje_use_cases/LeavePatrullajeUseCase.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/patrullaje/patrullaje_use_cases/ListenNewPatrullajeUseCase.dart';
+import 'package:sis_patrullaje_cusco/src/domain/use_cases/patrullaje/patrullaje_use_cases/ListenPatrullajeActualizadoUseCase.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/patrullaje/patrullaje_use_cases/ListenPatrullajeEndUseCase.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/patrullaje/patrullaje_use_cases/SendLocationUseCase.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/patrullaje/patrullaje_use_cases/StartPatrullajeSocketUseCase.dart';
@@ -15,6 +16,8 @@ class PatrullajeUseCases {
   StartPatrullajeUseCase startPatrullaje;
   SendLocationUseCase sendLocation;
   ListenNewPatrullajeUseCase listenNewPatrullaje;
+  ListenPatrullajeActualizadoUseCase listenPatrullajeActualizado;
+
   ListenPatrullajeEndUseCase listenPatrullajeEnd;
   StartPatrullajeSocketUseCase startPatrullajeSocket;
   EndPatrullajeSocketUseCase endPatrullajeSocket;
@@ -27,6 +30,7 @@ class PatrullajeUseCases {
     required this.startPatrullaje,
     required this.sendLocation,
     required this.listenNewPatrullaje,
+    required this.listenPatrullajeActualizado,
     required this.listenPatrullajeEnd,
     required this.startPatrullajeSocket,
     required this.endPatrullajeSocket,

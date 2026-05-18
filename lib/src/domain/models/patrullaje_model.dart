@@ -20,16 +20,16 @@ class PatrullajeModel extends PatrullajeEntity {
       horaFin: json['hora_fin'] ?? '',
       estado: json['estado'] ?? '',
       descripcion: json['descripcion'] ?? '',
+
       zona: Zona(
         nombre: json['zona']?['nombre'] ?? '',
         descripcion: json['zona']?['descripcion'] ?? '',
         riesgo: json['zona']?['riesgo'] ?? '',
-
         coordenadas: (json['zona']?['coordenadas'] as List? ?? [])
             .map(
               (c) => Coordenada(
-                lat: (c['lat'] ?? 0).toDouble(),
-                lng: (c['lng'] ?? 0).toDouble(),
+                lat: _toDouble(c['lat']),
+                lng: _toDouble(c['lng']),
               ),
             )
             .toList(),
@@ -42,4 +42,11 @@ class PatrullajeModel extends PatrullajeEntity {
       ),
     );
   }
+}
+
+double _toDouble(dynamic value) {
+  if (value == null) return 0;
+  if (value is double) return value;
+  if (value is int) return value.toDouble();
+  return double.tryParse(value.toString()) ?? 0;
 }

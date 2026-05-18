@@ -50,11 +50,12 @@ class Unidad {
 }
 
 
+
 enum PatrullajeStatus {
   sinAsignacion,
   asignado,
   aceptando,
   enCurso,
   finalizado,
-  error
+  error,
 }

@@ -13,6 +13,7 @@ class IncidenteState extends Equatable {
   final List<File> archivos;
   final double? latitud;
   final double? longitud;
+  final String? direccion;
 
   const IncidenteState({
     this.isLoading = false,
@@ -22,6 +23,7 @@ class IncidenteState extends Equatable {
     this.archivos = const [],
     this.latitud,
     this.longitud,
+    this.direccion,
   });
 
   IncidenteState copyWith({
@@ -32,6 +34,7 @@ class IncidenteState extends Equatable {
     List<File>? archivos,
     double? latitud,
     double? longitud,
+    String? direccion,
   }) {
     return IncidenteState(
       isLoading: isLoading ?? this.isLoading,
@@ -41,6 +44,7 @@ class IncidenteState extends Equatable {
       archivos: archivos ?? this.archivos,
       latitud: latitud ?? this.latitud,
       longitud: longitud ?? this.longitud,
+      direccion: direccion ?? this.direccion,
     );
   }
 
@@ -53,5 +57,6 @@ class IncidenteState extends Equatable {
     archivos,
     latitud,
     longitud,
+    direccion,
   ];
 }

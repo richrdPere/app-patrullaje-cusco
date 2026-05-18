@@ -14,7 +14,6 @@ import 'package:sis_patrullaje_cusco/src/domain/models/incidencia_model.dart';
 
 class IncidenteService {
   final AuthRepository authRepository;
-
   IncidenteService(this.authRepository);
 
   // APIS

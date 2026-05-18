@@ -9,6 +9,8 @@ import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/home/ho
 import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/socket/socket_bloc.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/socket/socket_event.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/socket/socket_state.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/tracking/tracking_bloc.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/tracking/tracking_event.dart';
 
 class AuthListener extends StatelessWidget {
   final Widget child;
@@ -40,6 +42,10 @@ class AuthListener extends StatelessWidget {
             if (state.isLoggedOut) {
               print("Usuario deslogueado");
 
+              // detener tracking
+              context.read<TrackingBloc>().add(StopTrackingEvent());
+
+              // desconectar socket
               socketBloc.add(DisconnectSocketEvent());
             }
           },
@@ -56,8 +62,10 @@ class AuthListener extends StatelessWidget {
             if (socketState.isConnected) {
               print("🟢 Socket conectado → inicializando Home");
 
-              // 🔥 AHORA SÍ ES SEGURO
+              // Inicializar listeners sockets
               homeBloc.add(InitSocketListeners());
+
+              // Recuperar patrullaje activo
               homeBloc.add(LoadPatrullajeActivo());
             } else {
               print("🔴 Socket desconectado");
@@ -71,45 +79,4 @@ class AuthListener extends StatelessWidget {
       child: child,
     );
   }
-
-  // return BlocListener<LoginBloc, LoginState>(
-  //   listenWhen: (prev, curr) =>
-  //       prev.response.runtimeType != curr.response.runtimeType ||
-  //       prev.isLoggedOut != curr.isLoggedOut,
-  //   listener: (context, state) {
-  //     final socketBloc = context.read<SocketBloc>();
-  //     final homeBloc = context.read<HomeBloc>();
-
-  //     // =========================
-  //     // LOGIN
-  //     // =========================
-  //     if (state.response is Success<AuthResponse> && !state.isLoggedOut) {
-  //       print("Usuario autenticado");
-
-  //       // 1. Conectar socket
-  //       socketBloc.add(ConnectSocketEvent());
-
-  //       // 2. Inicializar HOME (IMPORTANTE)
-  //       homeBloc.add(InitSocketListeners());
-
-  //       // 3. Cargar patrullaje actual
-  //       homeBloc.add(LoadPatrullajeActivo());
-  //     }
-
-  //     // =========================
-  //     // LOGOUT
-  //     // =========================
-  //     if (state.isLoggedOut) {
-  //       print("Usuario deslogueado");
-
-  //       // 1. Desconectar socket
-  //       socketBloc.add(DisconnectSocketEvent());
-
-  //       // 2. (Opcional pero recomendable)
-  //       // limpiar estado del home si tienes evento
-  //       // homeBloc.add(ClearHomeState());
-  //     }
-  //   },
-  //   child: child,
-  // );
 }
