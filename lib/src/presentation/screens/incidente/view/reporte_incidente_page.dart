@@ -3,15 +3,21 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 // Models
-import 'package:sis_patrullaje_cusco/src/domain/models/incidencia_model.dart';
+// import 'package:sis_patrullaje_cusco/src/domain/models/incidencia_model.dart';
 
 // Bloc
 import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/bloc/incidente_bloc.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/bloc/incidente_event.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/bloc/incidente_state.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/enums/incidente_tab_enum.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/view/screens/emergencia_screen.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/view/screens/evidencia_screen.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/view/screens/historial_incidentes_screen.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/view/screens/incident_form_screen.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/view/screens/video_screen.dart';
 
 // Widgets
-import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/view/media_preview_widget.dart';
+// import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/view/media_preview_widget.dart';
 
 class ReporteIncidentePage extends StatefulWidget {
   const ReporteIncidentePage({super.key});
@@ -21,72 +27,49 @@ class ReporteIncidentePage extends StatefulWidget {
 }
 
 class _ReporteIncidentePageState extends State<ReporteIncidentePage> {
-  String? tipoSeleccionado;
+  // String? tipoSeleccionado;
 
-  final TextEditingController descripcionCtrl = TextEditingController();
+  // final TextEditingController descripcionCtrl = TextEditingController();
 
-  final List<String> tipos = [
-    'ROBO',
-    'ACCIDENTE',
-    'SOSPECHOSO',
-    'VIOLENCIA',
-    'INCENDIO',
-    'OTRO',
-  ];
+  // final List<String> tipos = [
+  //   'ROBO',
+  //   'ACCIDENTE',
+  //   'SOSPECHOSO',
+  //   'VIOLENCIA',
+  //   'INCENDIO',
+  //   'OTRO',
+  // ];
 
   @override
   void initState() {
     super.initState();
 
     // OBTENER UBICACIÓN AUTOMÁTICAMENTE
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<IncidenteBloc>().add(ObtenerUbicacionEvent());
-    });
+    // WidgetsBinding.instance.addPostFrameCallback((_) {
+    //   context.read<IncidenteBloc>().add(ObtenerUbicacionEvent());
+    // });
   }
 
   @override
   void dispose() {
-    descripcionCtrl.dispose();
+    // descripcionCtrl.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      resizeToAvoidBottomInset: true,
+      // resizeToAvoidBottomInset: true,
       appBar: AppBar(title: const Text('Reportar Incidencia')),
       body: BlocConsumer<IncidenteBloc, IncidenteState>(
-        listener: (context, state) {
-          // SUCCESS
-          if (state.success) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Incidencia reportada correctamente'),
-              ),
-            );
-
-            context.go('/home');
-          }
-
-          // ERROR
-          if (state.error != null) {
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(SnackBar(content: Text(state.error!)));
-          }
-        },
+        listener: _listener,
 
         builder: (context, state) {
-          return Stack(
+          return Column(
             children: [
-              _buildContent(context, state),
+              Expanded(child: _buildCurrentTab(state)),
 
-              // LOADING
-              if (state.isLoading)
-                Container(
-                  color: Colors.black.withOpacity(0.4),
-                  child: const Center(child: CircularProgressIndicator()),
-                ),
+              _buildBottomTabs(context, state),
             ],
           );
         },
@@ -94,273 +77,154 @@ class _ReporteIncidentePageState extends State<ReporteIncidentePage> {
     );
   }
 
-  // =========================================================
-  // CONTENT
-  // =========================================================
-  Widget _buildContent(BuildContext context, IncidenteState state) {
-    return SafeArea(
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
+  void _listener(BuildContext context, IncidenteState state) {
+    // ERROR
+    if (state.error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(state.error!), backgroundColor: Colors.red),
+      );
 
-            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+      context.read<IncidenteBloc>().add(LimpiarErrorEvent());
+    }
 
-            child: ConstrainedBox(
-              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+    // SUCCESS INCIDENTE
+    if (state.success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Incidencia reportada correctamente'),
+          backgroundColor: Colors.green,
+        ),
+      );
 
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+      context.read<IncidenteBloc>().add(ResetIncidenteEvent());
 
-                children: [
-                  // =====================================================
-                  // TIPO
-                  // =====================================================
-                  const Text(
-                    'Tipo de incidencia',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  Wrap(
-                    spacing: 10,
-                    runSpacing: 10,
-                    children: tipos.map((tipo) {
-                      return ChoiceChip(
-                        label: Text(tipo),
-                        selected: tipoSeleccionado == tipo,
-                        onSelected: (_) {
-                          setState(() {
-                            tipoSeleccionado = tipo;
-                          });
-                        },
-                      );
-                    }).toList(),
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  // =====================================================
-                  // DESCRIPCIÓN
-                  // =====================================================
-                  TextField(
-                    controller: descripcionCtrl,
-                    maxLines: 4,
-
-                    decoration: const InputDecoration(
-                      labelText: 'Descripción',
-                      hintText: 'Describe lo sucedido...',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  // =====================================================
-                  // UBICACIÓN
-                  // =====================================================
-                  _buildUbicacion(state),
-
-                  const SizedBox(height: 20),
-
-                  // =====================================================
-                  // MULTIMEDIA
-                  // =====================================================
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-
-                    children: [
-                      ElevatedButton.icon(
-                        onPressed: () {
-                          context.read<IncidenteBloc>().add(TomarFotoEvent());
-                        },
-
-                        icon: const Icon(Icons.camera_alt),
-
-                        label: const Text('Foto'),
-                      ),
-
-                      ElevatedButton.icon(
-                        onPressed: () {
-                          context.read<IncidenteBloc>().add(GrabarVideoEvent());
-                        },
-
-                        icon: const Icon(Icons.videocam),
-
-                        label: const Text('Video'),
-                      ),
-
-                      ElevatedButton.icon(
-                        onPressed: () {
-                          context.read<IncidenteBloc>().add(
-                            SeleccionarImagenEvent(),
-                          );
-                        },
-
-                        icon: const Icon(Icons.photo_library),
-
-                        label: const Text('Galería'),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  // =====================================================
-                  // PREVIEW MEDIA
-                  // =====================================================
-                  const MediaPreviewWidget(),
-
-                  const SizedBox(height: 30),
-
-                  // =====================================================
-                  // BOTÓN ENVIAR
-                  // =====================================================
-                  SizedBox(
-                    width: double.infinity,
-
-                    child: ElevatedButton(
-                      onPressed: state.isLoading
-                          ? null
-                          : () => _enviarIncidencia(context),
-
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                      ),
-
-                      child: const Text(
-                        'ENVIAR REPORTE',
-
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 20),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
-    );
+      context.go('/home');
+    }
   }
 
   // =========================================================
-  // CARD UBICACIÓN
+  // BUILD CURRENT TAB
   // =========================================================
-  Widget _buildUbicacion(IncidenteState state) {
+  Widget _buildCurrentTab(IncidenteState state) {
+    switch (state.currentTab) {
+      case IncidenteTabEnum.incidente:
+        return const IncidenteFormScreen();
+
+      case IncidenteTabEnum.video:
+        return const VideoScreen();
+
+      case IncidenteTabEnum.evidencia:
+        return const EvidenciaScreen();
+
+      case IncidenteTabEnum.emergencia:
+        return const EmergenciaScreen();
+
+      case IncidenteTabEnum.historial:
+        return const HistorialIncidentesScreen();
+    }
+  }
+
+  // =========================================================
+  // BARRA INFERIOR
+  // =========================================================
+  Widget _buildBottomTabs(BuildContext context, IncidenteState state) {
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(12),
+
       decoration: BoxDecoration(
-        color: Colors.green[50],
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.green.shade300),
+        color: Colors.white,
+        boxShadow: [BoxShadow(blurRadius: 10, color: Colors.black12)],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+
         children: [
-          Row(
-            children: const [
-              Icon(Icons.location_on, color: Colors.green),
-              SizedBox(width: 8),
-              Text(
-                'Ubicación actual',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-            ],
+          _tabButton(
+            context,
+            icon: Icons.report,
+            label: 'Incidente',
+            selected: state.currentTab == IncidenteTabEnum.incidente,
+
+            tab: IncidenteTabEnum.incidente,
           ),
 
-          const SizedBox(height: 10),
+          _tabButton(
+            context,
+            icon: Icons.camera_alt,
+            label: 'Evidencia',
+            selected: state.currentTab == IncidenteTabEnum.evidencia,
 
-          if (state.latitud != null) Text('Latitud: ${state.latitud}'),
+            tab: IncidenteTabEnum.evidencia,
+          ),
 
-          if (state.longitud != null) Text('Longitud: ${state.longitud}'),
+          _tabButton(
+            context,
+            icon: Icons.emergency,
+            label: 'SOS',
+            selected: state.currentTab == IncidenteTabEnum.emergencia,
 
-          if (state.direccion != null)
-            Padding(
-              padding: const EdgeInsets.only(top: 6),
+            tab: IncidenteTabEnum.emergencia,
+          ),
 
-              child: Text(state.direccion!),
-            ),
+          _tabButton(
+            context,
+            icon: Icons.history,
+            label: 'Historial',
+            selected: state.currentTab == IncidenteTabEnum.historial,
 
-          if (state.latitud == null) const Text('Obteniendo ubicación...'),
+            tab: IncidenteTabEnum.historial,
+          ),
         ],
       ),
     );
   }
 
   // =========================================================
-  // ENVIAR INCIDENTE
+  // BOTON TAB
   // =========================================================
-  Future<void> _enviarIncidencia(BuildContext context) async {
-    if (tipoSeleccionado == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Seleccione un tipo')));
+  Widget _tabButton(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required bool selected,
+    required IncidenteTabEnum tab,
+  }) {
+    return InkWell(
+      onTap: () {
+        context.read<IncidenteBloc>().add(CambiarTabEvent(tab));
+      },
 
-      return;
-    }
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
 
-    if (descripcionCtrl.text.trim().isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Ingrese una descripción')));
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
 
-      return;
-    }
+        decoration: BoxDecoration(
+          color: selected ? Colors.blue.shade100 : Colors.transparent,
 
-    final blocState = context.read<IncidenteBloc>().state;
+          borderRadius: BorderRadius.circular(20),
+        ),
 
-    // VALIDAR UBICACIÓN
-    if (blocState.latitud == null || blocState.longitud == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No se pudo obtener ubicación')),
-      );
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
 
-      return;
-    }
+          children: [
+            Icon(icon, color: selected ? Colors.blue : Colors.grey),
 
-    try {
-      // TODO:
-      // OBTENER DE AUTH
-      final usuarioId = 1;
+            const SizedBox(height: 4),
 
-      // TODO:
-      // OBTENER DE PATRULLAJE ACTIVO
-      final patrullajeId = 1;
+            Text(
+              label,
 
-      // TODO:
-      // OBTENER ZONA ACTUAL
-      final zonaId = 1;
-
-      final params = IncidenteModel(
-        usuarioId: usuarioId,
-        patrullajeId: patrullajeId,
-        zonaId: zonaId,
-        tipo: tipoSeleccionado!,
-        descripcion: descripcionCtrl.text.trim(),
-        latitud: blocState.latitud!,
-        longitud: blocState.longitud!,
-        archivos: blocState.archivos,
-      );
-
-      print(
-        "📂 ARCHIVOS: "
-        "${blocState.archivos.length}",
-      );
-
-      context.read<IncidenteBloc>().add(CrearIncidenteEvent(params));
-    } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error: $e')));
-    }
+              style: TextStyle(
+                fontSize: 11,
+                color: selected ? Colors.blue : Colors.grey,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

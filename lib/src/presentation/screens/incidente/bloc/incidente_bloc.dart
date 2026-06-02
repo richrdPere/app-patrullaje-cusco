@@ -1,207 +1,123 @@
-import 'dart:io';
-
 import 'package:bloc/bloc.dart';
-// import 'package:flutter/material.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:sis_patrullaje_cusco/src/domain/models/historial_patrullaje_model.dart';
-import 'package:sis_patrullaje_cusco/src/domain/models/incidencia_model.dart';
+
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/geolocator/GeolocatorUseCases.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/historial_patrullaje/HistorialPatrullajeUseCases.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/incidente/IncidenteUseCases.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/multimedias/MultimediasUsesCases.dart';
+
 import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/bloc/incidente_event.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/bloc/incidente_state.dart';
+
+// Handlers
+import 'handlers/incidente_handlers.dart';
+import 'handlers/location_handlers.dart';
+import 'handlers/media_handlers.dart';
+import 'handlers/ui_handlers.dart';
+import 'handlers/context_handlers.dart';
 
 class IncidenteBloc extends Bloc<IncidenteEvent, IncidenteState> {
   final IncidenteUseCases incidenteUseCases;
   final GeolocatorUseCases geolocatorUseCases;
   final MultimediasUseCases mediaUseCases;
+
   final HistorialPatrullajeUseCases historialUseCases;
+
+  late final IncidenteHandlers _incidenteHandlers;
+  late final LocationHandlers _locationHandlers;
+  late final MediaHandlers _mediaHandlers;
+  late final UiHandlers _uiHandlers;
+  late final ContextHandlers _contextHandlers;
 
   IncidenteBloc(
     this.incidenteUseCases,
     this.geolocatorUseCases,
     this.mediaUseCases,
     this.historialUseCases,
-  ) : super(IncidenteState()) {
-    on<CrearIncidenteEvent>(_onCrearIncidente);
-    on<TomarFotoEvent>(_onTomarFoto);
-    on<GrabarVideoEvent>(_onGrabarVideo);
-    on<SeleccionarImagenEvent>(_onSeleccionarImagen);
-    on<EliminarArchivoEvent>(_onEliminarArchivo);
-    on<ObtenerUbicacionEvent>(_onObtenerUbicacion);
-  }
-
-  // ==============================
-  // CREAR INCIDENCIA
-  // ==============================
-  Future<void> _onCrearIncidente(
-    CrearIncidenteEvent event,
-    Emitter<IncidenteState> emit,
-  ) async {
-    // LOADING
-    emit(state.copyWith(isLoading: true, error: null, success: false));
-
-    try {
-      // 1. REGISTRAR INCIDENCIA
-      final incidencia = await incidenteUseCases.createIncidente.run(
-        event.params,
-      );
-
-      print("INCIDENCIA BLOC: ${incidencia}");
-
-      // 2. REGISTRAR HISTORIAL AUTOMÁTICO
-      final historial = _buildHistorialFromIncidencia(incidencia);
-
-      await historialUseCases.registerResumenHistorial.run(historial);
-
-      print("✅ HISTORIAL REGISTRADO");
-
-      // 3. SUCCESS
-      emit(
-        state.copyWith(isLoading: false, success: true, incidencia: incidencia),
-      );
-    } catch (e) {
-      // ERROR
-      emit(
-        state.copyWith(isLoading: false, success: false, error: e.toString()),
-      );
-    }
-  }
-
-  // ==============================
-  // FOTO
-  // ==============================
-  Future<void> _onTomarFoto(
-    TomarFotoEvent event,
-    Emitter<IncidenteState> emit,
-  ) async {
-    try {
-      final file = await mediaUseCases.takePhoto.run();
-
-      if (file != null) {
-        final nuevos = List<File>.from(state.archivos)..add(file);
-        emit(state.copyWith(archivos: nuevos));
-      }
-    } catch (e) {
-      emit(state.copyWith(error: e.toString()));
-    }
-  }
-
-  // ==============================
-  // VIDEO
-  // ==============================
-  Future<void> _onGrabarVideo(
-    GrabarVideoEvent event,
-    Emitter<IncidenteState> emit,
-  ) async {
-    try {
-      final file = await mediaUseCases.recordVideo.run();
-
-      if (file != null) {
-        final nuevos = List<File>.from(state.archivos)..add(file);
-        emit(state.copyWith(archivos: nuevos));
-      }
-    } catch (e) {
-      emit(state.copyWith(error: e.toString()));
-    }
-  }
-
-  // ==============================
-  // GALERÍA
-  // ==============================
-  Future<void> _onSeleccionarImagen(
-    SeleccionarImagenEvent event,
-    Emitter<IncidenteState> emit,
-  ) async {
-    try {
-      final file = await mediaUseCases.pickImage.run();
-
-      if (file != null) {
-        final nuevos = List<File>.from(state.archivos)..add(file);
-        emit(state.copyWith(archivos: nuevos));
-      }
-    } catch (e) {
-      emit(state.copyWith(error: e.toString()));
-    }
-  }
-
-  // ==============================
-  // ELIMINAR ARCHIVO
-  // ==============================
-  Future<void> _onEliminarArchivo(
-    EliminarArchivoEvent event,
-    Emitter<IncidenteState> emit,
-  ) async {
-    final nuevos = List<File>.from(state.archivos)..removeAt(event.index);
-
-    emit(state.copyWith(archivos: nuevos));
-  }
-
-  // ==============================
-  // UBICACIÓN
-  // ==============================
-  Future<void> _onObtenerUbicacion(
-    ObtenerUbicacionEvent event,
-    Emitter<IncidenteState> emit,
-  ) async {
-    try {
-      Position pos = await geolocatorUseCases.findPosition.run();
-
-      final placemark = await geolocatorUseCases.getPlaceMarkData.run(
-        CameraPosition(target: LatLng(pos.latitude, pos.longitude)),
-      );
-
-      emit(
-        state.copyWith(
-          latitud: pos.latitude,
-          longitud: pos.longitude,
-          direccion: placemark.address,
-        ),
-      );
-    } catch (e) {
-      emit(state.copyWith(error: e.toString()));
-    }
-  }
-
-  HistorialPatrullajeModel _buildHistorialFromIncidencia(
-    IncidenteModel incidencia,
-  ) {
-    return HistorialPatrullajeModel(
-      patrullajeId: incidencia.patrullajeId ?? 0,
-      serenoId: incidencia.usuarioId,
-      zonaId: incidencia.zonaId ?? 0,
-      tipo: "ALERTA",
-      titulo: "Incidencia reportada: ${incidencia.tipo}",
-      descripcion: incidencia.descripcion,
-      prioridad: _mapPrioridad(incidencia.tipo),
-      latitud: incidencia.latitud,
-      longitud: incidencia.longitud,
-      visibleParaSiguienteTurno: true,
-      estado: "ACTIVO",
+  ) : super(const IncidenteState()) {
+    // Incidente
+    _incidenteHandlers = IncidenteHandlers(
+      incidenteUseCases: incidenteUseCases,
+      historialUseCases: historialUseCases,
     );
-  }
 
-  String _mapPrioridad(String tipo) {
-    switch (tipo) {
-      case "ROBO":
-        return "ALTA";
+    // Location
+    _locationHandlers = LocationHandlers(
+      geolocatorUseCases: geolocatorUseCases,
+    );
 
-      case "INCENDIO":
-        return "CRITICA";
+    // Media
+    _mediaHandlers = MediaHandlers(mediaUseCases: mediaUseCases);
 
-      case "VIOLENCIA":
-        return "ALTA";
+    // UI
+    _uiHandlers = const UiHandlers();
 
-      case "ACCIDENTE":
-        return "MEDIA";
+    // Context
+    _contextHandlers = const ContextHandlers();
 
-      case "SOSPECHOSO":
-        return "MEDIA";
+    // INCIDENTE
+    on<CrearIncidenteEvent>(
+      (event, emit) => _incidenteHandlers.onCrearIncidente(event, emit, state),
+    );
+    on<ReporteRapidoEvent>(
+      (event, emit) =>
+          _incidenteHandlers.onReporteRapido(event, emit, state, add),
+    );
 
-      default:
-        return "BAJA";
-    }
+    // LOCATION
+    on<ObtenerUbicacionEvent>(
+      (event, emit) => _locationHandlers.onObtenerUbicacion(event, emit, state),
+    );
+
+    // MEDIA
+    on<TomarFotoEvent>(
+      (event, emit) => _mediaHandlers.onTomarFoto(event, emit, state),
+    );
+    on<SeleccionarImagenEvent>(
+      (event, emit) => _mediaHandlers.onSeleccionarImagen(event, emit, state),
+    );
+    on<SeleccionarVideoEvent>(
+      (event, emit) => _mediaHandlers.onSeleccionarVideo(event, emit, state),
+    );
+    on<IniciarGrabacionVideoEvent>(
+      (event, emit) =>
+          _mediaHandlers.onIniciarGrabacionVideo(event, emit, state),
+    );
+    on<DetenerGrabacionVideoEvent>(
+      (event, emit) =>
+          _mediaHandlers.onDetenerGrabacionVideo(event, emit, state),
+    );
+    on<EliminarArchivoEvent>(
+      (event, emit) => _mediaHandlers.onEliminarArchivo(event, emit, state),
+    );
+    on<LimpiarArchivosEvent>(
+      (event, emit) => _mediaHandlers.onLimpiarArchivos(event, emit, state),
+    );
+
+    // UI
+    on<ResetIncidenteEvent>(
+      (event, emit) => _uiHandlers.onResetIncidente(event, emit),
+    );
+
+    on<LimpiarErrorEvent>(
+      (event, emit) => _uiHandlers.onLimpiarError(event, emit, state),
+    );
+
+    on<CambiarTabEvent>(
+      (event, emit) => _uiHandlers.onCambiarTab(event, emit, state),
+    );
+
+    on<ExpandirSheetEvent>(
+      (event, emit) => _uiHandlers.onExpandirSheet(event, emit, state),
+    );
+
+    on<ContraerSheetEvent>(
+      (event, emit) => _uiHandlers.onContraerSheet(event, emit, state),
+    );
+
+    // CONTEXT
+    on<ObtenerIncidentesCercanosEvent>(
+      (event, emit) =>
+          _contextHandlers.onObtenerIncidentesCercanos(event, emit, state),
+    );
   }
 }

@@ -100,7 +100,13 @@ class MapaBloc extends Bloc<MapaEvent, MapaState> {
     });
 
     on<ChangeMapCameraPosition>((event, emit) async {
+      if (state.controller == null) {
+        print("⚠️ GoogleMapController aún no existe");
+        return;
+      }
+
       GoogleMapController googleMapController = await state.controller!.future;
+      
       await googleMapController.animateCamera(
         CameraUpdate.newCameraPosition(
           CameraPosition(

@@ -53,15 +53,6 @@ class _LoginPageState extends State<LoginPage> {
             );
 
             context.go('/home');
-            // CONECTAR SOCKET
-            // context.read<SocketBloc>().add(ConnectSocketEvent());
-            // final authResponse = responseState.data as AuthResponse;
-
-            // context.read<LoginBloc>().add(
-            //   SaveUserSession(authResponse: authResponse),
-            // );
-
-            // SOLO NAVEGAR (la sesión ya debe guardarse en el Bloc)
           }
         },
         child: BlocBuilder<LoginBloc, LoginState>(

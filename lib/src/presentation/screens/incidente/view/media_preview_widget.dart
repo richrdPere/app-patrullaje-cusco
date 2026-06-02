@@ -140,7 +140,7 @@ class MediaPreviewWidget extends StatelessWidget {
                 title: const Text("Grabar video"),
                 onTap: () {
                   Navigator.pop(context);
-                  context.read<IncidenteBloc>().add(GrabarVideoEvent());
+                  // context.read<IncidenteBloc>().add(GrabarVideoEvent());
                 },
               ),
               ListTile(

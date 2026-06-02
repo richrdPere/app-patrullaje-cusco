@@ -27,6 +27,7 @@ import 'package:sis_patrullaje_cusco/src/domain/use_cases/incidente/IncidenteUse
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/incidente/incidente_use_cases/CreateIncidenteUseCase.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/multimedias/MultimediasUsesCases.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/multimedias/multimedias_use_case/PickImageUseCase.dart';
+import 'package:sis_patrullaje_cusco/src/domain/use_cases/multimedias/multimedias_use_case/PickVideoUseCase.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/multimedias/multimedias_use_case/RecordVideoUseCase.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/multimedias/multimedias_use_case/TakePhotoUseCase.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/patrullaje/patrullaje_use_cases/EndPatrullajeSocketUseCase.dart';
@@ -240,6 +241,7 @@ abstract class AppModule {
     takePhoto: TakePhotoUseCase(mediaRepository),
     recordVideo: RecordVideoUseCase(mediaRepository),
     pickImage: PickImageUseCase(mediaRepository),
+    pickVideo: PickVideoUseCase(mediaRepository),
   );
 
   // Socket

@@ -17,7 +17,10 @@ class MediaRepositoryImpl implements MediaRepository {
 
   @override
   Future<File?> recordVideo() async {
-    final XFile? file = await picker.pickVideo(source: ImageSource.camera);
+    final XFile? file = await picker.pickVideo(
+      source: ImageSource.camera,
+      maxDuration: const Duration(minutes: 2),
+    );
 
     return file != null ? File(file.path) : null;
   }
@@ -25,6 +28,16 @@ class MediaRepositoryImpl implements MediaRepository {
   @override
   Future<File?> pickImage() async {
     final XFile? file = await picker.pickImage(source: ImageSource.gallery);
+
+    return file != null ? File(file.path) : null;
+  }
+
+  @override
+  Future<File?> pickVideo() async {
+    final XFile? file = await picker.pickVideo(
+      source: ImageSource.gallery,
+      maxDuration: const Duration(minutes: 2),
+    );
 
     return file != null ? File(file.path) : null;
   }

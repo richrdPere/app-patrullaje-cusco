@@ -1,27 +1,92 @@
 import 'package:sis_patrullaje_cusco/src/domain/models/incidencia_model.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/enums/incidente_tab_enum.dart';
 
-abstract class IncidenteEvent {}
+abstract class IncidenteEvent {
+  const IncidenteEvent();
+}
 
-// CREAR INCIDENCIA
+// GENERAL
+class ResetIncidenteEvent extends IncidenteEvent {
+  const ResetIncidenteEvent();
+}
+
+class LimpiarErrorEvent extends IncidenteEvent {
+  const LimpiarErrorEvent();
+}
+
+// INCIDENTE
 class CrearIncidenteEvent extends IncidenteEvent {
   final IncidenteModel params;
 
-  CrearIncidenteEvent(this.params);
+  const CrearIncidenteEvent(this.params);
+}
+
+class ReporteRapidoEvent extends IncidenteEvent {
+  final IncidenteRapidoEnum tipo;
+
+  const ReporteRapidoEvent(this.tipo);
 }
 
 // MEDIA
-class TomarFotoEvent extends IncidenteEvent {}
+class TomarFotoEvent extends IncidenteEvent {
+  const TomarFotoEvent();
+}
 
-class GrabarVideoEvent extends IncidenteEvent {}
+class SeleccionarImagenEvent extends IncidenteEvent {
+  const SeleccionarImagenEvent();
+}
 
-class SeleccionarImagenEvent extends IncidenteEvent {}
+class IniciarGrabacionVideoEvent extends IncidenteEvent {
+  const IniciarGrabacionVideoEvent();
+}
+
+class DetenerGrabacionVideoEvent extends IncidenteEvent {
+  const DetenerGrabacionVideoEvent();
+}
+
+class IniciarGrabacionAudioEvent extends IncidenteEvent {
+  const IniciarGrabacionAudioEvent();
+}
+
+class DetenerGrabacionAudioEvent extends IncidenteEvent {
+  const DetenerGrabacionAudioEvent();
+}
 
 class EliminarArchivoEvent extends IncidenteEvent {
   final int index;
 
-  EliminarArchivoEvent(this.index);
+  const EliminarArchivoEvent(this.index);
 }
 
+class LimpiarArchivosEvent extends IncidenteEvent {
+  const LimpiarArchivosEvent();
+}
 
-// UBICACIÓN
-class ObtenerUbicacionEvent extends IncidenteEvent {}
+class SeleccionarVideoEvent extends IncidenteEvent {
+  const SeleccionarVideoEvent();
+}
+
+// LOCATION
+class ObtenerUbicacionEvent extends IncidenteEvent {
+  const ObtenerUbicacionEvent();
+}
+
+// UI
+class CambiarTabEvent extends IncidenteEvent {
+  final IncidenteTabEnum tab;
+
+  const CambiarTabEvent(this.tab);
+}
+
+class ExpandirSheetEvent extends IncidenteEvent {
+  const ExpandirSheetEvent();
+}
+
+class ContraerSheetEvent extends IncidenteEvent {
+  const ContraerSheetEvent();
+}
+
+// CONTEXTUAL
+class ObtenerIncidentesCercanosEvent extends IncidenteEvent {
+  const ObtenerIncidentesCercanosEvent();
+}
