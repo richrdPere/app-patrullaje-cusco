@@ -1,21 +1,21 @@
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/historial_patrullaje/historial_patrullaje_use_cases/ArchivarHistorialUseCase.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/historial_patrullaje/historial_patrullaje_use_cases/GetContextoZonaUseCase.dart';
+import 'package:sis_patrullaje_cusco/src/domain/use_cases/historial_patrullaje/historial_patrullaje_use_cases/GetHistorialByIdUseCase.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/historial_patrullaje/historial_patrullaje_use_cases/GetHistorialByPatrullajeUseCase.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/historial_patrullaje/historial_patrullaje_use_cases/GetResumenZonaUseCase.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/historial_patrullaje/historial_patrullaje_use_cases/RegisterHistorialUseCase.dart';
+import 'package:sis_patrullaje_cusco/src/domain/use_cases/historial_patrullaje/historial_patrullaje_use_cases/UpdateHistorialUseCase.dart';
 
 class HistorialPatrullajeUseCases {
-  ArchivarHistorialUseCase archivarHistorial;
-  GetContextoZonaUseCase getContextoZona;
+  ArchivarHistorialUseCase archivedHistorial;
+  GetHistorialByIdUseCase getHistorialById;
   GetHistorialByPatrullajeUseCase getHistorialByPatrullaje;
-  GetResumenZonaUseCase getResumenZona;
-  RegisterHistorialUseCase registerResumenHistorial;
+  UpdateHistorialUseCase updateHistorial;
+  RegisterHistorialUseCase createHistorial;
 
   HistorialPatrullajeUseCases({
-    required this.archivarHistorial,
-    required this.getContextoZona,
+    required this.archivedHistorial,
+    required this.getHistorialById,
     required this.getHistorialByPatrullaje,
-    required this.getResumenZona,
-    required this.registerResumenHistorial,
+    required this.updateHistorial,
+    required this.createHistorial,
   });
 }

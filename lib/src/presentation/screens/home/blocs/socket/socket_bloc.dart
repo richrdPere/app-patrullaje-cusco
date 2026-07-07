@@ -38,7 +38,7 @@ class SocketBloc extends Bloc<SocketEvent, SocketState> {
 
     try {
       final session = await authUsesCases.getUserSession.run();
-      final token = session?.token;
+      final token = session?.data.token;
 
       if (token == null) {
         print("No hay token");

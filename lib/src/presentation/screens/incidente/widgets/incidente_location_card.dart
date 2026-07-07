@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../bloc/incidente_state.dart';
+import '../blocs/incidencia/incidente_state.dart';
 
 class IncidenteLocationCard extends StatelessWidget {
 

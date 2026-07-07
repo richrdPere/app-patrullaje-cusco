@@ -1,300 +1,294 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:sis_patrullaje_cusco/src/domain/models/incidencia_model.dart';
-import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/view/media_preview_widget.dart';
-import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/widgets/incidente_location_card.dart';
-import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/widgets/incidente_media_actions.dart';
+// import 'package:flutter/material.dart';
+// import 'package:flutter_bloc/flutter_bloc.dart';
+// import 'package:sis_patrullaje_cusco/src/domain/models/incidencia_model.dart';
+// import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/view/media_preview_widget.dart';
+// import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/widgets/incidente_location_card.dart';
+// import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/widgets/incidente_media_actions.dart';
 
-import '../bloc/incidente_bloc.dart';
-import '../bloc/incidente_event.dart';
-import '../bloc/incidente_state.dart';
+// import '../blocs/incidencia/incidente_bloc.dart';
+// import '../blocs/incidencia/incidente_event.dart';
+// import '../blocs/incidencia/incidente_state.dart';
 
-import '../enums/incidente_tab_enum.dart';
+// import '../enums/incidente_tab_enum.dart';
 
-class ReporteRapidoPage extends StatefulWidget {
-  final TipoIncidente tipo;
+// class ReporteRapidoPage extends StatefulWidget {
+//   final TipoIncidente tipo;
 
-  const ReporteRapidoPage({
-    super.key,
-    required this.tipo,
-  });
+//   const ReporteRapidoPage({
+//     super.key,
+//     required this.tipo,
+//   });
 
-  @override
-  State<ReporteRapidoPage> createState() =>
-      _ReporteRapidoPageState();
-}
+//   @override
+//   State<ReporteRapidoPage> createState() =>
+//       _ReporteRapidoPageState();
+// }
 
-class _ReporteRapidoPageState
-    extends State<ReporteRapidoPage> {
+// class _ReporteRapidoPageState
+//     extends State<ReporteRapidoPage> {
 
-  final descripcionCtrl = TextEditingController();
+//   final descripcionCtrl = TextEditingController();
 
-  @override
-  void initState() {
-    super.initState();
+//   @override
+//   void initState() {
+//     super.initState();
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+//     WidgetsBinding.instance.addPostFrameCallback((_) {
 
-      context.read<IncidenteBloc>()
-        ..add(ObtenerUbicacionEvent())
-        ..add(ObtenerIncidentesCercanosEvent());
+//       context.read<IncidenteBloc>()
+//         ..add(ObtenerUbicacionEvent())
+//         ..add(ObtenerIncidentesCercanosEvent());
 
-    });
-  }
+//     });
+//   }
 
-  @override
-  Widget build(BuildContext context) {
+//   @override
+//   Widget build(BuildContext context) {
 
-    return Scaffold(
-      backgroundColor: const Color(0xff0F172A),
+//     return Scaffold(
+//       backgroundColor: const Color(0xff0F172A),
 
-      // appBar: AppBar(
-      //   backgroundColor: Colors.transparent,
-      //   elevation: 0,
-      //   title: Text(_title()),
-      // ),
+//       // appBar: AppBar(
+//       //   backgroundColor: Colors.transparent,
+//       //   elevation: 0,
+//       //   title: Text(_title()),
+//       // ),
 
-      body: BlocBuilder<IncidenteBloc, IncidenteState>(
-        builder: (context, state) {
+//       body: BlocBuilder<IncidenteBloc, IncidenteState>(
+//         builder: (context, state) {
 
-          return SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
+//           return SafeArea(
+//             child: SingleChildScrollView(
+//               padding: const EdgeInsets.all(16),
 
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+//               child: Column(
+//                 crossAxisAlignment: CrossAxisAlignment.start,
+//                 children: [
 
-                  // HEADER
-                  _buildHeader(),
+//                   // HEADER
+//                   _buildHeader(),
 
-                  const SizedBox(height: 24),
+//                   const SizedBox(height: 24),
 
-                  // DESCRIPTION
-                  TextField(
-                    controller: descripcionCtrl,
-                    maxLines: 5,
-                    style: const TextStyle(color: Colors.white),
+//                   // DESCRIPTION
+//                   TextField(
+//                     controller: descripcionCtrl,
+//                     maxLines: 5,
+//                     style: const TextStyle(color: Colors.white),
 
-                    decoration: InputDecoration(
-                      hintText: 'Describe lo sucedido...',
-                      hintStyle: const TextStyle(
-                        color: Colors.white54,
+//                     decoration: InputDecoration(
+//                       hintText: 'Describe lo sucedido...',
+//                       hintStyle: const TextStyle(
+//                         color: Colors.white54,
                    
-                      ),
+//                       ),
 
-                      filled: true,
-                      fillColor: const Color(0xff1E293B),
+//                       filled: true,
+//                       fillColor: const Color(0xff1E293B),
 
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(18),
-                        borderSide: BorderSide.none,
-                      ),
-                    ),
-                  ),
+//                       border: OutlineInputBorder(
+//                         borderRadius: BorderRadius.circular(18),
+//                         borderSide: BorderSide.none,
+//                       ),
+//                     ),
+//                   ),
 
-                  const SizedBox(height: 20),
+//                   const SizedBox(height: 20),
 
-                  // LOCATION
-                  IncidenteLocationCard(state: state),
+//                   // LOCATION
+//                   IncidenteLocationCard(state: state),
 
-                  const SizedBox(height: 20),
+//                   const SizedBox(height: 20),
 
-                  // MEDIA
-                  const IncidenteMediaActions(),
+//                   // MEDIA
+//                   const IncidenteMediaActions(),
 
-                  const SizedBox(height: 16),
+//                   const SizedBox(height: 16),
 
-                  const MediaPreviewWidget(),
+//                   const MediaPreviewWidget(),
 
-                  const SizedBox(height: 28),
+//                   const SizedBox(height: 28),
 
-                  // SUBMIT
-                  SizedBox(
-                    width: double.infinity,
+//                   // SUBMIT
+//                   SizedBox(
+//                     width: double.infinity,
 
-                    child: ElevatedButton.icon(
-                      onPressed: () => _submit(context),
+//                     child: ElevatedButton.icon(
+//                       onPressed: () => _submit(context),
 
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: _color(),
-                        padding: const EdgeInsets.symmetric(
-                          vertical: 18,
-                        ),
+//                       style: ElevatedButton.styleFrom(
+//                         backgroundColor: _color(),
+//                         padding: const EdgeInsets.symmetric(
+//                           vertical: 18,
+//                         ),
 
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(18),
-                        ),
-                      ),
+//                         shape: RoundedRectangleBorder(
+//                           borderRadius: BorderRadius.circular(18),
+//                         ),
+//                       ),
 
-                      icon: const Icon(Icons.send),
+//                       icon: const Icon(Icons.send),
 
-                      label: const Text(
-                        'REPORTAR INCIDENTE',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
+//                       label: const Text(
+//                         'REPORTAR INCIDENTE',
+//                         style: TextStyle(
+//                           fontWeight: FontWeight.bold,
+//                         ),
+//                       ),
+//                     ),
+//                   ),
 
-                  const SizedBox(height: 30),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
+//                   const SizedBox(height: 30),
+//                 ],
+//               ),
+//             ),
+//           );
+//         },
+//       ),
+//     );
+//   }
 
-  Widget _buildHeader() {
+//   Widget _buildHeader() {
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(18),
+//     return Container(
+//       width: double.infinity,
+//       padding: const EdgeInsets.all(18),
 
-      decoration: BoxDecoration(
-        color: _color().withOpacity(.15),
-        borderRadius: BorderRadius.circular(22),
-      ),
+//       decoration: BoxDecoration(
+//         color: _color().withOpacity(.15),
+//         borderRadius: BorderRadius.circular(22),
+//       ),
 
-      child: Row(
-        children: [
+//       child: Row(
+//         children: [
 
-          CircleAvatar(
-            radius: 30,
-            backgroundColor: _color(),
+//           CircleAvatar(
+//             radius: 30,
+//             backgroundColor: _color(),
 
-            child: Icon(
-              _icon(),
-              color: Colors.white,
-              size: 30,
-            ),
-          ),
+//             child: Icon(
+//               _icon(),
+//               color: Colors.white,
+//               size: 30,
+//             ),
+//           ),
 
-          const SizedBox(width: 16),
+//           const SizedBox(width: 16),
 
-          Expanded(
-            child: Column(
-              crossAxisAlignment:
-                  CrossAxisAlignment.start,
+//           Expanded(
+//             child: Column(
+//               crossAxisAlignment:
+//                   CrossAxisAlignment.start,
 
-              children: [
+//               children: [
 
-                Text(
-                  _title(),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+//                 Text(
+//                   _title(),
+//                   style: const TextStyle(
+//                     color: Colors.white,
+//                     fontSize: 22,
+//                     fontWeight: FontWeight.bold,
+//                   ),
+//                 ),
 
-                const SizedBox(height: 6),
+//                 const SizedBox(height: 6),
 
-                const Text(
-                  'Reporte táctico rápido',
-                  style: TextStyle(
-                    color: Colors.white70,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+//                 const Text(
+//                   'Reporte táctico rápido',
+//                   style: TextStyle(
+//                     color: Colors.white70,
+//                   ),
+//                 ),
+//               ],
+//             ),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
 
-  Future<void> _submit(BuildContext context) async {
+//   Future<void> _submit(BuildContext context) async {
 
-    final state =
-        context.read<IncidenteBloc>().state;
+//     final state =
+//         context.read<IncidenteBloc>().state;
 
-    final incidente = IncidenteModel(
-      usuarioId: 1,
-      patrullajeId: 1,
-      zonaId: 1,
+//     final incidente = IncidenteModel(
+//       patrullajeId: 1,
+//       tipo: widget.tipo.name.toUpperCase(),
+//       descripcion: descripcionCtrl.text,
+//       latitud: state.latitud!,
+//       longitud: state.longitud!,
+//       archivos: state.archivos,
+//     );
 
-      tipo: widget.tipo.name.toUpperCase(),
+//     context.read<IncidenteBloc>().add(
+//       CrearIncidenteEvent(incidente),
+//     );
+//   }
 
-      descripcion: descripcionCtrl.text,
+//   String _title() {
+//     switch (widget.tipo) {
+//       case TipoIncidente.robo:
+//         return 'Reporte de Robo';
 
-      latitud: state.latitud!,
-      longitud: state.longitud!,
+//       case TipoIncidente.accidente:
+//         return 'Accidente';
 
-      archivos: state.archivos,
-    );
+//       case TipoIncidente.incendio:
+//         return 'Incendio';
 
-    context.read<IncidenteBloc>().add(
-      CrearIncidenteEvent(incidente),
-    );
-  }
+//       case TipoIncidente.violencia:
+//         return 'Violencia';
 
-  String _title() {
-    switch (widget.tipo) {
-      case TipoIncidente.robo:
-        return 'Reporte de Robo';
+//       case TipoIncidente.sospechoso:
+//         return 'Sospechoso';
 
-      case TipoIncidente.accidente:
-        return 'Accidente';
+//       case TipoIncidente.otro:
+//         return 'Otro';
+//     }
+//   }
 
-      case TipoIncidente.incendio:
-        return 'Incendio';
+//   IconData _icon() {
+//     switch (widget.tipo) {
+//       case TipoIncidente.robo:
+//         return Icons.local_police;
 
-      case TipoIncidente.violencia:
-        return 'Violencia';
+//       case TipoIncidente.accidente:
+//         return Icons.car_crash;
 
-      case TipoIncidente.sospechoso:
-        return 'Sospechoso';
+//       case TipoIncidente.incendio:
+//         return Icons.local_fire_department;
 
-      case TipoIncidente.otro:
-        return 'Otro';
-    }
-  }
+//       case TipoIncidente.violencia:
+//         return Icons.warning;
 
-  IconData _icon() {
-    switch (widget.tipo) {
-      case TipoIncidente.robo:
-        return Icons.local_police;
+//       case TipoIncidente.sospechoso:
+//         return Icons.visibility;
 
-      case TipoIncidente.accidente:
-        return Icons.car_crash;
+//       case TipoIncidente.otro:
+//         return Icons.info;
+//     }
+//   }
 
-      case TipoIncidente.incendio:
-        return Icons.local_fire_department;
+//   Color _color() {
+//     switch (widget.tipo) {
+//       case TipoIncidente.robo:
+//         return Colors.red;
 
-      case TipoIncidente.violencia:
-        return Icons.warning;
+//       case TipoIncidente.accidente:
+//         return Colors.orange;
 
-      case TipoIncidente.sospechoso:
-        return Icons.visibility;
+//       case TipoIncidente.incendio:
+//         return Colors.deepOrange;
 
-      case TipoIncidente.otro:
-        return Icons.info;
-    }
-  }
+//       case TipoIncidente.violencia:
+//         return Colors.purple;
 
-  Color _color() {
-    switch (widget.tipo) {
-      case TipoIncidente.robo:
-        return Colors.red;
+//       case TipoIncidente.sospechoso:
+//         return Colors.blue;
 
-      case TipoIncidente.accidente:
-        return Colors.orange;
-
-      case TipoIncidente.incendio:
-        return Colors.deepOrange;
-
-      case TipoIncidente.violencia:
-        return Colors.purple;
-
-      case TipoIncidente.sospechoso:
-        return Colors.blue;
-
-      case TipoIncidente.otro:
-        return Colors.green;
-    }
-  }
-}
+//       case TipoIncidente.otro:
+//         return Colors.green;
+//     }
+//   }
+// }

@@ -10,7 +10,7 @@ import 'package:sis_patrullaje_cusco/src/presentation/screens/auth/register/bloc
 
 // Auth Uses Cases
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/auth/AuthUseCases.dart';
-import 'package:sis_patrullaje_cusco/src/domain/entities/auth_response.dart';
+import 'package:sis_patrullaje_cusco/src/data/models/login/auth_response.dart';
 
 // Bloc_Form_Items
 import 'package:sis_patrullaje_cusco/src/domain/utils/Resource.dart';

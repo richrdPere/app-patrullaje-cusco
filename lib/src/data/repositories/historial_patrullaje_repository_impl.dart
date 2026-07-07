@@ -29,21 +29,23 @@ class HistorialPatrullajeRepositoryImpl extends HistorialPatrullajeRepository {
     return await historialService.obtenerHistorialPorPatrullaje(patrullajeId);
   }
 
-  // OBTENER CONTEXTO OPERATIVO DE ZONA
-  @override
-  Future<Map<String, dynamic>> obtenerContextoZona(int zonaId) async {
-    return await historialService.obtenerContextoZona(zonaId);
-  }
-
-  // OBTENER RESUMEN DE ZONA
-  @override
-  Future<Map<String, dynamic>> obtenerResumenZona(int zonaId) async {
-    return await historialService.obtenerResumenZona(zonaId);
-  }
-
   // ARCHIVAR HISTORIAL
   @override
   Future<void> archivarHistorial(int historialId) async {
     await historialService.archivarHistorial(historialId);
+  }
+
+  @override
+  Future<HistorialPatrullajeModel> editarHistorial(
+    HistorialPatrullajeModel historial,
+  ) async {
+    return await historialService.editarHistorial(historial);
+  }
+
+  @override
+  Future<HistorialPatrullajeModel> obtenerDetalleHistorial(
+    int historialId,
+  ) async {
+    return await historialService.obtenerDetalleHistorial(historialId);
   }
 }

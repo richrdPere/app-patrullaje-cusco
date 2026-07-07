@@ -2,7 +2,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sis_patrullaje_cusco/src/data/datasources/local/SharefPref.dart';
 
 import 'package:sis_patrullaje_cusco/src/data/datasources/remote/services/auth_service.dart';
-import 'package:sis_patrullaje_cusco/src/domain/entities/auth_response.dart';
+import 'package:sis_patrullaje_cusco/src/data/models/login/auth_response.dart';
 import 'package:sis_patrullaje_cusco/src/domain/entities/user_entity.dart';
 import 'package:sis_patrullaje_cusco/src/domain/repositories/auth_repository.dart';
 import 'package:sis_patrullaje_cusco/src/domain/utils/Resource.dart';
@@ -50,6 +50,6 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<String?> getToken() async {
     final session = await getUserSession();
-    return session?.token;
+    return session?.data.token;
   }
 }

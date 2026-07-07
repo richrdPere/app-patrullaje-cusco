@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:sis_patrullaje_cusco/src/domain/entities/patrullaje_entity.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/home/home_bloc.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/home/home_event.dart';
@@ -130,14 +131,24 @@ class _HomeContentState extends State<HomeContent> {
           ],
 
           _buildStats(),
-          const SizedBox(height: 20),
+          const SizedBox(height: 30),
 
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
+          Wrap(
+            alignment: WrapAlignment.center,
+            spacing: 30,
+            runSpacing: 20,
             children: [
-              _quickAction(Icons.report, 'Incidencia'),
-              _quickAction(Icons.warning, 'Alerta'),
-              _quickAction(Icons.location_on, 'Ubicación'),
+              _quickAction(context, Icons.map, 'Ver mapa', 'mapa'),
+              // _quickAction(context, Icons.report, 'Incidencia', 'incidencia'),
+              _quickAction(context, Icons.warning, 'Alerta', 'alertas'),
+              _quickAction(
+                context,
+                Icons.location_on,
+                'Ubicación',
+                'home', // o la ruta que corresponda
+              ),
+              _quickAction(context, Icons.history, 'Historial', 'historial'),
+              _quickAction(context, Icons.video_collection_rounded, 'Tutoriales', 'tutorial'),
             ],
           ),
         ],
@@ -312,13 +323,25 @@ class _HomeContentState extends State<HomeContent> {
     );
   }
 
-  Widget _quickAction(IconData icon, String label) {
-    return Column(
-      children: [
-        CircleAvatar(radius: 25, child: Icon(icon)),
-        const SizedBox(height: 5),
-        Text(label),
-      ],
+  Widget _quickAction(
+    BuildContext context,
+    IconData icon,
+    String label,
+    String routeName,
+  ) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(30),
+      onTap: () {
+        context.pushNamed(routeName);
+      },
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          CircleAvatar(radius: 25, child: Icon(icon)),
+          const SizedBox(height: 5),
+          Text(label, textAlign: TextAlign.center),
+        ],
+      ),
     );
   }
 }

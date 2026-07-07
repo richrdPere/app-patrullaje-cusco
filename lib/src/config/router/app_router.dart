@@ -1,13 +1,17 @@
 // import 'package:flutter/material.dart';
 // import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sis_patrullaje_cusco/src/config/core/main_shell.dart';
+import 'package:sis_patrullaje_cusco/src/config/core/session/session_bloc.dart';
 import 'package:sis_patrullaje_cusco/src/domain/entities/incident_data_entity.dart';
 import 'package:sis_patrullaje_cusco/src/domain/models/usuarios.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/alertas/view/alertas_page.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/chat/chat_page.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/auth/login/view/login_page.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/auth/register/view/register_page.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/historial_patrullaje/view/historial_patrullaje_page.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/home/home_content.dart';
 // import 'package:sis_patrullaje_cusco/src/presentation/screens/home/home_page.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/mapa/view/mapa/mapa_page.dart';
@@ -15,18 +19,86 @@ import 'package:sis_patrullaje_cusco/src/presentation/screens/mapa/view/mapa_inc
 import 'package:sis_patrullaje_cusco/src/presentation/screens/profile/info/view/profile_page.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/profile/update/view/profile_update_page.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/usuarios/usuarios_page.dart';
-import 'package:sis_patrullaje_cusco/src/presentation/shared/screens/loading_page.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/shared/screens/loading/view/loading_page.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/shared/screens/logout/view/logout_page.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/shared/screens/splash/view/splash_page.dart';
 
+String? authRedirect(BuildContext context, GoRouterState state) {
+  final session = context.read<SessionBloc>().state;
+
+  final loggedIn = session.isAuthenticated;
+
+  final location = state.matchedLocation;
+
+  // Rutas públicas
+  const publicRoutes = {'/splash', '/login'};
+
+  // =========================
+  // USUARIO NO AUTENTICADO
+  // =========================
+  if (!loggedIn) {
+    // Puede permanecer en Splash o Login
+    if (publicRoutes.contains(location)) {
+      return null;
+    }
+
+    // Cualquier otra ruta → Login
+    return '/login';
+  }
+
+  // =========================
+  // USUARIO AUTENTICADO
+  // =========================
+  if (loggedIn) {
+    // Si intenta entrar nuevamente a Splash o Login
+    if (location == '/splash' || location == '/login') {
+      return '/home';
+    }
+
+    // Puede navegar libremente
+    return null;
+  }
+
+  return null;
+}
+
+// ===================================
+// RUTAS
+// ===================================
 final GoRouter appRouter = GoRouter(
-  initialLocation: '/login',
+  // initialLocation: '/login',
+  initialLocation: '/splash',
   debugLogDiagnostics: true,
   routes: [
     // AUTH
-    GoRoute(path: '/login', builder: (_, __) => const LoginPage()),
+    GoRoute(
+      path: '/splash',
+      name: 'splash',
+      builder: (_, __) => const SplashPage(),
+    ),
+    GoRoute(
+      path: '/login',
+      name: "login",
+      builder: (_, __) => const LoginPage(),
+    ),
 
-    GoRoute(path: '/register', builder: (_, __) => const RegisterPage()),
+    GoRoute(
+      path: '/register',
+      name: "register",
+      builder: (_, __) => const RegisterPage(),
+    ),
 
-    GoRoute(path: '/loading', builder: (_, __) => const LoadingPage()),
+    GoRoute(
+      path: '/loading',
+      name: "loading",
+      builder: (_, __) => const LoadingPage(),
+    ),
+
+    GoRoute(
+      path: '/logout',
+      name: "logout",
+      builder: (_, __) => const LogoutLoadingPage(),
+    ),
 
     // APP
     ShellRoute(
@@ -36,16 +108,22 @@ final GoRouter appRouter = GoRouter(
 
       routes: [
         // 1. HOME
-        GoRoute(path: '/home', builder: (_, __) => const HomeContent()),
+        GoRoute(
+          path: '/home',
+          name: "home",
+          builder: (_, __) => const HomeContent(),
+        ),
 
         // 2. MAPA
         GoRoute(
           path: '/mapa',
+          name: "mapa",
           builder: (_, __) => const MapaPage(),
 
           routes: [
             GoRoute(
               path: 'incident',
+              name: "mapa_incident",
 
               builder: (context, state) {
                 final incident = state.extra as IncidentData;
@@ -57,26 +135,41 @@ final GoRouter appRouter = GoRouter(
         ),
 
         // 4. USUARIOS
-        GoRoute(path: '/usuarios', builder: (_, __) => const UsuariosPage()),
+        GoRoute(
+          path: '/usuarios',
+          name: 'usuarios',
+          builder: (_, __) => const UsuariosPage(),
+        ),
 
         // 5. ALERTAS
-        GoRoute(path: '/alertas', builder: (_, __) => const AlertasPage()),
+        GoRoute(
+          path: '/alertas',
+          name: 'alertas',
+          builder: (_, __) => const AlertasPage(),
+        ),
       ],
     ),
 
+    // HISTORIAL
+    GoRoute(
+      path: '/historial',
+      name: 'historial',
+      builder: (_, __) => const HistorialPatrullajePage(),
+    ),
+
     // CHAT
-    GoRoute(path: '/chat', builder: (_, __) => const ChatPage()),
+    GoRoute(path: '/chat', name: 'chat', builder: (_, __) => const ChatPage()),
 
     // PERFIL
     GoRoute(
       path: '/profile',
-
+      name: 'profile',
       builder: (_, __) => const ProfilePage(),
 
       routes: [
         GoRoute(
           path: 'update',
-
+          name: 'profile_update',
           builder: (context, state) {
             final user = state.extra as Usuario;
 

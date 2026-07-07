@@ -5,8 +5,8 @@ import 'package:sis_patrullaje_cusco/src/domain/use_cases/historial_patrullaje/H
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/incidente/IncidenteUseCases.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/multimedias/MultimediasUsesCases.dart';
 
-import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/bloc/incidente_event.dart';
-import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/bloc/incidente_state.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/blocs/incidencia/incidente_event.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/blocs/incidencia/incidente_state.dart';
 
 // Handlers
 import 'handlers/incidente_handlers.dart';
@@ -52,7 +52,7 @@ class IncidenteBloc extends Bloc<IncidenteEvent, IncidenteState> {
     _uiHandlers = const UiHandlers();
 
     // Context
-    _contextHandlers = const ContextHandlers();
+    _contextHandlers = ContextHandlers(incidenteUseCases: incidenteUseCases);
 
     // INCIDENTE
     on<CrearIncidenteEvent>(
@@ -61,6 +61,26 @@ class IncidenteBloc extends Bloc<IncidenteEvent, IncidenteState> {
     on<ReporteRapidoEvent>(
       (event, emit) =>
           _incidenteHandlers.onReporteRapido(event, emit, state, add),
+    );
+
+    on<ObtenerIncidenciaEvent>(
+      (event, emit) =>
+          _incidenteHandlers.onObtenerIncidencia(event, emit, state),
+    );
+
+    on<ObtenerEvidenciasEvent>(
+      (event, emit) =>
+          _incidenteHandlers.onObtenerEvidencias(event, emit, state),
+    );
+
+    on<AgregarEvidenciasEvent>(
+      (event, emit) =>
+          _incidenteHandlers.onAgregarEvidencias(event, emit, state),
+    );
+
+    on<EliminarEvidenciaEvent>(
+      (event, emit) =>
+          _incidenteHandlers.onEliminarEvidencia(event, emit, state),
     );
 
     // LOCATION
@@ -118,6 +138,15 @@ class IncidenteBloc extends Bloc<IncidenteEvent, IncidenteState> {
     on<ObtenerIncidentesCercanosEvent>(
       (event, emit) =>
           _contextHandlers.onObtenerIncidentesCercanos(event, emit, state),
+    );
+
+    on<ObtenerMapaIncidentesEvent>(
+      (event, emit) =>
+          _contextHandlers.onObtenerMapaIncidentes(event, emit, state),
+    );
+
+    on<ObtenerDashboardIncidentesEvent>(
+      (event, emit) => _contextHandlers.onObtenerDashboard(event, emit, state),
     );
   }
 }

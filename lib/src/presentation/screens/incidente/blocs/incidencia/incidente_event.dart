@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:sis_patrullaje_cusco/src/domain/models/incidencia_model.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/enums/incidente_tab_enum.dart';
 
@@ -15,16 +17,55 @@ class LimpiarErrorEvent extends IncidenteEvent {
 }
 
 // INCIDENTE
+
+// - Crear incidente
 class CrearIncidenteEvent extends IncidenteEvent {
   final IncidenteModel params;
 
   const CrearIncidenteEvent(this.params);
 }
 
+// - Reporte rápido
 class ReporteRapidoEvent extends IncidenteEvent {
   final IncidenteRapidoEnum tipo;
 
   const ReporteRapidoEvent(this.tipo);
+}
+
+// - Obtener incidente
+class ObtenerIncidenciaEvent extends IncidenteEvent {
+  final int incidenciaId;
+
+  const ObtenerIncidenciaEvent(this.incidenciaId);
+}
+
+// - Obtener evidencias
+class ObtenerEvidenciasEvent extends IncidenteEvent {
+  final int incidenciaId;
+
+  const ObtenerEvidenciasEvent(this.incidenciaId);
+}
+
+// - Agregar evidencias
+class AgregarEvidenciasEvent extends IncidenteEvent {
+  final int incidenciaId;
+  final List<File> archivos;
+
+  const AgregarEvidenciasEvent({
+    required this.incidenciaId,
+    required this.archivos,
+  });
+}
+
+// - Remover evidencia
+class EliminarEvidenciaEvent extends IncidenteEvent {
+  final int incidenciaId;
+  final int evidenciaId;
+
+  const EliminarEvidenciaEvent({
+    required this.incidenciaId,
+    required this.evidenciaId,
+  });
 }
 
 // MEDIA
@@ -87,6 +128,17 @@ class ContraerSheetEvent extends IncidenteEvent {
 }
 
 // CONTEXTUAL
+// - Obtener incidentes cercanos
 class ObtenerIncidentesCercanosEvent extends IncidenteEvent {
   const ObtenerIncidentesCercanosEvent();
+}
+
+// - Obtener mapa de incidentes
+class ObtenerMapaIncidentesEvent extends IncidenteEvent {
+  const ObtenerMapaIncidentesEvent();
+}
+
+// - Dashboard de incidentes
+class ObtenerDashboardIncidentesEvent extends IncidenteEvent {
+  const ObtenerDashboardIncidentesEvent();
 }

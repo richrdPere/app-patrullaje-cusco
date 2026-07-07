@@ -21,12 +21,14 @@ class PatrullajeEntity {
 }
 
 class Zona {
+  final int id;
   final String nombre;
   final String riesgo;
   final String descripcion;
   final List<Coordenada> coordenadas;
 
   Zona({
+    required this.id,
     required this.nombre,
     required this.descripcion,
     required this.riesgo,
@@ -48,8 +50,6 @@ class Unidad {
 
   Unidad({required this.codigo, required this.tipo, required this.placa});
 }
-
-
 
 enum PatrullajeStatus {
   sinAsignacion,

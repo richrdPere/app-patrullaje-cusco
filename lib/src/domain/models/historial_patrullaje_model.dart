@@ -2,8 +2,8 @@ class HistorialPatrullajeModel {
   final int? id;
 
   final int patrullajeId;
-  final int serenoId;
-  final int zonaId;
+  // final int serenoId;
+  // final int zonaId;
   final String tipo;
   final String titulo;
   final String descripcion;
@@ -19,8 +19,8 @@ class HistorialPatrullajeModel {
   HistorialPatrullajeModel({
     this.id,
     required this.patrullajeId,
-    required this.serenoId,
-    required this.zonaId,
+    // required this.serenoId,
+    // required this.zonaId,
     required this.tipo,
     required this.titulo,
     required this.descripcion,
@@ -39,8 +39,8 @@ class HistorialPatrullajeModel {
     return HistorialPatrullajeModel(
       id: json["id"],
       patrullajeId: json["patrullaje_id"],
-      serenoId: json["sereno_id"],
-      zonaId: json["zona_id"],
+      // serenoId: json["sereno_id"],
+      // zonaId: json["zona_id"],
       tipo: json["tipo"] ?? "OBSERVACION",
       titulo: json["titulo"] ?? "",
       descripcion: json["descripcion"] ?? "",
@@ -66,8 +66,8 @@ class HistorialPatrullajeModel {
     return {
       "id": id,
       "patrullaje_id": patrullajeId,
-      "sereno_id": serenoId,
-      "zona_id": zonaId,
+      // "sereno_id": serenoId,
+      // "zona_id": zonaId,
       "tipo": tipo,
       "titulo": titulo,
       "descripcion": descripcion,
@@ -86,8 +86,8 @@ class HistorialPatrullajeModel {
   HistorialPatrullajeModel copyWith({
     int? id,
     int? patrullajeId,
-    int? serenoId,
-    int? zonaId,
+    // int? serenoId,
+    // int? zonaId,
     String? tipo,
     String? titulo,
     String? descripcion,
@@ -101,8 +101,8 @@ class HistorialPatrullajeModel {
     return HistorialPatrullajeModel(
       id: id ?? this.id,
       patrullajeId: patrullajeId ?? this.patrullajeId,
-      serenoId: serenoId ?? this.serenoId,
-      zonaId: zonaId ?? this.zonaId,
+      // serenoId: serenoId ?? this.serenoId,
+      // zonaId: zonaId ?? this.zonaId,
       tipo: tipo ?? this.tipo,
       titulo: titulo ?? this.titulo,
       descripcion: descripcion ?? this.descripcion,

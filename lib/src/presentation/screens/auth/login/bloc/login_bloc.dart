@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:sis_patrullaje_cusco/src/domain/entities/auth_response.dart';
+import 'package:sis_patrullaje_cusco/src/data/models/login/auth_response.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/auth/AuthUseCases.dart';
 import 'package:sis_patrullaje_cusco/src/domain/utils/Resource.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/auth/login/bloc/login_event.dart';
@@ -24,7 +24,7 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
 
   // FUNCIONES
   Future<void> _onInitEvent(InitEvent event, Emitter<LoginState> emit) async {
-    await authUsesCases.logoutSession.run();
+    // await authUsesCases.logoutSession.run();
 
     AuthResponse? authResponse = await authUsesCases.getUserSession.run();
     emit(state.copyWith(formKey: formKey));

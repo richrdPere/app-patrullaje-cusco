@@ -1,51 +1,39 @@
 import 'package:sis_patrullaje_cusco/src/domain/models/historial_patrullaje_model.dart';
 
 abstract class HistorialPatrullajeRepository {
-
   // =========================================================
-  // REGISTRAR HISTORIAL OPERATIVO
-  // POST /historial
+  // REGISTRAR HISTORIAL
+  // POST /historial/crear
   // =========================================================
   Future<HistorialPatrullajeModel> registrarHistorial(
-    HistorialPatrullajeModel historial
+    HistorialPatrullajeModel historial,
   );
 
   // =========================================================
-  // OBTENER HISTORIAL POR PATRULLAJE
-  // GET /historial/patrullaje/:patrullajeId
+  // OBTENER HISTORIAL DE UN PATRULLAJE
+  // GET /historial/patrullaje/:id
   // =========================================================
-  Future<List<HistorialPatrullajeModel>>
-      obtenerHistorialPorPatrullaje(
-    int patrullajeId
+  Future<List<HistorialPatrullajeModel>> obtenerHistorialPorPatrullaje(
+    int patrullajeId,
   );
 
   // =========================================================
-  // OBTENER CONTEXTO OPERATIVO DE ZONA
-  // GET /historial/zona/:zonaId
-  //
-  // Incluye:
-  // - historial
-  // - incidencias
-  // - recomendaciones
-  // - observaciones
+  // OBTENER DETALLE DEL HISTORIAL
+  // GET /historial/detalle/:id
   // =========================================================
-  Future<Map<String, dynamic>> obtenerContextoZona(
-    int zonaId
-  );
+  Future<HistorialPatrullajeModel> obtenerDetalleHistorial(int historialId);
 
   // =========================================================
-  // OBTENER RESUMEN OPERATIVO DE ZONA
-  // GET /historial/zona/:zonaId/resumen
+  // EDITAR HISTORIAL
+  // PUT /historial/editar/:id
   // =========================================================
-  Future<Map<String, dynamic>> obtenerResumenZona(
-    int zonaId
+  Future<HistorialPatrullajeModel> editarHistorial(
+    HistorialPatrullajeModel historial,
   );
 
   // =========================================================
   // ARCHIVAR HISTORIAL
-  // PUT /historial/archivar/:historialId
+  // PATCH /historial/archivar/:id
   // =========================================================
-  Future<void> archivarHistorial(
-    int historialId
-  );
+  Future<void> archivarHistorial(int historialId);
 }

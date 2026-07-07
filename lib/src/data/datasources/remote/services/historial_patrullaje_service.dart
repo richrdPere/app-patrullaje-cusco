@@ -23,12 +23,16 @@ class HistorialPatrullajeService {
 
   String get API_REGISTRAR_HISTORIAL => API_BASE;
 
-  String API_HISTORIAL_PATRULLAJE(int patrullajeId) =>
+  String get API_CREATE_HISTORIAL => '$API_BASE/crear';
+
+  String API_GET_HISTORIAL_PATRULLAJE(int patrullajeId) =>
       '$API_BASE/patrullaje/$patrullajeId';
 
-  String API_CONTEXTO_ZONA(int zonaId) => '$API_BASE/zona/$zonaId';
+  String API_GET_DETALLE_HISTORIAL(int historialId) =>
+      '$API_BASE/detalle/$historialId';
 
-  String API_RESUMEN_ZONA(int zonaId) => '$API_BASE/zona/$zonaId/resumen';
+  String API_UPDATE_HISTORIAL(int historialId) =>
+      '$API_BASE/editar/$historialId';
 
   String API_ARCHIVAR_HISTORIAL(int historialId) =>
       '$API_BASE/archivar/$historialId';
@@ -45,7 +49,7 @@ class HistorialPatrullajeService {
 
     return {
       'Content-Type': 'application/json',
-      'Authorization': 'Bearer ${session.token}',
+      'Authorization': 'Bearer ${session.data.token}',
     };
   }
 
@@ -58,7 +62,7 @@ class HistorialPatrullajeService {
     try {
       final headers = await _getHeaders();
 
-      Uri url = Uri.parse(API_REGISTRAR_HISTORIAL);
+      Uri url = Uri.parse(API_CREATE_HISTORIAL);
 
       final response = await http.post(
         url,
@@ -87,7 +91,7 @@ class HistorialPatrullajeService {
     try {
       final headers = await _getHeaders();
 
-      Uri url = Uri.parse(API_HISTORIAL_PATRULLAJE(patrullajeId));
+      Uri url = Uri.parse(API_GET_HISTORIAL_PATRULLAJE(patrullajeId));
 
       final response = await http.get(url, headers: headers);
 
@@ -108,45 +112,56 @@ class HistorialPatrullajeService {
   }
 
   // =====================================================
-  // 3. OBTENER CONTEXTO OPERATIVO DE ZONA
+  // 3. OBTENER DETALLE DEL HISTORIAL
   // =====================================================
-  Future<Map<String, dynamic>> obtenerContextoZona(int zonaId) async {
+  Future<HistorialPatrullajeModel> obtenerDetalleHistorial(
+    int historialId,
+  ) async {
     try {
       final headers = await _getHeaders();
-      Uri url = Uri.parse(API_CONTEXTO_ZONA(zonaId));
+
+      Uri url = Uri.parse(API_GET_DETALLE_HISTORIAL(historialId));
+
       final response = await http.get(url, headers: headers);
+
       final data = json.decode(response.body);
 
       if (response.statusCode == 200) {
-        return data;
+        return HistorialPatrullajeModel.fromJson(data['historial']);
       } else {
-        throw Exception(data['msg'] ?? 'Error al obtener contexto operativo');
+        throw Exception(data['msg'] ?? 'Error al obtener detalle');
       }
     } catch (error) {
-      throw Exception('Error obtenerContextoZona: $error');
+      throw Exception('Error obtenerDetalleHistorial: $error');
     }
   }
 
   // =====================================================
-  // 4. OBTENER RESUMEN OPERATIVO
+  // 4. EDITAR HISTORIAL
   // =====================================================
-  Future<Map<String, dynamic>> obtenerResumenZona(int zonaId) async {
+  Future<HistorialPatrullajeModel> editarHistorial(
+    HistorialPatrullajeModel historial,
+  ) async {
     try {
       final headers = await _getHeaders();
 
-      Uri url = Uri.parse(API_RESUMEN_ZONA(zonaId));
+      Uri url = Uri.parse(API_UPDATE_HISTORIAL(historial.id!));
 
-      final response = await http.get(url, headers: headers);
+      final response = await http.put(
+        url,
+        headers: headers,
+        body: jsonEncode(historial.toJson()),
+      );
 
       final data = json.decode(response.body);
 
       if (response.statusCode == 200) {
-        return data['resumen'];
+        return HistorialPatrullajeModel.fromJson(data['historial']);
       } else {
-        throw Exception(data['msg'] ?? 'Error al obtener resumen');
+        throw Exception(data['msg'] ?? 'Error al editar historial');
       }
     } catch (error) {
-      throw Exception('Error obtenerResumenZona: $error');
+      throw Exception('Error editarHistorial: $error');
     }
   }
 
@@ -159,7 +174,7 @@ class HistorialPatrullajeService {
 
       Uri url = Uri.parse(API_ARCHIVAR_HISTORIAL(historialId));
 
-      final response = await http.put(url, headers: headers);
+      final response = await http.patch(url, headers: headers);
 
       final data = json.decode(response.body);
 

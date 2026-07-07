@@ -1,4 +1,10 @@
-enum IncidenteTabEnum { incidente, evidencia, emergencia, historial, video }
+enum IncidenteTabEnum { 
+  incidente, 
+  evidencia, 
+  emergencia, 
+  historial, 
+  observacion,
+  video }
 
 enum IncidenteRapidoEnum {
   robo,

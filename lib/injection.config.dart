@@ -67,6 +67,10 @@ import 'package:sis_patrullaje_cusco/src/domain/use_cases/users/UsersUseCases.da
     as _i913;
 import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/socket/socket_bloc.dart'
     as _i362;
+import 'package:sis_patrullaje_cusco/src/presentation/shared/screens/loading/bloc/loading_bloc.dart'
+    as _i318;
+import 'package:sis_patrullaje_cusco/src/presentation/shared/screens/splash/bloc/splash_bloc.dart'
+    as _i717;
 
 extension GetItInjectableX on _i174.GetIt {
   // initializes the registration of main-scope dependencies inside of GetIt
@@ -113,6 +117,12 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i647.PatrullajeService>(),
         gh<_i481.SocketRepository>(),
       ),
+    );
+    gh.factory<_i318.LoadingBloc>(
+      () => _i318.LoadingBloc(gh<_i422.AuthUsesCases>()),
+    );
+    gh.factory<_i717.SplashBloc>(
+      () => _i717.SplashBloc(gh<_i422.AuthUsesCases>()),
     );
     gh.lazySingleton<_i427.SocketUseCases>(
       () => appModule.socketUseCases(gh<_i481.SocketRepository>()),

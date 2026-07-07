@@ -2,7 +2,7 @@ import 'package:bloc/bloc.dart';
 
 import '../incidente_event.dart';
 import '../incidente_state.dart';
-import '../../enums/incidente_tab_enum.dart';
+import '../../../enums/incidente_tab_enum.dart';
 
 class UiHandlers {
   const UiHandlers();

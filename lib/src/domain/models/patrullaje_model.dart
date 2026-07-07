@@ -22,6 +22,7 @@ class PatrullajeModel extends PatrullajeEntity {
       descripcion: json['descripcion'] ?? '',
 
       zona: Zona(
+        id: json['zona']?['id'] ?? 0,
         nombre: json['zona']?['nombre'] ?? '',
         descripcion: json['zona']?['descripcion'] ?? '',
         riesgo: json['zona']?['riesgo'] ?? '',

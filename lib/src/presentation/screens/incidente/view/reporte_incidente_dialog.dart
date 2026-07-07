@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/bloc/incidente_bloc.dart';
-import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/bloc/incidente_event.dart';
-import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/bloc/incidente_state.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/blocs/incidencia/incidente_bloc.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/blocs/incidencia/incidente_event.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/blocs/incidencia/incidente_state.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/enums/incidente_tab_enum.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/view/screens/emergencia_screen.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/view/screens/evidencia_screen.dart';
@@ -92,6 +92,9 @@ class ReporteIncidenteDialog extends StatelessWidget {
 
                     IncidenteTabEnum.historial =>
                       const HistorialIncidentesScreen(),
+
+                    IncidenteTabEnum.observacion =>
+                      const HistorialIncidentesScreen(),
                   },
                 ),
 
@@ -143,6 +146,12 @@ IncidenteHeaderInfo _getHeader(IncidenteTabEnum tab) {
         subtitle: 'Asistencia inmediata',
       );
 
+    case IncidenteTabEnum.observacion:
+      return const IncidenteHeaderInfo(
+        title: 'Observación',
+        subtitle: 'Anota actividad sospechosa',
+      );
+
     case IncidenteTabEnum.historial:
       return const IncidenteHeaderInfo(
         title: 'Historial de Incidentes',
@@ -165,8 +174,10 @@ class _IncidenteBottomTabsState extends State<_IncidenteBottomTabs> {
     ('Incidente', IncidenteTabEnum.incidente),
     ('Video', IncidenteTabEnum.video),
     ('Evidencia', IncidenteTabEnum.evidencia),
-    ('SOS', IncidenteTabEnum.emergencia),
+    ('Observación', IncidenteTabEnum.observacion),
     ('Historial', IncidenteTabEnum.historial),
+    ('SOS', IncidenteTabEnum.emergencia),
+   
   ];
 
   late final List<GlobalKey> _tabKeys;

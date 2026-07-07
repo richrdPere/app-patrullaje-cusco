@@ -2,7 +2,7 @@ import 'package:equatable/equatable.dart';
 
 // Utils
 
-import 'package:sis_patrullaje_cusco/src/domain/entities/auth_response.dart';
+import 'package:sis_patrullaje_cusco/src/data/models/login/auth_response.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/shared/utils/BlocFormItem.dart';
 
 abstract class LoginEvent extends Equatable {

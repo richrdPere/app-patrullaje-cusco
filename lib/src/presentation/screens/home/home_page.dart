@@ -3,7 +3,7 @@ import 'package:sis_patrullaje_cusco/src/presentation/screens/alertas/view/alert
 import 'package:sis_patrullaje_cusco/src/presentation/screens/home/home_content.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/view/reporte_incidente_dialog.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/mapa/view/mapa/mapa_page.dart';
-import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/view/reporte_incidente_page.dart';
+//import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/view/reporte_incidente_page.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/usuarios/usuarios_page.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/shared/widgets/custom_bottom_navigation.dart';
 
@@ -23,7 +23,7 @@ class _HomePageState extends State<HomePage> {
   final List<Widget> pages = [
     const HomeContent(),
     const MapaPage(),
-    const ReporteIncidentePage(),
+    //const ReporteIncidentePage(),
     const UsuariosPage(),
     const AlertasPage(),
   ];

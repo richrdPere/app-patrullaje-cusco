@@ -18,6 +18,7 @@ class IncidenteHandlers {
     required this.historialUseCases,
   });
 
+  // 1. CREAR INCIDENCIA
   Future<void> onCrearIncidente(
     CrearIncidenteEvent event,
     Emitter<IncidenteState> emit,
@@ -32,7 +33,7 @@ class IncidenteHandlers {
 
       final historial = _buildHistorialFromIncidencia(incidencia);
 
-      await historialUseCases.registerResumenHistorial.run(historial);
+      await historialUseCases.createHistorial.run(historial);
 
       emit(
         state.copyWith(isLoading: false, success: true, incidencia: incidencia),
@@ -44,6 +45,92 @@ class IncidenteHandlers {
     }
   }
 
+  // 2. OBTENER DETALLE INCIDENCIA
+  Future<void> onObtenerIncidencia(
+    ObtenerIncidenciaEvent event,
+    Emitter<IncidenteState> emit,
+    IncidenteState state,
+  ) async {
+    emit(state.copyWith(isLoading: true, error: null));
+
+    try {
+      final incidencia = await incidenteUseCases.getIncidencia.run(
+        event.incidenciaId,
+      );
+
+      emit(
+        state.copyWith(isLoading: false, incidenciaSeleccionada: incidencia),
+      );
+    } catch (e) {
+      emit(state.copyWith(isLoading: false, error: e.toString()));
+    }
+  }
+
+  // 3. OBTENER EVIDENCIAS
+  Future<void> onObtenerEvidencias(
+    ObtenerEvidenciasEvent event,
+    Emitter<IncidenteState> emit,
+    IncidenteState state,
+  ) async {
+    emit(state.copyWith(loadingEvidencias: true, error: null));
+
+    try {
+      final evidencias = await incidenteUseCases.getEvidenciasIncidente.run(
+        event.incidenciaId,
+      );
+
+      emit(state.copyWith(loadingEvidencias: false, evidencias: evidencias));
+    } catch (e) {
+      emit(state.copyWith(loadingEvidencias: false, error: e.toString()));
+    }
+  }
+
+  // 4. AGREGAR EVIDENCIAS
+  Future<void> onAgregarEvidencias(
+    AgregarEvidenciasEvent event,
+    Emitter<IncidenteState> emit,
+    IncidenteState state,
+  ) async {
+    emit(state.copyWith(loadingEvidencias: true, error: null));
+
+    try {
+      await incidenteUseCases.addEvidenciasIncidente.run(
+        incidenciaId: event.incidenciaId,
+        archivos: event.archivos,
+      );
+
+      final evidencias = await incidenteUseCases.getEvidenciasIncidente.run(
+        event.incidenciaId,
+      );
+
+      emit(state.copyWith(loadingEvidencias: false, evidencias: evidencias));
+    } catch (e) {
+      emit(state.copyWith(loadingEvidencias: false, error: e.toString()));
+    }
+  }
+
+  // 5. ELIMINAR EVIDENCIA
+  Future<void> onEliminarEvidencia(
+    EliminarEvidenciaEvent event,
+    Emitter<IncidenteState> emit,
+    IncidenteState state,
+  ) async {
+    emit(state.copyWith(loadingEvidencias: true, error: null));
+
+    try {
+      await incidenteUseCases.removeEvidenciaIncidente.run(event.evidenciaId);
+
+      final evidencias = await incidenteUseCases.getEvidenciasIncidente.run(
+        event.incidenciaId,
+      );
+
+      emit(state.copyWith(loadingEvidencias: false, evidencias: evidencias));
+    } catch (e) {
+      emit(state.copyWith(loadingEvidencias: false, error: e.toString()));
+    }
+  }
+
+  // 6. REPORTE RÁPIDO
   Future<void> onReporteRapido(
     ReporteRapidoEvent event,
     Emitter<IncidenteState> emit,
@@ -61,19 +148,21 @@ class IncidenteHandlers {
       descripcion: 'Reporte rápido generado',
       latitud: state.latitud!,
       longitud: state.longitud!,
-      usuarioId: 0,
     );
 
     add(CrearIncidenteEvent(incidente));
   }
 
+  // ==================================================
+  // HELPERS
+  // ==================================================
   HistorialPatrullajeModel _buildHistorialFromIncidencia(
     IncidenteModel incidencia,
   ) {
     return HistorialPatrullajeModel(
       patrullajeId: incidencia.patrullajeId ?? 0,
-      serenoId: incidencia.usuarioId,
-      zonaId: incidencia.zonaId ?? 0,
+      // serenoId: incidencia.usuarioId,
+      // zonaId: incidencia.zonaId ?? 0,
       tipo: "ALERTA",
       titulo: "Incidencia reportada: ${incidencia.tipo}",
       descripcion: incidencia.descripcion,

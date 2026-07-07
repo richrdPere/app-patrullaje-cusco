@@ -42,7 +42,7 @@ class PatrullajeService {
 
     return {
       'Content-Type': 'application/json',
-      'Authorization': 'Bearer ${session.token}',
+      'Authorization': 'Bearer ${session.data.token}',
     };
   }
 

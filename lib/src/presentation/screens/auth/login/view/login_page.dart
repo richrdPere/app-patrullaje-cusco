@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:go_router/go_router.dart';
+import 'package:sis_patrullaje_cusco/src/config/core/session/session_bloc.dart';
+import 'package:sis_patrullaje_cusco/src/data/models/login/auth_response.dart';
 // import 'package:sis_patrullaje_cusco/src/domain/entities/auth_response.dart';
 import 'package:sis_patrullaje_cusco/src/domain/utils/Resource.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/auth/login/bloc/login_bloc.dart';
@@ -22,11 +24,6 @@ class _LoginPageState extends State<LoginPage> {
   @override
   void initState() {
     super.initState();
-
-    // Verificar sesión al iniciar
-    // WidgetsBinding.instance.addPostFrameCallback((_) {
-    //   context.read<LoginBloc>().add(InitEvent());
-    // });
   }
 
   @override
@@ -40,19 +37,26 @@ class _LoginPageState extends State<LoginPage> {
         listenWhen: (prev, curr) => prev.response != curr.response,
 
         listener: (context, state) {
-          final responseState = state.response;
-          if (responseState is ErrorData) {
+          final response = state.response;
+
+          if (response is ErrorData) {
             Fluttertoast.showToast(
-              msg: responseState.error,
+              msg: response.error,
               toastLength: Toast.LENGTH_LONG,
             );
-          } else if (responseState is Success) {
+          } else if (response is Success<AuthResponse>) {
+            final auth = response.data;
+
+            // Actualizar el estado global de la sesión
+            context.read<SessionBloc>().updateSession(auth);
+
             Fluttertoast.showToast(
-              msg: "Login Exitoso",
+              msg: "Login exitoso",
               toastLength: Toast.LENGTH_LONG,
             );
 
-            context.go('/home');
+            // Ir a la pantalla de carga
+            context.go('/loading');
           }
         },
         child: BlocBuilder<LoginBloc, LoginState>(

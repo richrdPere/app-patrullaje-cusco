@@ -19,12 +19,19 @@ import 'package:sis_patrullaje_cusco/src/domain/repositories/tracking_repository
 import 'package:sis_patrullaje_cusco/src/domain/repositories/users_repository.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/historial_patrullaje/HistorialPatrullajeUseCases.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/historial_patrullaje/historial_patrullaje_use_cases/ArchivarHistorialUseCase.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/historial_patrullaje/historial_patrullaje_use_cases/GetContextoZonaUseCase.dart';
+import 'package:sis_patrullaje_cusco/src/domain/use_cases/historial_patrullaje/historial_patrullaje_use_cases/GetHistorialByIdUseCase.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/historial_patrullaje/historial_patrullaje_use_cases/GetHistorialByPatrullajeUseCase.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/historial_patrullaje/historial_patrullaje_use_cases/GetResumenZonaUseCase.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/historial_patrullaje/historial_patrullaje_use_cases/RegisterHistorialUseCase.dart';
+import 'package:sis_patrullaje_cusco/src/domain/use_cases/historial_patrullaje/historial_patrullaje_use_cases/UpdateHistorialUseCase.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/incidente/IncidenteUseCases.dart';
+import 'package:sis_patrullaje_cusco/src/domain/use_cases/incidente/incidente_use_cases/AddEvidenciasIncidenteUseCase.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/incidente/incidente_use_cases/CreateIncidenteUseCase.dart';
+import 'package:sis_patrullaje_cusco/src/domain/use_cases/incidente/incidente_use_cases/GetDashboardIncidentesUseCase.dart';
+import 'package:sis_patrullaje_cusco/src/domain/use_cases/incidente/incidente_use_cases/GetEvidenciasIncidenteUseCase.dart';
+import 'package:sis_patrullaje_cusco/src/domain/use_cases/incidente/incidente_use_cases/GetIncidenciaUseCase.dart';
+import 'package:sis_patrullaje_cusco/src/domain/use_cases/incidente/incidente_use_cases/GetMapaIncidentesUseCase.dart';
+import 'package:sis_patrullaje_cusco/src/domain/use_cases/incidente/incidente_use_cases/GetNearbyIncidenciaUseCase.dart';
+import 'package:sis_patrullaje_cusco/src/domain/use_cases/incidente/incidente_use_cases/RemoveEvidenciaIncidenteUseCase.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/multimedias/MultimediasUsesCases.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/multimedias/multimedias_use_case/PickImageUseCase.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/multimedias/multimedias_use_case/PickVideoUseCase.dart';
@@ -211,24 +218,29 @@ abstract class AppModule {
   @injectable
   IncidenteUseCases get incidentUseCases => IncidenteUseCases(
     createIncidente: CreateIncidenteUseCase(incidenteRepository),
+    addEvidenciasIncidente: AddEvidenciasIncidenteUseCase(incidenteRepository),
+    removeEvidenciaIncidente: RemoveEvidenciaIncidenteUseCase(
+      incidenteRepository,
+    ),
+    getDashboardIncidentes: GetDashboardIncidentesUseCase(incidenteRepository),
+    getEvidenciasIncidente: GetEvidenciasIncidenteUseCase(incidenteRepository),
+    getIncidencia: GetIncidenciaUseCase(incidenteRepository),
+    getMapaIncidentes: GetMapaIncidentesUseCase(incidenteRepository),
+    getNearbyIncidentes: GetNearbyIncidentesUseCase(incidenteRepository),
   );
 
   // Historial Patrullaje
   @injectable
-  HistorialPatrullajeUseCases get historialPatrullajeUseCases =>
-      HistorialPatrullajeUseCases(
-        archivarHistorial: ArchivarHistorialUseCase(
-          historialPatrullajeRepository,
-        ),
-        getContextoZona: GetContextoZonaUseCase(historialPatrullajeRepository),
-        getHistorialByPatrullaje: GetHistorialByPatrullajeUseCase(
-          historialPatrullajeRepository,
-        ),
-        getResumenZona: GetResumenZonaUseCase(historialPatrullajeRepository),
-        registerResumenHistorial: RegisterHistorialUseCase(
-          historialPatrullajeRepository,
-        ),
-      );
+  HistorialPatrullajeUseCases
+  get historialPatrullajeUseCases => HistorialPatrullajeUseCases(
+    archivedHistorial: ArchivarHistorialUseCase(historialPatrullajeRepository),
+    getHistorialById: GetHistorialByIdUseCase(historialPatrullajeRepository),
+    getHistorialByPatrullaje: GetHistorialByPatrullajeUseCase(
+      historialPatrullajeRepository,
+    ),
+    updateHistorial: UpdateHistorialUseCase(historialPatrullajeRepository),
+    createHistorial: RegisterHistorialUseCase(historialPatrullajeRepository),
+  );
 
   // Users
   @injectable

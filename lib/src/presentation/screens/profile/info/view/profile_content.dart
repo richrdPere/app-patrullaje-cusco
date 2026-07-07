@@ -1,11 +1,11 @@
 // ignore_for_file: must_be_immutable
 
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+// import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sis_patrullaje_cusco/src/domain/models/usuarios.dart';
-import 'package:sis_patrullaje_cusco/src/presentation/screens/auth/login/bloc/login_bloc.dart';
-import 'package:sis_patrullaje_cusco/src/presentation/screens/auth/login/bloc/login_event.dart';
+// import 'package:sis_patrullaje_cusco/src/presentation/screens/auth/login/bloc/login_bloc.dart';
+// import 'package:sis_patrullaje_cusco/src/presentation/screens/auth/login/bloc/login_event.dart';
 // import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/tracking/tracking_bloc.dart';
 // import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/tracking/tracking_event.dart';
 
@@ -31,10 +31,10 @@ class ProfileContent extends StatelessWidget {
               }),
               _actionProfile('CERRAR SESION', Icons.settings_power, () {
                 // 1. LOGOUT
-                context.read<LoginBloc>().add(LogoutEvent());
+                // context.read<LoginBloc>().add(LogoutEvent());
 
                 // 2. REDIRIGIR
-                context.goNamed('login');
+                context.goNamed('logout');
               }),
 
               SizedBox(height: 35),
