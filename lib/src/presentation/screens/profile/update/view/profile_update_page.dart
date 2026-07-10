@@ -43,7 +43,7 @@ class _ProfileUpdatePageState extends State<ProfileUpdatePage> {
           final response = state.response;
           if (response is ErrorData) {
             Fluttertoast.showToast(
-              msg: response.error,
+              msg: response.message,
               toastLength: Toast.LENGTH_LONG,
             );
           } else if (response is Success) {

@@ -2,23 +2,16 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
-// Repository
-import 'package:sis_patrullaje_cusco/src/domain/repositories/auth_repository.dart';
-
 // Environment
 import 'package:sis_patrullaje_cusco/src/config/constants/environment.dart'
     as url_backend;
 
 // Models
-import 'package:sis_patrullaje_cusco/src/domain/models/historial_patrullaje_model.dart';
+import 'package:sis_patrullaje_cusco/src/data/models/historial_patrullaje/historial_patrullaje_model.dart';
+import 'package:sis_patrullaje_cusco/src/domain/utils/Resource.dart';
 
 class HistorialPatrullajeService {
-  final AuthRepository authRepository;
-  HistorialPatrullajeService(this.authRepository);
-
-  // =====================================================
   // APIS
-  // =====================================================
   String get API_BASE => '${url_backend.Environment.mainUrl}/historial';
 
   String get API_REGISTRAR_HISTORIAL => API_BASE;
@@ -37,32 +30,47 @@ class HistorialPatrullajeService {
   String API_ARCHIVAR_HISTORIAL(int historialId) =>
       '$API_BASE/archivar/$historialId';
 
-  // =====================================================
-  // HEADERS
-  // =====================================================
-  Future<Map<String, String>> _getHeaders() async {
-    final session = await authRepository.getUserSession();
-
-    if (session == null) {
-      throw Exception('No hay sesión activa');
-    }
-
+  Map<String, String> _getHeaders(String token) {
     return {
       'Content-Type': 'application/json',
-      'Authorization': 'Bearer ${session.data.token}',
+      'Authorization': 'Bearer $token',
     };
   }
 
-  // =====================================================
-  // 1. REGISTRAR HISTORIAL
-  // =====================================================
-  Future<HistorialPatrullajeModel?> registrarHistorial(
-    HistorialPatrullajeModel historial,
-  ) async {
+  // Helpers
+  Map<String, dynamic> _decodeResponse(http.Response response) {
     try {
-      final headers = await _getHeaders();
+      return json.decode(response.body) as Map<String, dynamic>;
+    } catch (_) {
+      return {'success': false, 'message': 'Respuesta inválida del servidor'};
+    }
+  }
 
-      Uri url = Uri.parse(API_CREATE_HISTORIAL);
+  ErrorData<T> _buildError<T>(Map<String, dynamic> body, int statusCode) {
+    return ErrorData<T>(
+      message:
+          body['message']?.toString() ??
+          body['msg']?.toString() ??
+          'Ocurrió un error.',
+      error: body['error']?.toString(),
+      statusCode: statusCode,
+    );
+  }
+
+  bool _isSuccess(int statusCode) {
+    return statusCode >= 200 && statusCode < 300;
+  }
+
+  // *********************************************************
+  // 1. REGISTRAR HISTORIAL
+  // *********************************************************
+  Future<Resource<HistorialPatrullajeModel>> registerHistorial({
+    required HistorialPatrullajeModel historial,
+    required String token,
+  }) async {
+    try {
+      final headers = _getHeaders(token);
+      final url = Uri.parse(API_CREATE_HISTORIAL);
 
       final response = await http.post(
         url,
@@ -70,82 +78,111 @@ class HistorialPatrullajeService {
         body: jsonEncode(historial.toJson()),
       );
 
-      final data = json.decode(response.body);
+      final body = _decodeResponse(response);
 
-      if (response.statusCode == 201) {
-        return HistorialPatrullajeModel.fromJson(data['historial']);
-      } else {
-        throw Exception(data['msg'] ?? 'Error al registrar historial');
+      if (_isSuccess(response.statusCode)) {
+        final data = body['data'] ?? body['historial'];
+
+        return Success<HistorialPatrullajeModel>(
+          HistorialPatrullajeModel.fromJson(data),
+        );
       }
+
+      return _buildError<HistorialPatrullajeModel>(body, response.statusCode);
     } catch (error) {
-      throw Exception('Error registrarHistorial: $error');
+      return ErrorData<HistorialPatrullajeModel>(
+        message: 'Error al registrar historial.',
+        error: error.toString(),
+      );
     }
   }
 
-  // =====================================================
+  // *********************************************************
   // 2. OBTENER HISTORIAL POR PATRULLAJE
-  // =====================================================
-  Future<List<HistorialPatrullajeModel>> obtenerHistorialPorPatrullaje(
-    int patrullajeId,
-  ) async {
+  // *********************************************************
+  Future<Resource<List<HistorialPatrullajeModel>>>
+  getHistorialByPatrullaje({
+    required int patrullajeId,
+    required String token,
+  }) async {
     try {
-      final headers = await _getHeaders();
-
-      Uri url = Uri.parse(API_GET_HISTORIAL_PATRULLAJE(patrullajeId));
+      final headers = _getHeaders(token);
+      final url = Uri.parse(API_GET_HISTORIAL_PATRULLAJE(patrullajeId));
 
       final response = await http.get(url, headers: headers);
 
-      final data = json.decode(response.body);
+      final body = _decodeResponse(response);
 
-      if (response.statusCode == 200) {
-        final List historialJson = data['historial'];
+      if (_isSuccess(response.statusCode)) {
+        final List historialJson = body['data'] ?? [];
 
-        return historialJson
+        final historial = historialJson
             .map((e) => HistorialPatrullajeModel.fromJson(e))
             .toList();
-      } else {
-        throw Exception(data['msg'] ?? 'Error al obtener historial');
+
+        return Success<List<HistorialPatrullajeModel>>(historial);
       }
+
+      return _buildError<List<HistorialPatrullajeModel>>(
+        body,
+        response.statusCode,
+      );
     } catch (error) {
-      throw Exception('Error obtenerHistorialPorPatrullaje: $error');
+      return ErrorData<List<HistorialPatrullajeModel>>(
+        message: 'Error al obtener historial por patrullaje.',
+        error: error.toString(),
+      );
     }
   }
 
-  // =====================================================
+  // *********************************************************
   // 3. OBTENER DETALLE DEL HISTORIAL
-  // =====================================================
-  Future<HistorialPatrullajeModel> obtenerDetalleHistorial(
-    int historialId,
-  ) async {
+  // *********************************************************
+  Future<Resource<HistorialPatrullajeModel>> getHistorialById({
+    required int historialId,
+    required String token,
+  }) async {
     try {
-      final headers = await _getHeaders();
-
-      Uri url = Uri.parse(API_GET_DETALLE_HISTORIAL(historialId));
+      final headers = _getHeaders(token);
+      final url = Uri.parse(API_GET_DETALLE_HISTORIAL(historialId));
 
       final response = await http.get(url, headers: headers);
 
-      final data = json.decode(response.body);
+      final body = _decodeResponse(response);
 
-      if (response.statusCode == 200) {
-        return HistorialPatrullajeModel.fromJson(data['historial']);
-      } else {
-        throw Exception(data['msg'] ?? 'Error al obtener detalle');
+      if (_isSuccess(response.statusCode)) {
+        final data = body['data'] ?? body['historial'];
+
+        return Success<HistorialPatrullajeModel>(
+          HistorialPatrullajeModel.fromJson(data),
+        );
       }
+
+      return _buildError<HistorialPatrullajeModel>(body, response.statusCode);
     } catch (error) {
-      throw Exception('Error obtenerDetalleHistorial: $error');
+      return ErrorData<HistorialPatrullajeModel>(
+        message: 'Error al obtener detalle del historial.',
+        error: error.toString(),
+      );
     }
   }
 
-  // =====================================================
+  // *********************************************************
   // 4. EDITAR HISTORIAL
-  // =====================================================
-  Future<HistorialPatrullajeModel> editarHistorial(
-    HistorialPatrullajeModel historial,
-  ) async {
+  // *********************************************************
+  Future<Resource<HistorialPatrullajeModel>> updateHistorial({
+    required HistorialPatrullajeModel historial,
+    required String token,
+  }) async {
     try {
-      final headers = await _getHeaders();
+      if (historial.id == null) {
+        return ErrorData<HistorialPatrullajeModel>(
+          message: 'ID de historial inválido.',
+        );
+      }
 
-      Uri url = Uri.parse(API_UPDATE_HISTORIAL(historial.id!));
+      final headers = _getHeaders(token);
+      final url = Uri.parse(API_UPDATE_HISTORIAL(historial.id!));
 
       final response = await http.put(
         url,
@@ -153,36 +190,50 @@ class HistorialPatrullajeService {
         body: jsonEncode(historial.toJson()),
       );
 
-      final data = json.decode(response.body);
+      final body = _decodeResponse(response);
 
-      if (response.statusCode == 200) {
-        return HistorialPatrullajeModel.fromJson(data['historial']);
-      } else {
-        throw Exception(data['msg'] ?? 'Error al editar historial');
+      if (_isSuccess(response.statusCode)) {
+        final data = body['data'] ?? body['historial'];
+
+        return Success<HistorialPatrullajeModel>(
+          HistorialPatrullajeModel.fromJson(data),
+        );
       }
+
+      return _buildError<HistorialPatrullajeModel>(body, response.statusCode);
     } catch (error) {
-      throw Exception('Error editarHistorial: $error');
+      return ErrorData<HistorialPatrullajeModel>(
+        message: 'Error al editar historial.',
+        error: error.toString(),
+      );
     }
   }
 
-  // =====================================================
+  // *********************************************************
   // 5. ARCHIVAR HISTORIAL
-  // =====================================================
-  Future<void> archivarHistorial(int historialId) async {
+  // *********************************************************
+  Future<Resource<bool>> archivedHistorial({
+    required int historialId,
+    required String token,
+  }) async {
     try {
-      final headers = await _getHeaders();
-
-      Uri url = Uri.parse(API_ARCHIVAR_HISTORIAL(historialId));
+      final headers = _getHeaders(token);
+      final url = Uri.parse(API_ARCHIVAR_HISTORIAL(historialId));
 
       final response = await http.patch(url, headers: headers);
 
-      final data = json.decode(response.body);
+      final body = _decodeResponse(response);
 
-      if (response.statusCode != 200) {
-        throw Exception(data['msg'] ?? 'Error al archivar historial');
+      if (_isSuccess(response.statusCode)) {
+        return Success<bool>(true);
       }
+
+      return _buildError<bool>(body, response.statusCode);
     } catch (error) {
-      throw Exception('Error archivarHistorial: $error');
+      return ErrorData<bool>(
+        message: 'Error al archivar historial.',
+        error: error.toString(),
+      );
     }
   }
 }

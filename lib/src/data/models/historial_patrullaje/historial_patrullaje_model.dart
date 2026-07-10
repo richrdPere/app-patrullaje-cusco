@@ -1,9 +1,6 @@
 class HistorialPatrullajeModel {
   final int? id;
 
-  final int patrullajeId;
-  // final int serenoId;
-  // final int zonaId;
   final String tipo;
   final String titulo;
   final String descripcion;
@@ -14,13 +11,12 @@ class HistorialPatrullajeModel {
 
   final bool visibleParaSiguienteTurno;
   final DateTime? fechaHora;
-  final String estado;
+
+  final Map<String, dynamic>? sereno;
+  final HistorialZonaModel? zona;
 
   HistorialPatrullajeModel({
     this.id,
-    required this.patrullajeId,
-    // required this.serenoId,
-    // required this.zonaId,
     required this.tipo,
     required this.titulo,
     required this.descripcion,
@@ -29,7 +25,8 @@ class HistorialPatrullajeModel {
     this.longitud,
     required this.visibleParaSiguienteTurno,
     this.fechaHora,
-    required this.estado,
+    this.sereno,
+    this.zona,
   });
 
   // =========================================================
@@ -38,9 +35,6 @@ class HistorialPatrullajeModel {
   factory HistorialPatrullajeModel.fromJson(Map<String, dynamic> json) {
     return HistorialPatrullajeModel(
       id: json["id"],
-      patrullajeId: json["patrullaje_id"],
-      // serenoId: json["sereno_id"],
-      // zonaId: json["zona_id"],
       tipo: json["tipo"] ?? "OBSERVACION",
       titulo: json["titulo"] ?? "",
       descripcion: json["descripcion"] ?? "",
@@ -55,7 +49,10 @@ class HistorialPatrullajeModel {
       fechaHora: json["fecha_hora"] != null
           ? DateTime.parse(json["fecha_hora"])
           : null,
-      estado: json["estado"] ?? "ACTIVO",
+      sereno: json["sereno"],
+      zona: json["zona"] != null
+          ? HistorialZonaModel.fromJson(json["zona"])
+          : null,
     );
   }
 
@@ -65,9 +62,6 @@ class HistorialPatrullajeModel {
   Map<String, dynamic> toJson() {
     return {
       "id": id,
-      "patrullaje_id": patrullajeId,
-      // "sereno_id": serenoId,
-      // "zona_id": zonaId,
       "tipo": tipo,
       "titulo": titulo,
       "descripcion": descripcion,
@@ -76,7 +70,8 @@ class HistorialPatrullajeModel {
       "longitud": longitud,
       "visible_para_siguiente_turno": visibleParaSiguienteTurno,
       "fecha_hora": fechaHora?.toIso8601String(),
-      "estado": estado,
+      "sereno": sereno,
+      "zona": zona?.toJson(),
     };
   }
 
@@ -85,9 +80,6 @@ class HistorialPatrullajeModel {
   // =========================================================
   HistorialPatrullajeModel copyWith({
     int? id,
-    int? patrullajeId,
-    // int? serenoId,
-    // int? zonaId,
     String? tipo,
     String? titulo,
     String? descripcion,
@@ -96,13 +88,11 @@ class HistorialPatrullajeModel {
     double? longitud,
     bool? visibleParaSiguienteTurno,
     DateTime? fechaHora,
-    String? estado,
+    Map<String, dynamic>? sereno,
+    HistorialZonaModel? zona,
   }) {
     return HistorialPatrullajeModel(
       id: id ?? this.id,
-      patrullajeId: patrullajeId ?? this.patrullajeId,
-      // serenoId: serenoId ?? this.serenoId,
-      // zonaId: zonaId ?? this.zonaId,
       tipo: tipo ?? this.tipo,
       titulo: titulo ?? this.titulo,
       descripcion: descripcion ?? this.descripcion,
@@ -112,7 +102,23 @@ class HistorialPatrullajeModel {
       visibleParaSiguienteTurno:
           visibleParaSiguienteTurno ?? this.visibleParaSiguienteTurno,
       fechaHora: fechaHora ?? this.fechaHora,
-      estado: estado ?? this.estado,
+      sereno: sereno ?? this.sereno,
+      zona: zona ?? this.zona,
     );
+  }
+}
+
+class HistorialZonaModel {
+  final int id;
+  final String nombre;
+
+  HistorialZonaModel({required this.id, required this.nombre});
+
+  factory HistorialZonaModel.fromJson(Map<String, dynamic> json) {
+    return HistorialZonaModel(id: json["id"], nombre: json["nombre"] ?? "");
+  }
+
+  Map<String, dynamic> toJson() {
+    return {"id": id, "nombre": nombre};
   }
 }

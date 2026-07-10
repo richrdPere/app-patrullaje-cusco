@@ -1,180 +1,85 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+
 import 'package:sis_patrullaje_cusco/src/domain/entities/patrullaje_entity.dart';
+
 import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/home/home_bloc.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/home/home_event.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/home/home_state.dart';
-import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/tracking/tracking_bloc.dart';
-import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/tracking/tracking_event.dart';
+
 import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/tracking/tracking_state.dart';
-import 'package:sis_patrullaje_cusco/src/presentation/screens/mapa/blocs/mapa/mapa_bloc.dart';
-import 'package:sis_patrullaje_cusco/src/presentation/screens/mapa/blocs/mapa/mapa_event.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/shared/widgets/custom_appbar.dart';
 
-class HomeContent extends StatefulWidget {
-  const HomeContent({super.key});
+// import 'package:sis_patrullaje_cusco/src/presentation/widgets/custom_app_bar.dart';
 
-  @override
-  State<HomeContent> createState() => _HomeContentState();
-}
+class HomeContent extends StatelessWidget {
+  final HomeState homeState;
+  final TrackingState trackingState;
 
-class _HomeContentState extends State<HomeContent> {
+  const HomeContent({
+    super.key,
+    required this.homeState,
+    required this.trackingState,
+  });
+
   @override
   Widget build(BuildContext context) {
-    return MultiBlocListener(
-      listeners: [
-        BlocListener<HomeBloc, HomeState>(
-          listenWhen: (prev, curr) {
-            return prev.status != curr.status ||
-                prev.patrullaje?.id != curr.patrullaje?.id;
-          },
-          listener: _handlePatrullajeListener,
-        ),
-
-        BlocListener<TrackingBloc, TrackingState>(
-          listenWhen: (prev, curr) {
-            return prev.lastLocation != curr.lastLocation;
-          },
-          listener: (context, trackingState) {
-            final location = trackingState.lastLocation;
-
-            if (location == null) return;
-
-            print("📍 UI recibió nueva ubicación");
-
-            context.read<MapaBloc>().add(
-              UpdateTrackingLocationEvent(
-                lat: location.latitud,
-                lng: location.longitud,
-              ),
-            );
-          },
-        ),
-      ],
-      child: BlocBuilder<HomeBloc, HomeState>(
-        builder: (context, homeState) {
-          if (homeState.isLoading) return _buildLoading();
-
-          if (homeState.status == PatrullajeStatus.error) {
-            return _buildError(homeState.error ?? 'Error desconocido');
-          }
-
-          return BlocBuilder<TrackingBloc, TrackingState>(
-            builder: (context, trackingState) {
-              return Scaffold(
-                appBar: CustomAppBar(),
-                body: _buildBody(context, homeState, trackingState),
-              );
-            },
-          );
-        },
-      ),
-    );
+    return Scaffold(appBar: const CustomAppBar(), body: _buildBody(context));
   }
 
-  // ==========================================
-  // 🎯 ORQUESTACIÓN DESDE UI (REACTIVA)
-  // ==========================================
-  void _handlePatrullajeListener(BuildContext context, HomeState state) {
-    final patrullaje = state.patrullaje;
+  Widget _buildBody(BuildContext context) {
+    final isEmpty =
+        homeState.status == PatrullajeStatus.sinAsignacion ||
+        homeState.patrullaje == null;
 
-    switch (state.status) {
-      case PatrullajeStatus.asignado:
-        if (patrullaje != null) {
-          context.read<MapaBloc>().add(
-            DrawZonaEvent(patrullaje.zona.coordenadas),
-          );
-        }
-        break;
-
-      case PatrullajeStatus.enCurso:
-        // SOLO TRACKING (NO lógica de negocio)
-        context.read<TrackingBloc>().add(StartTrackingEvent(patrullaje!.id));
-        break;
-
-      case PatrullajeStatus.finalizado:
-        context.read<TrackingBloc>().add(StopTrackingEvent());
-        break;
-
-      default:
-        break;
-    }
-  }
-
-  // ==========================================
-  // UI
-  // ==========================================
-  Widget _buildBody(
-    BuildContext context,
-    HomeState homeState,
-    TrackingState trackingState,
-  ) {
-    final isEmpty = homeState.status == PatrullajeStatus.sinAsignacion;
-
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        children: [
-          if (isEmpty) ...[
-            SizedBox(
-              height: MediaQuery.of(context).size.height * 0.3,
-              child: Center(child: _buildEmptyState()),
-            ),
-          ] else ...[
-            _buildHeader(homeState),
-            const SizedBox(height: 20),
-            _buildMainButton(context, homeState),
-            const SizedBox(height: 20),
-            _buildLocationCard(trackingState),
-            const SizedBox(height: 20),
-          ],
-
-          _buildStats(),
-          const SizedBox(height: 30),
-
-          Wrap(
-            alignment: WrapAlignment.center,
-            spacing: 30,
-            runSpacing: 20,
-            children: [
-              _quickAction(context, Icons.map, 'Ver mapa', 'mapa'),
-              // _quickAction(context, Icons.report, 'Incidencia', 'incidencia'),
-              _quickAction(context, Icons.warning, 'Alerta', 'alertas'),
-              _quickAction(
-                context,
-                Icons.location_on,
-                'Ubicación',
-                'home', // o la ruta que corresponda
+    return RefreshIndicator(
+      onRefresh: () async {
+        context.read<HomeBloc>().add(LoadPatrullajeActivo());
+      },
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            if (isEmpty) ...[
+              SizedBox(
+                height: MediaQuery.sizeOf(context).height * 0.30,
+                child: const Center(child: _EmptyPatrullaje()),
               ),
-              _quickAction(context, Icons.history, 'Historial', 'historial'),
-              _quickAction(context, Icons.video_collection_rounded, 'Tutoriales', 'tutorial'),
+            ] else ...[
+              _PatrullajeHeader(homeState: homeState),
+              const SizedBox(height: 20),
+
+              _MainPatrullajeButton(homeState: homeState),
+              const SizedBox(height: 20),
+
+              _LocationCard(trackingState: trackingState),
+              const SizedBox(height: 20),
             ],
-          ),
-        ],
+
+            const _StatsSection(),
+            const SizedBox(height: 30),
+
+            const _QuickActions(),
+          ],
+        ),
       ),
     );
   }
+}
 
-  // ==========================================
-  // HEADER
-  // ==========================================
-  Widget _buildHeader(HomeState homeState) {
+class _PatrullajeHeader extends StatelessWidget {
+  final HomeState homeState;
+
+  const _PatrullajeHeader({required this.homeState});
+
+  @override
+  Widget build(BuildContext context) {
     final patrullaje = homeState.patrullaje;
 
-    String getStatusText(PatrullajeStatus status) {
-      switch (status) {
-        case PatrullajeStatus.asignado:
-          return '🟡 Asignado';
-        case PatrullajeStatus.aceptando:
-          return '🟠 Aceptando...';
-        case PatrullajeStatus.enCurso:
-          return '🟢 En patrullaje';
-        case PatrullajeStatus.finalizado:
-          return '🔴 Finalizado';
-        default:
-          return '⚪ Sin asignación';
-      }
+    if (patrullaje == null) {
+      return const SizedBox.shrink();
     }
 
     return Container(
@@ -184,87 +89,191 @@ class _HomeContentState extends State<HomeContent> {
         color: Colors.blue,
         borderRadius: BorderRadius.circular(15),
       ),
-      child: patrullaje == null
-          ? const Text(
-              'No tienes patrullaje asignado',
-              style: TextStyle(color: Colors.white),
-            )
-          : Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('Patrullaje', style: TextStyle(color: Colors.white)),
-                Text(
-                  'Zona: ${patrullaje.zona.nombre}',
-                  style: const TextStyle(color: Colors.white),
-                ),
-                Text(
-                  'Descripción: ${patrullaje.descripcion}',
-                  style: const TextStyle(color: Colors.white),
-                ),
-                Text(
-                  getStatusText(homeState.status),
-                  style: const TextStyle(color: Colors.white),
-                ),
-              ],
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Patrullaje asignado',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 19,
+              fontWeight: FontWeight.bold,
             ),
-    );
-  }
+          ),
+          const SizedBox(height: 12),
 
-  // ==========================================
-  // BOTÓN PRINCIPAL
-  // ==========================================
-  Widget _buildMainButton(BuildContext context, HomeState homeState) {
-    final patrullaje = homeState.patrullaje;
+          Text(
+            'Zona: ${patrullaje.zona.nombre}',
+            style: const TextStyle(color: Colors.white),
+          ),
+          const SizedBox(height: 5),
 
-    if (patrullaje == null) return const SizedBox();
+          if (patrullaje.descripcion.trim().isNotEmpty)
+            Text(
+              'Descripción: ${patrullaje.descripcion}',
+              style: const TextStyle(color: Colors.white),
+            ),
 
-    final homeBloc = context.read<HomeBloc>();
+          const SizedBox(height: 8),
 
-    switch (homeState.status) {
-      case PatrullajeStatus.asignado:
-        return ElevatedButton.icon(
-          onPressed: () {
-            homeBloc.add(AceptarPatrullaje(patrullaje.id));
-          },
-          icon: const Icon(Icons.check),
-          label: const Text('Aceptar Patrullaje'),
-        );
-
-      case PatrullajeStatus.enCurso:
-        return ElevatedButton.icon(
-          onPressed: () {
-            // 👉 SOLO Home controla esto
-            homeBloc.add(FinalizarPatrullaje(patrullaje.id));
-          },
-          icon: const Icon(Icons.stop),
-          label: const Text('Finalizar Patrullaje'),
-        );
-
-      case PatrullajeStatus.aceptando:
-        return const CircularProgressIndicator();
-
-      default:
-        return const SizedBox();
-    }
-  }
-
-  // ==========================================
-  // LOCATION
-  // ==========================================
-  Widget _buildLocationCard(TrackingState trackingState) {
-    if (trackingState.lastLocation == null) return const SizedBox();
-
-    final loc = trackingState.lastLocation!;
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(10),
-        child: Text('📍 ${loc.latitud}, ${loc.longitud}'),
+          Text(
+            _getStatusText(homeState.status),
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildEmptyState() {
+  String _getStatusText(PatrullajeStatus status) {
+    switch (status) {
+      case PatrullajeStatus.asignado:
+        return '🟡 Asignado';
+
+      case PatrullajeStatus.aceptando:
+        return '🟠 Aceptando...';
+
+      case PatrullajeStatus.enCurso:
+        return '🟢 En patrullaje';
+
+      case PatrullajeStatus.finalizado:
+        return '🔴 Finalizado';
+
+      case PatrullajeStatus.error:
+        return '🔴 Error';
+
+      case PatrullajeStatus.sinAsignacion:
+        return '⚪ Sin asignación';
+    }
+  }
+}
+
+class _MainPatrullajeButton extends StatelessWidget {
+  final HomeState homeState;
+
+  const _MainPatrullajeButton({required this.homeState});
+
+  @override
+  Widget build(BuildContext context) {
+    final patrullaje = homeState.patrullaje;
+
+    if (patrullaje == null) {
+      return const SizedBox.shrink();
+    }
+
+    switch (homeState.status) {
+      case PatrullajeStatus.asignado:
+        return SizedBox(
+          width: double.infinity,
+          child: ElevatedButton.icon(
+            onPressed: () {
+              context.read<HomeBloc>().add(AceptarPatrullaje(patrullaje.id));
+            },
+            icon: const Icon(Icons.check),
+            label: const Text('Aceptar patrullaje'),
+          ),
+        );
+
+      case PatrullajeStatus.aceptando:
+        return const Center(
+          child: Column(
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(height: 10),
+              Text('Aceptando patrullaje...'),
+            ],
+          ),
+        );
+
+      case PatrullajeStatus.enCurso:
+        return SizedBox(
+          width: double.infinity,
+          child: ElevatedButton.icon(
+            onPressed: () {
+              _confirmarFinalizacion(context, patrullaje.id);
+            },
+            icon: const Icon(Icons.stop),
+            label: const Text('Finalizar patrullaje'),
+          ),
+        );
+
+      case PatrullajeStatus.sinAsignacion:
+      case PatrullajeStatus.finalizado:
+      case PatrullajeStatus.error:
+        return const SizedBox.shrink();
+    }
+  }
+
+  Future<void> _confirmarFinalizacion(
+    BuildContext context,
+    int patrullajeId,
+  ) async {
+    final confirmar = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Finalizar patrullaje'),
+          content: const Text(
+            '¿Está seguro de finalizar el patrullaje actual?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(dialogContext, false);
+              },
+              child: const Text('Cancelar'),
+            ),
+            FilledButton(
+              onPressed: () {
+                Navigator.pop(dialogContext, true);
+              },
+              child: const Text('Finalizar'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmar != true || !context.mounted) return;
+
+    context.read<HomeBloc>().add(FinalizarPatrullaje(patrullajeId));
+  }
+}
+
+class _LocationCard extends StatelessWidget {
+  final TrackingState trackingState;
+
+  const _LocationCard({required this.trackingState});
+
+  @override
+  Widget build(BuildContext context) {
+    final location = trackingState.lastLocation;
+
+    if (location == null) {
+      return const SizedBox.shrink();
+    }
+
+    return Card(
+      child: ListTile(
+        leading: const CircleAvatar(child: Icon(Icons.my_location)),
+        title: const Text('Ubicación actual'),
+        subtitle: Text(
+          '${location.latitud.toStringAsFixed(6)}, '
+          '${location.longitud.toStringAsFixed(6)}',
+        ),
+      ),
+    );
+  }
+}
+
+class _EmptyPatrullaje extends StatelessWidget {
+  const _EmptyPatrullaje();
+
+  @override
+  Widget build(BuildContext context) {
     return const Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -276,71 +285,149 @@ class _HomeContentState extends State<HomeContent> {
         ),
         SizedBox(height: 10),
         Text(
-          'Espera una asignación desde la central',
+          'Espera una asignación desde la central.',
+          textAlign: TextAlign.center,
           style: TextStyle(color: Colors.grey),
         ),
       ],
     );
   }
+}
 
-  Widget _buildLoading() {
-    return const Scaffold(body: Center(child: CircularProgressIndicator()));
-  }
+class _StatsSection extends StatelessWidget {
+  const _StatsSection();
 
-  Widget _buildError(String error) {
-    return Scaffold(
-      body: Center(
-        child: Text(error, style: const TextStyle(color: Colors.red)),
-      ),
-    );
-  }
-
-  Widget _buildStats() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  @override
+  Widget build(BuildContext context) {
+    return const Row(
       children: [
-        _buildStatCard('Incidencias', '3', Colors.red),
-        _buildStatCard('Alertas', '2', Colors.orange),
-        _buildStatCard('Recorrido', '75%', Colors.green),
+        Expanded(
+          child: _StatCard(
+            title: 'Incidencias',
+            value: '3',
+            valueColor: Colors.red,
+          ),
+        ),
+        SizedBox(width: 8),
+        Expanded(
+          child: _StatCard(
+            title: 'Alertas',
+            value: '2',
+            valueColor: Colors.orange,
+          ),
+        ),
+        SizedBox(width: 8),
+        Expanded(
+          child: _StatCard(
+            title: 'Recorrido',
+            value: '75%',
+            valueColor: Colors.green,
+          ),
+        ),
       ],
     );
   }
+}
 
-  Widget _buildStatCard(String title, String value, Color color) {
-    return Expanded(
-      child: Card(
-        child: Padding(
-          padding: const EdgeInsets.all(10),
-          child: Column(
-            children: [
-              Text(title),
-              const SizedBox(height: 5),
-              Text(value, style: TextStyle(fontSize: 18, color: color)),
-            ],
-          ),
+class _StatCard extends StatelessWidget {
+  final String title;
+  final String value;
+  final Color valueColor;
+
+  const _StatCard({
+    required this.title,
+    required this.value,
+    required this.valueColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 14),
+        child: Column(
+          children: [
+            Text(title, textAlign: TextAlign.center),
+            const SizedBox(height: 6),
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 18,
+                color: valueColor,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
+}
 
-  Widget _quickAction(
-    BuildContext context,
-    IconData icon,
-    String label,
-    String routeName,
-  ) {
+class _QuickActions extends StatelessWidget {
+  const _QuickActions();
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      alignment: WrapAlignment.center,
+      spacing: 30,
+      runSpacing: 20,
+      children: const [
+        _QuickAction(icon: Icons.map, label: 'Ver mapa', routeName: 'mapa'),
+        _QuickAction(
+          icon: Icons.warning,
+          label: 'Alerta',
+          routeName: 'alertas',
+        ),
+        _QuickAction(
+          icon: Icons.location_on,
+          label: 'Ubicación',
+          routeName: 'home',
+        ),
+        _QuickAction(
+          icon: Icons.history,
+          label: 'Historial',
+          routeName: 'historial',
+        ),
+        _QuickAction(
+          icon: Icons.video_collection_rounded,
+          label: 'Tutoriales',
+          routeName: 'tutorial',
+        ),
+      ],
+    );
+  }
+}
+
+class _QuickAction extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String routeName;
+
+  const _QuickAction({
+    required this.icon,
+    required this.label,
+    required this.routeName,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return InkWell(
-      borderRadius: BorderRadius.circular(30),
+      borderRadius: BorderRadius.circular(35),
       onTap: () {
         context.pushNamed(routeName);
       },
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          CircleAvatar(radius: 25, child: Icon(icon)),
-          const SizedBox(height: 5),
-          Text(label, textAlign: TextAlign.center),
-        ],
+      child: SizedBox(
+        width: 75,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CircleAvatar(radius: 25, child: Icon(icon)),
+            const SizedBox(height: 6),
+            Text(label, textAlign: TextAlign.center),
+          ],
+        ),
       ),
     );
   }

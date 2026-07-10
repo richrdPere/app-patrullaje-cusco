@@ -9,67 +9,74 @@ class HistorialPatrullajeContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Historial del patrullaje')),
+    return BlocBuilder<HistorialPatrullajeBloc, HistorialPatrullajeState>(
+      builder: (context, state) {
+        final patrullajeId = state.patrullaje?.id;
+        final zonaId = state.patrullaje?.zona.id;
 
-      body: BlocBuilder<HistorialPatrullajeBloc, HistorialPatrullajeState>(
-        builder: (context, state) {
-          if (state.loading) {
-            return const Center(child: CircularProgressIndicator());
-          }
+        debugPrint("ID PATRULLAJE PARA CREAR: $patrullajeId");
+        debugPrint("ID ZONA PARA CREAR: $zonaId");
 
-          if (state.historial.isEmpty) {
-            return const Center(
-              child: Text('No existen registros de historial.'),
-            );
-          }
+        return Scaffold(
+          appBar: AppBar(title: const Text('Historial del patrullaje')),
 
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: state.historial.length,
-            itemBuilder: (_, index) {
-              final historial = state.historial[index];
+          body: () {
+            if (state.loading) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
-              return Card(
-                margin: const EdgeInsets.only(bottom: 12),
-                child: ListTile(
-                  leading: const Icon(Icons.history),
-                  title: Text(historial.titulo),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 4),
-                      Text(historial.descripcion),
-                      const SizedBox(height: 8),
-                      Text(
-                        historial.tipo,
-                        style: const TextStyle(fontSize: 12),
-                      ),
-                    ],
-                  ),
-                ),
+            if (state.historial.isEmpty) {
+              return const Center(
+                child: Text('No existen registros de historial.'),
               );
-            },
-          );
-        },
-      ),
+            }
 
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          // Próximo paso:
-          // abrir formulario para registrar observación.
-          await showDialog(
-            context: context,
-            barrierDismissible: false,
-            builder: (_) => HistorialObservacionDialog(
-              patrullajeId: 1,
-              zonaId: 1,
-            ),
-          );
-        },
+            return ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: state.historial.length,
+              itemBuilder: (_, index) {
+                final historial = state.historial[index];
 
-        child: const Icon(Icons.add),
-      ),
+                return Card(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  child: ListTile(
+                    leading: const Icon(Icons.history),
+                    title: Text(historial.titulo),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 4),
+                        Text(historial.descripcion),
+                        const SizedBox(height: 8),
+                        Text(
+                          historial.tipo,
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            );
+          }(),
+
+          floatingActionButton: FloatingActionButton(
+            onPressed: (patrullajeId == null || zonaId == null)
+                ? null
+                : () async {
+                    await showDialog(
+                      context: context,
+                      barrierDismissible: false,
+                      builder: (_) => HistorialObservacionDialog(
+                        patrullajeId: patrullajeId,
+                        zonaId: zonaId,
+                      ),
+                    );
+                  },
+            child: const Icon(Icons.add),
+          ),
+        );
+      },
     );
   }
 }

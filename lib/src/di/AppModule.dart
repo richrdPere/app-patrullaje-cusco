@@ -1,92 +1,19 @@
 import 'package:image_picker/image_picker.dart';
 import 'package:injectable/injectable.dart';
-import 'package:sis_patrullaje_cusco/src/data/datasources/remote/services/historial_patrullaje_service.dart';
-import 'package:sis_patrullaje_cusco/src/data/datasources/remote/services/incidente_service.dart';
-import 'package:sis_patrullaje_cusco/src/data/datasources/remote/services/users_service.dart';
-import 'package:sis_patrullaje_cusco/src/data/repositories/historial_patrullaje_repository_impl.dart';
-import 'package:sis_patrullaje_cusco/src/data/repositories/incidente_repository_impl.dart';
-import 'package:sis_patrullaje_cusco/src/data/repositories/media_repository_impl.dart';
-// import 'package:sis_patrullaje_cusco/injection.dart';
-import 'package:sis_patrullaje_cusco/src/data/repositories/socket_repository_impl.dart';
-import 'package:sis_patrullaje_cusco/src/data/repositories/tracking_repository_impl.dart';
-import 'package:sis_patrullaje_cusco/src/data/repositories/users_repository_impl.dart';
-import 'package:sis_patrullaje_cusco/src/domain/repositories/historial_patrullaje_repository.dart';
-// import 'package:sis_patrullaje_cusco/src/domain/entities/auth_response.dart';
-import 'package:sis_patrullaje_cusco/src/domain/repositories/incidente_repository.dart';
-import 'package:sis_patrullaje_cusco/src/domain/repositories/media_repository.dart';
-import 'package:sis_patrullaje_cusco/src/domain/repositories/socket_repository.dart';
-import 'package:sis_patrullaje_cusco/src/domain/repositories/tracking_repository.dart';
-import 'package:sis_patrullaje_cusco/src/domain/repositories/users_repository.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/historial_patrullaje/HistorialPatrullajeUseCases.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/historial_patrullaje/historial_patrullaje_use_cases/ArchivarHistorialUseCase.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/historial_patrullaje/historial_patrullaje_use_cases/GetHistorialByIdUseCase.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/historial_patrullaje/historial_patrullaje_use_cases/GetHistorialByPatrullajeUseCase.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/historial_patrullaje/historial_patrullaje_use_cases/RegisterHistorialUseCase.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/historial_patrullaje/historial_patrullaje_use_cases/UpdateHistorialUseCase.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/incidente/IncidenteUseCases.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/incidente/incidente_use_cases/AddEvidenciasIncidenteUseCase.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/incidente/incidente_use_cases/CreateIncidenteUseCase.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/incidente/incidente_use_cases/GetDashboardIncidentesUseCase.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/incidente/incidente_use_cases/GetEvidenciasIncidenteUseCase.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/incidente/incidente_use_cases/GetIncidenciaUseCase.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/incidente/incidente_use_cases/GetMapaIncidentesUseCase.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/incidente/incidente_use_cases/GetNearbyIncidenciaUseCase.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/incidente/incidente_use_cases/RemoveEvidenciaIncidenteUseCase.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/multimedias/MultimediasUsesCases.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/multimedias/multimedias_use_case/PickImageUseCase.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/multimedias/multimedias_use_case/PickVideoUseCase.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/multimedias/multimedias_use_case/RecordVideoUseCase.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/multimedias/multimedias_use_case/TakePhotoUseCase.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/patrullaje/patrullaje_use_cases/EndPatrullajeSocketUseCase.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/patrullaje/patrullaje_use_cases/JoinPatrullajeUseCase.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/patrullaje/patrullaje_use_cases/LeavePatrullajeUseCase.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/patrullaje/patrullaje_use_cases/ListenNewPatrullajeUseCase.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/patrullaje/patrullaje_use_cases/ListenPatrullajeActualizadoUseCase.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/patrullaje/patrullaje_use_cases/ListenPatrullajeEndUseCase.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/patrullaje/patrullaje_use_cases/StartPatrullajeSocketUseCase.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/socket/SocketUseCases.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/socket/socket_use_Cases/ConnectSocketUseCase.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/socket/socket_use_Cases/DisconnetSocketUseCase.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/socket/socket_use_Cases/GetSocketUseCase.dart';
-// import 'package:socket_io_client/socket_io_client.dart';
-
 import 'package:sis_patrullaje_cusco/src/data/datasources/local/SharefPref.dart';
-import 'package:sis_patrullaje_cusco/src/data/datasources/remote/services/auth_service.dart';
-import 'package:sis_patrullaje_cusco/src/data/datasources/remote/services/patrullaje_service.dart';
-import 'package:sis_patrullaje_cusco/src/data/repositories/alert_repository_impl.dart';
-import 'package:sis_patrullaje_cusco/src/data/repositories/auth_repository_impl.dart';
-import 'package:sis_patrullaje_cusco/src/data/repositories/geolocator_repository_impl.dart';
-import 'package:sis_patrullaje_cusco/src/data/repositories/patrullaje_repository_impl.dart';
-import 'package:sis_patrullaje_cusco/src/domain/repositories/alert_repository.dart';
-import 'package:sis_patrullaje_cusco/src/domain/repositories/auth_repository.dart';
-import 'package:sis_patrullaje_cusco/src/domain/repositories/geolocator_repository.dart';
-import 'package:sis_patrullaje_cusco/src/domain/repositories/patrullaje_repository.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/alerta/AlertUseCases.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/alerta/alerta_use_case/SendAlertUseCase.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/auth/AuthUseCases.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/auth/auth_use_cases/GetUserSessionUseCase.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/auth/auth_use_cases/LoginUseCase.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/auth/auth_use_cases/LogoutUseCase.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/auth/auth_use_cases/RegisterUseCase.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/auth/auth_use_cases/SaveUserSessionUseCase.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/geolocator/GeolocatorUseCases.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/geolocator/geolocator_use_cases/CreateMarkerUseCase.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/geolocator/geolocator_use_cases/FindPositionUseCase.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/geolocator/geolocator_use_cases/GetLocationStreamUseCase.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/geolocator/geolocator_use_cases/GetMarkerUseCase.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/geolocator/geolocator_use_cases/GetPlaceMarkDataUseCase.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/geolocator/geolocator_use_cases/GetPolyLineUseCase.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/patrullaje/PatrullajeUseCases.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/patrullaje/patrullaje_use_cases/EndPatrullajeUseCase.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/patrullaje/patrullaje_use_cases/GetPatrullajeActivoUseCase.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/patrullaje/patrullaje_use_cases/SendLocationUseCase.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/patrullaje/patrullaje_use_cases/StartPatrullajeUseCase.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/tracking/TrackingUseCases.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/tracking/tracking_use_case/GetLocationUseCase.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/tracking/tracking_use_case/SendLocationUserUseCase.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/users/UsersUseCases.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/users/users_uses_cases/UpdateUserUseCase.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/socket/socket_bloc.dart';
+
+// Service
+import 'package:sis_patrullaje_cusco/src/data/datasources/remote/index_service.dart';
+
+// Repository - DOMAIN
+import 'package:sis_patrullaje_cusco/src/domain/repositories/index_repository.dart';
+
+// Repository Impl - DATA
+import 'package:sis_patrullaje_cusco/src/data/repositories/index_repository_impl.dart';
+
+// Use Cases
+import 'package:sis_patrullaje_cusco/src/domain/use_cases/index_uses_cases.dart';
 
 @module
 abstract class AppModule {
@@ -100,26 +27,26 @@ abstract class AppModule {
   SharefPref get sharedPref => SharefPref();
 
   // =============================================================
-  // SERVICES (DATA SOURCE REMOTO)
+  // 1. SERVICES (DATA SOURCE REMOTO)
   // =============================================================
   @injectable
   AuthService get authService => AuthService();
 
   @injectable
-  UsersService get usersService => UsersService(authRepository);
+  UsersService get usersService => UsersService();
 
   @injectable
-  PatrullajeService get patrullajeService => PatrullajeService(authRepository);
+  PatrullajeService get patrullajeService => PatrullajeService();
 
   @injectable
-  IncidenteService get incidenteService => IncidenteService(authRepository);
+  IncidenciaService get incidenteService => IncidenciaService();
 
   @injectable
   HistorialPatrullajeService get historialPatrullajeService =>
-      HistorialPatrullajeService(authRepository);
+      HistorialPatrullajeService();
 
   // =============================================================
-  // REPOSITORY IMPL
+  // 2. REPOSITORY
   // =============================================================
   @injectable
   AuthRepository get authRepository =>
@@ -132,7 +59,11 @@ abstract class AppModule {
   PatrullajeRepository patrullajeRepository(
     PatrullajeService patrullajeService,
     SocketRepository socketRepository,
-  ) => PatrullajeRepositoryImpl(patrullajeService, socketRepository);
+  ) => PatrullajeRepositoryImpl(
+    patrullajeService,
+    authRepository,
+    socketRepository,
+  );
 
   @injectable
   TrackingRepository trackingRepository(SocketRepository socketRepository) =>
@@ -140,24 +71,28 @@ abstract class AppModule {
 
   @injectable
   IncidenteRepository get incidenteRepository =>
-      IncidenteRepositoryImpl(incidenteService);
+      IncidenteRepositoryImpl(incidenteService, authRepository);
 
   @injectable
   HistorialPatrullajeRepository get historialPatrullajeRepository =>
-      HistorialPatrullajeRepositoryImpl(historialPatrullajeService);
+      HistorialPatrullajeRepositoryImpl(
+        historialPatrullajeService,
+        authRepository,
+      );
 
   @injectable
-  UsersRepository get usersRepository => UsersRepositoryImpl(usersService);
+  UsersRepository get usersRepository =>
+      UsersRepositoryImpl(usersService, authRepository);
 
   @injectable
   MediaRepository get mediaRepository => MediaRepositoryImpl(imagePicker);
 
   @injectable
   AlertRepository get alertRepository =>
-      AlertRepositoryImpl(geolocatorUseCases);
+      AlertRepositoryImpl(geolocatorRepository);
 
   // =============================================================
-  // USES CASES
+  // 3. USES CASES
   // =============================================================
 
   // - Auth
@@ -181,7 +116,7 @@ abstract class AppModule {
     getLocationStream: GetLocationStreamUseCase(geolocatorRepository),
   );
 
-  // Patrullaje
+  // - Patrullaje
   @injectable
   PatrullajeUseCases patrullajeUseCases(
     PatrullajeRepository patrullajeRepository,
@@ -201,7 +136,7 @@ abstract class AppModule {
     leavePatrullaje: LeavePatrullajeUseCase(patrullajeRepository),
   );
 
-  // Tracking
+  // - Tracking
   @injectable
   TrackingUseCases trackingUseCases(TrackingRepository trackingRepository) =>
       TrackingUseCases(
@@ -209,27 +144,26 @@ abstract class AppModule {
         sendLocation: SendLocationUserUseCase(trackingRepository),
       );
 
-  // Alert
+  // - Alert
   @injectable
   AlertUseCases get alertUseCases =>
       AlertUseCases(sendAlert: SendAlertUseCase(alertRepository));
 
-  // Incident
+  // - Incidencia
   @injectable
   IncidenteUseCases get incidentUseCases => IncidenteUseCases(
+    addArchivosIncidencia: AddArchivosIncidenciaUseCase(incidenteRepository),
     createIncidente: CreateIncidenteUseCase(incidenteRepository),
-    addEvidenciasIncidente: AddEvidenciasIncidenteUseCase(incidenteRepository),
-    removeEvidenciaIncidente: RemoveEvidenciaIncidenteUseCase(
+    getEvidenciasIncidente: GetArchivoIncidenciaUseCase(incidenteRepository),
+    getIncidenciaById: GetIncidenciaByIdUseCase(incidenteRepository),
+    getIncidenciasCercanas: GetIncidenciasCercanasUseCase(incidenteRepository),
+    getMisIncidencias: GetMisIncidenciasUseCase(incidenteRepository),
+    removeEvidenciaIncidente: RemoveArchivoIncidenciaUseCase(
       incidenteRepository,
     ),
-    getDashboardIncidentes: GetDashboardIncidentesUseCase(incidenteRepository),
-    getEvidenciasIncidente: GetEvidenciasIncidenteUseCase(incidenteRepository),
-    getIncidencia: GetIncidenciaUseCase(incidenteRepository),
-    getMapaIncidentes: GetMapaIncidentesUseCase(incidenteRepository),
-    getNearbyIncidentes: GetNearbyIncidentesUseCase(incidenteRepository),
   );
 
-  // Historial Patrullaje
+  // - Historial Patrullaje
   @injectable
   HistorialPatrullajeUseCases
   get historialPatrullajeUseCases => HistorialPatrullajeUseCases(
@@ -242,12 +176,12 @@ abstract class AppModule {
     createHistorial: RegisterHistorialUseCase(historialPatrullajeRepository),
   );
 
-  // Users
+  // - Users
   @injectable
   UsersUseCases get usersUseCases =>
       UsersUseCases(updateUser: UpdateUserUseCase(usersRepository));
 
-  // Multimedias
+  // - Multimedias
   @injectable
   MultimediasUseCases get multimediasUseCases => MultimediasUseCases(
     takePhoto: TakePhotoUseCase(mediaRepository),
@@ -256,7 +190,11 @@ abstract class AppModule {
     pickVideo: PickVideoUseCase(mediaRepository),
   );
 
-  // Socket
+  // =============================================================
+  // 4. SOCKETS
+  // =============================================================
+
+  // - Socket
   @lazySingleton
   SocketUseCases socketUseCases(SocketRepository socketRepository) =>
       SocketUseCases(

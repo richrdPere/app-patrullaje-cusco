@@ -4,14 +4,10 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sis_patrullaje_cusco/src/config/core/session/session_bloc.dart';
 import 'package:sis_patrullaje_cusco/src/data/models/login/auth_response.dart';
-// import 'package:sis_patrullaje_cusco/src/domain/entities/auth_response.dart';
 import 'package:sis_patrullaje_cusco/src/domain/utils/Resource.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/auth/login/bloc/login_bloc.dart';
-// import 'package:sis_patrullaje_cusco/src/presentation/screens/auth/login/bloc/login_event.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/auth/login/bloc/login_state.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/auth/login/view/login_content.dart';
-// import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/socket/socket_bloc.dart';
-// import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/socket/socket_event.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -41,7 +37,7 @@ class _LoginPageState extends State<LoginPage> {
 
           if (response is ErrorData) {
             Fluttertoast.showToast(
-              msg: response.error,
+              msg: response.message,
               toastLength: Toast.LENGTH_LONG,
             );
           } else if (response is Success<AuthResponse>) {

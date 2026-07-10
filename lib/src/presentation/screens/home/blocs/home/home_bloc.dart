@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'package:bloc/bloc.dart';
+import 'package:sis_patrullaje_cusco/src/data/models/patrullaje/patrullaje_data.dart';
 import 'package:sis_patrullaje_cusco/src/domain/entities/patrullaje_entity.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/patrullaje/PatrullajeUseCases.dart';
+import 'package:sis_patrullaje_cusco/src/domain/utils/Resource.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/home/home_event.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/home/home_state.dart';
 
@@ -54,41 +56,59 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     LoadPatrullajeActivo event,
     Emitter<HomeState> emit,
   ) async {
-    // LOADING
-    emit(state.copyWith(isLoading: true, error: null));
+    emit(state.copyWith(isLoading: true, clearError: true));
 
-    try {
-      final patrullaje = await patrullajeUseCases.getPatrullajeActivo.run();
+    final response = await patrullajeUseCases.getPatrullajeActivo.run();
 
-      print("Patrullaje activo cargado: ${patrullaje?.id}");
-      // SUCCESS
-      if (patrullaje != null) {
+    if (response is Success<PatrullajeData?>) {
+      final patrullaje = response.data;
+
+      if (patrullaje == null) {
         emit(
           state.copyWith(
             isLoading: false,
-            patrullaje: patrullaje,
-            // activo: true,
-            status: mapEstado(patrullaje.estado),
-          ),
-        );
-      } else {
-        emit(
-          state.copyWith(
-            isLoading: false,
+            clearPatrullaje: true,
+            clearError: true,
             status: PatrullajeStatus.sinAsignacion,
           ),
         );
+
+        return;
       }
-    } catch (e) {
-      //  ERROR
+
       emit(
         state.copyWith(
           isLoading: false,
-          error: e.toString(),
+          patrullaje: patrullaje,
+          clearError: true,
+          status: mapEstado(patrullaje.estado),
+        ),
+      );
+
+      return;
+    }
+
+    if (response is ErrorData<PatrullajeData?>) {
+      emit(
+        state.copyWith(
+          isLoading: false,
+          clearPatrullaje: true,
+          error: response.fullMessage,
           status: PatrullajeStatus.error,
         ),
       );
+
+      return;
     }
+
+    emit(
+      state.copyWith(
+        isLoading: false,
+        clearPatrullaje: true,
+        error: 'Respuesta desconocida al obtener el patrullaje activo.',
+        status: PatrullajeStatus.error,
+      ),
+    );
   }
 
   // =========================
@@ -179,7 +199,6 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     }
   }
 
- 
   // =========================
   // CLEANUP
   // =========================

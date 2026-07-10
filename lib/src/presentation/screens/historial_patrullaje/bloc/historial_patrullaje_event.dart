@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'package:sis_patrullaje_cusco/src/domain/models/historial_patrullaje_model.dart';
+import 'package:sis_patrullaje_cusco/src/data/models/historial_patrullaje/historial_patrullaje_model.dart';
 
 abstract class HistorialPatrullajeEvent extends Equatable {
   const HistorialPatrullajeEvent();
@@ -12,12 +12,12 @@ abstract class HistorialPatrullajeEvent extends Equatable {
 // OBTENER HISTORIAL POR PATRULLAJE
 // ======================================================
 class LoadHistorialPatrullajeEvent extends HistorialPatrullajeEvent {
-  final int patrullajeId;
+  // final int patrullajeId;
 
-  const LoadHistorialPatrullajeEvent(this.patrullajeId);
+  // const LoadHistorialPatrullajeEvent(this.patrullajeId);
 
-  @override
-  List<Object?> get props => [patrullajeId];
+  // @override
+  // List<Object?> get props => [patrullajeId];
 }
 
 // ======================================================

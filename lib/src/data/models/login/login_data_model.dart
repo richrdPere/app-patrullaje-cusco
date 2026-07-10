@@ -26,8 +26,4 @@ class LoginDataModel {
       "usuario": usuario.toJson(),
     };
   }
-
-  // SessionEntity toEntity() {
-  //   return SessionEntity(token: token, usuario: usuario.toEntity());
-  // }
 }

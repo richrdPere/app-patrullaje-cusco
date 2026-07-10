@@ -1,4 +1,5 @@
 import 'package:bloc/bloc.dart';
+import 'package:flutter/widgets.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/incidente/IncidenteUseCases.dart';
 
 import '../incidente_event.dart';
@@ -29,7 +30,7 @@ class ContextHandlers {
         return;
       }
 
-      final incidents = await incidenteUseCases.getNearbyIncidentes.run(
+      final incidents = await incidenteUseCases.getIncidenciasCercanas.run(
         latitud: state.latitud!,
         longitud: state.longitud!,
       );
@@ -49,9 +50,10 @@ class ContextHandlers {
     emit(state.copyWith(loadingMapa: true, error: null));
 
     try {
-      final incidencias = await incidenteUseCases.getMapaIncidentes.run();
+      debugPrint("PROBANDO OBTENRR MAPA");
+      // final incidencias = await incidenteUseCases.getMapaIncidentes.run();
 
-      emit(state.copyWith(loadingMapa: false, mapaIncidentes: incidencias));
+      // emit(state.copyWith(loadingMapa: false, mapaIncidentes: incidencias));
     } catch (e) {
       emit(state.copyWith(loadingMapa: false, error: e.toString()));
     }
@@ -66,9 +68,10 @@ class ContextHandlers {
     emit(state.copyWith(loadingDashboard: true, error: null));
 
     try {
-      final dashboard = await incidenteUseCases.getDashboardIncidentes.run();
+      debugPrint("PROBANDO OBTENRR DASHBOARD");
+      // final dashboard = await incidenteUseCases.getDashboardIncidentes.run();
 
-      emit(state.copyWith(loadingDashboard: false, dashboard: dashboard));
+      // emit(state.copyWith(loadingDashboard: false, dashboard: dashboard));
     } catch (e) {
       emit(state.copyWith(loadingDashboard: false, error: e.toString()));
     }

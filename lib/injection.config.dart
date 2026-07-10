@@ -14,57 +14,15 @@ import 'package:image_picker/image_picker.dart' as _i183;
 import 'package:injectable/injectable.dart' as _i526;
 import 'package:sis_patrullaje_cusco/src/data/datasources/local/SharefPref.dart'
     as _i118;
-import 'package:sis_patrullaje_cusco/src/data/datasources/remote/services/auth_service.dart'
-    as _i501;
-import 'package:sis_patrullaje_cusco/src/data/datasources/remote/services/historial_patrullaje_service.dart'
-    as _i469;
-import 'package:sis_patrullaje_cusco/src/data/datasources/remote/services/incidente_service.dart'
-    as _i822;
-import 'package:sis_patrullaje_cusco/src/data/datasources/remote/services/patrullaje_service.dart'
-    as _i647;
-import 'package:sis_patrullaje_cusco/src/data/datasources/remote/services/users_service.dart'
-    as _i762;
+import 'package:sis_patrullaje_cusco/src/data/datasources/remote/index_service.dart'
+    as _i506;
 import 'package:sis_patrullaje_cusco/src/di/AppModule.dart' as _i1038;
-import 'package:sis_patrullaje_cusco/src/domain/repositories/alert_repository.dart'
-    as _i574;
-import 'package:sis_patrullaje_cusco/src/domain/repositories/auth_repository.dart'
-    as _i606;
-import 'package:sis_patrullaje_cusco/src/domain/repositories/geolocator_repository.dart'
-    as _i175;
-import 'package:sis_patrullaje_cusco/src/domain/repositories/historial_patrullaje_repository.dart'
-    as _i345;
-import 'package:sis_patrullaje_cusco/src/domain/repositories/incidente_repository.dart'
-    as _i590;
-import 'package:sis_patrullaje_cusco/src/domain/repositories/media_repository.dart'
-    as _i725;
-import 'package:sis_patrullaje_cusco/src/domain/repositories/patrullaje_repository.dart'
-    as _i313;
-import 'package:sis_patrullaje_cusco/src/domain/repositories/socket_repository.dart'
-    as _i481;
-import 'package:sis_patrullaje_cusco/src/domain/repositories/tracking_repository.dart'
-    as _i492;
-import 'package:sis_patrullaje_cusco/src/domain/repositories/users_repository.dart'
-    as _i144;
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/alerta/AlertUseCases.dart'
-    as _i607;
+import 'package:sis_patrullaje_cusco/src/domain/repositories/index_repository.dart'
+    as _i224;
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/auth/AuthUseCases.dart'
     as _i422;
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/geolocator/GeolocatorUseCases.dart'
-    as _i549;
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/historial_patrullaje/HistorialPatrullajeUseCases.dart'
-    as _i180;
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/incidente/IncidenteUseCases.dart'
-    as _i125;
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/multimedias/MultimediasUsesCases.dart'
-    as _i25;
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/patrullaje/PatrullajeUseCases.dart'
-    as _i1030;
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/socket/SocketUseCases.dart'
-    as _i427;
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/tracking/TrackingUseCases.dart'
-    as _i981;
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/users/UsersUseCases.dart'
-    as _i913;
+import 'package:sis_patrullaje_cusco/src/domain/use_cases/index_uses_cases.dart'
+    as _i952;
 import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/socket/socket_bloc.dart'
     as _i362;
 import 'package:sis_patrullaje_cusco/src/presentation/shared/screens/loading/bloc/loading_bloc.dart'
@@ -82,41 +40,35 @@ extension GetItInjectableX on _i174.GetIt {
     final appModule = _$AppModule();
     gh.factory<_i183.ImagePicker>(() => appModule.imagePicker);
     gh.factory<_i118.SharefPref>(() => appModule.sharedPref);
-    gh.factory<_i501.AuthService>(() => appModule.authService);
-    gh.factory<_i762.UsersService>(() => appModule.usersService);
-    gh.factory<_i647.PatrullajeService>(() => appModule.patrullajeService);
-    gh.factory<_i822.IncidenteService>(() => appModule.incidenteService);
-    gh.factory<_i469.HistorialPatrullajeService>(
+    gh.factory<_i506.AuthService>(() => appModule.authService);
+    gh.factory<_i506.UsersService>(() => appModule.usersService);
+    gh.factory<_i506.PatrullajeService>(() => appModule.patrullajeService);
+    gh.factory<_i506.IncidenciaService>(() => appModule.incidenteService);
+    gh.factory<_i506.HistorialPatrullajeService>(
       () => appModule.historialPatrullajeService,
     );
-    gh.factory<_i606.AuthRepository>(() => appModule.authRepository);
-    gh.factory<_i175.GeolocatorRepository>(
+    gh.factory<_i224.AuthRepository>(() => appModule.authRepository);
+    gh.factory<_i224.GeolocatorRepository>(
       () => appModule.geolocatorRepository,
     );
-    gh.factory<_i590.IncidenteRepository>(() => appModule.incidenteRepository);
-    gh.factory<_i345.HistorialPatrullajeRepository>(
+    gh.factory<_i224.IncidenteRepository>(() => appModule.incidenteRepository);
+    gh.factory<_i224.HistorialPatrullajeRepository>(
       () => appModule.historialPatrullajeRepository,
     );
-    gh.factory<_i144.UsersRepository>(() => appModule.usersRepository);
-    gh.factory<_i725.MediaRepository>(() => appModule.mediaRepository);
-    gh.factory<_i574.AlertRepository>(() => appModule.alertRepository);
-    gh.factory<_i422.AuthUsesCases>(() => appModule.authUseCases);
-    gh.factory<_i549.GeolocatorUseCases>(() => appModule.geolocatorUseCases);
-    gh.factory<_i607.AlertUseCases>(() => appModule.alertUseCases);
-    gh.factory<_i125.IncidenteUseCases>(() => appModule.incidentUseCases);
-    gh.factory<_i180.HistorialPatrullajeUseCases>(
+    gh.factory<_i224.UsersRepository>(() => appModule.usersRepository);
+    gh.factory<_i224.MediaRepository>(() => appModule.mediaRepository);
+    gh.factory<_i224.AlertRepository>(() => appModule.alertRepository);
+    gh.factory<_i952.AuthUsesCases>(() => appModule.authUseCases);
+    gh.factory<_i952.GeolocatorUseCases>(() => appModule.geolocatorUseCases);
+    gh.factory<_i952.AlertUseCases>(() => appModule.alertUseCases);
+    gh.factory<_i952.IncidenteUseCases>(() => appModule.incidentUseCases);
+    gh.factory<_i952.HistorialPatrullajeUseCases>(
       () => appModule.historialPatrullajeUseCases,
     );
-    gh.factory<_i913.UsersUseCases>(() => appModule.usersUseCases);
-    gh.factory<_i25.MultimediasUseCases>(() => appModule.multimediasUseCases);
-    gh.lazySingleton<_i481.SocketRepository>(
+    gh.factory<_i952.UsersUseCases>(() => appModule.usersUseCases);
+    gh.factory<_i952.MultimediasUseCases>(() => appModule.multimediasUseCases);
+    gh.lazySingleton<_i224.SocketRepository>(
       () => appModule.socketRepository(),
-    );
-    gh.factory<_i313.PatrullajeRepository>(
-      () => appModule.patrullajeRepository(
-        gh<_i647.PatrullajeService>(),
-        gh<_i481.SocketRepository>(),
-      ),
     );
     gh.factory<_i318.LoadingBloc>(
       () => _i318.LoadingBloc(gh<_i422.AuthUsesCases>()),
@@ -124,23 +76,29 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i717.SplashBloc>(
       () => _i717.SplashBloc(gh<_i422.AuthUsesCases>()),
     );
-    gh.lazySingleton<_i427.SocketUseCases>(
-      () => appModule.socketUseCases(gh<_i481.SocketRepository>()),
+    gh.factory<_i224.PatrullajeRepository>(
+      () => appModule.patrullajeRepository(
+        gh<_i506.PatrullajeService>(),
+        gh<_i224.SocketRepository>(),
+      ),
     );
-    gh.factory<_i492.TrackingRepository>(
-      () => appModule.trackingRepository(gh<_i481.SocketRepository>()),
+    gh.factory<_i224.TrackingRepository>(
+      () => appModule.trackingRepository(gh<_i224.SocketRepository>()),
     );
-    gh.factory<_i1030.PatrullajeUseCases>(
-      () => appModule.patrullajeUseCases(gh<_i313.PatrullajeRepository>()),
+    gh.lazySingleton<_i952.SocketUseCases>(
+      () => appModule.socketUseCases(gh<_i224.SocketRepository>()),
     );
     gh.lazySingleton<_i362.SocketBloc>(
       () => appModule.socketBloc(
-        gh<_i427.SocketUseCases>(),
-        gh<_i422.AuthUsesCases>(),
+        gh<_i952.SocketUseCases>(),
+        gh<_i952.AuthUsesCases>(),
       ),
     );
-    gh.factory<_i981.TrackingUseCases>(
-      () => appModule.trackingUseCases(gh<_i492.TrackingRepository>()),
+    gh.factory<_i952.PatrullajeUseCases>(
+      () => appModule.patrullajeUseCases(gh<_i224.PatrullajeRepository>()),
+    );
+    gh.factory<_i952.TrackingUseCases>(
+      () => appModule.trackingUseCases(gh<_i224.TrackingRepository>()),
     );
     return this;
   }

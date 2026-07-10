@@ -4,9 +4,6 @@ import 'dart:io';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
-// Repository
-import 'package:sis_patrullaje_cusco/src/domain/repositories/auth_repository.dart';
-
 // Environment
 import 'package:sis_patrullaje_cusco/src/config/constants/environment.dart'
     as url_backend;
@@ -14,80 +11,85 @@ import 'package:sis_patrullaje_cusco/src/config/constants/environment.dart'
 // Models
 import 'package:sis_patrullaje_cusco/src/domain/models/incidencia_model.dart';
 import 'package:sis_patrullaje_cusco/src/domain/models/incidencia_archivo_model.dart';
+import 'package:sis_patrullaje_cusco/src/domain/utils/Resource.dart';
 
-class IncidenteService {
-  final AuthRepository authRepository;
-  IncidenteService(this.authRepository);
+class IncidenciaService {
 
-  // APIS
-  String get API_BASE => url_backend.Environment.mainUrl + '/incidencias';
+  // API
+  String get API_BASE => '${url_backend.Environment.mainUrl}/incidencias';
 
-  String get API_NEW_INCIDENTE => '$API_BASE/crear';
-  String get API_NEARBY_INCIDENTES => '$API_BASE/nearby';
-  String get API_MAPA_ACTIVAS => '$API_BASE/mapa-activas';
-  String get API_DASHBOARD_RESUMEN => '$API_BASE/dashboard/resumen';
-  String apiDetalleIncidencia(int id) => '$API_BASE/$id';
-  String apiEvidenciasIncidencia(int id) => '$API_BASE/$id/evidencias';
-  String apiAgregarEvidencia(int id) => '$API_BASE/$id/evidencias';
-  String apiEliminarEvidencia(int evidenciaId) =>
-      '$API_BASE/evidencias/$evidenciaId';
+  String get API_CREATE_INCIDENCIA => '$API_BASE/crear';
+  String get API_MIS_INCIDENCIAS => '$API_BASE/mis-incidencias';
+  String get API_INCIDENCIAS_CERCANAS => '$API_BASE/cercanas';
 
-  // ============================
-  // HEADERS
-  // ============================
-  Future<Map<String, String>> _getAuthHeaders() async {
-    final session = await authRepository.getUserSession();
+  String API_DETALLE_INCIDENCIA(int id) => '$API_BASE/detalle/$id';
+  String API_ARCHIVOS_INCIDENCIA(int id) => '$API_BASE/$id/archivos';
+  String API_AGREGAR_ARCHIVOS(int id) => '$API_BASE/$id/archivos';
 
-    if (session == null) {
-      throw Exception('No hay sesión activa');
-    }
+  String API_ELIMINAR_ARCHIVO({
+    required int incidenciaId,
+    required int archivoId,
+  }) => '$API_BASE/$incidenciaId/archivos/$archivoId';
 
-    return {'Authorization': 'Bearer ${session.data.token}'};
+  // Helpers
+  Map<String, String> _getAuthHeaders(String token) {
+    return {'Authorization': 'Bearer $token'};
   }
 
-  Future<Map<String, String>> _getJsonHeaders() async {
-    final session = await authRepository.getUserSession();
-
-    if (session == null) {
-      throw Exception('No hay sesión activa');
-    }
-
+  Map<String, String> _getJsonHeaders(String token) {
     return {
       'Content-Type': 'application/json',
-      'Authorization': 'Bearer ${session.data.token}',
+      'Authorization': 'Bearer $token',
     };
   }
 
-  // =====================================================
-  // 1. REGISTRAR INCIDENTE
-  // =====================================================
-  Future<IncidenteModel?> newIncidente(IncidenteModel params) async {
+  Map<String, dynamic> _decodeResponse(http.Response response) {
     try {
-      final headers = await _getAuthHeaders();
+      return json.decode(response.body) as Map<String, dynamic>;
+    } catch (_) {
+      return {'success': false, 'message': 'Respuesta inválida del servidor'};
+    }
+  }
 
+  ErrorData<T> _buildError<T>(Map<String, dynamic> body, int statusCode) {
+    return ErrorData<T>(
+      message: body['message']?.toString() ?? 'Ocurrió un error.',
+      error: body['error']?.toString(),
+      statusCode: statusCode,
+    );
+  }
+
+  bool _isSuccess(int statusCode) {
+    return statusCode >= 200 && statusCode < 300;
+  }
+
+  // =====================================================
+  // 1. REGISTRAR INCIDENCIA
+  // =====================================================
+  Future<Resource<IncidenteModel>> registerIncidencia({
+    required IncidenteModel incidencia,
+    required String token,
+  }) async {
+    try {
       final request = http.MultipartRequest(
-        "POST",
-        Uri.parse(API_NEW_INCIDENTE),
+        'POST',
+        Uri.parse(API_CREATE_INCIDENCIA),
       );
 
-      request.headers.addAll(headers);
+      request.headers.addAll(_getAuthHeaders(token));
 
-      // CAMPOS
-      // request.fields['usuario_id'] = params.usuarioId.toString();
-      // request.fields['zona_id'] = params.zonaId.toString();
-      request.fields['tipo'] = params.tipo;
-      request.fields['descripcion'] = params.descripcion;
-      request.fields['latitud'] = params.latitud.toString();
-      request.fields['longitud'] = params.longitud.toString();
-      request.fields['origen'] = params.origen;
+      request.fields['tipo'] = incidencia.tipo;
+      request.fields['descripcion'] = incidencia.descripcion;
+      request.fields['latitud'] = incidencia.latitud.toString();
+      request.fields['longitud'] = incidencia.longitud.toString();
+      request.fields['origen'] = incidencia.origen;
 
-      if (params.patrullajeId != null) {
-        request.fields['patrullaje_id'] = params.patrullajeId.toString();
+      if (incidencia.patrullajeId != null) {
+        request.fields['patrullaje_id'] = incidencia.patrullajeId.toString();
       }
 
-      // EVIDENCIAS
-      if (params.archivos != null && params.archivos!.isNotEmpty) {
-        for (final file in params.archivos!) {
+      if (incidencia.archivos != null && incidencia.archivos!.isNotEmpty) {
+        for (final file in incidencia.archivos!) {
           if (!file.existsSync()) continue;
 
           request.files.add(
@@ -96,186 +98,257 @@ class IncidenteService {
         }
       }
 
-      print("===== CREAR INCIDENCIA =====");
-      print("URL: $API_NEW_INCIDENTE");
-      print("FIELDS: ${request.fields}");
-      print("FILES: ${request.files.length}");
-
       final streamedResponse = await request.send();
-
       final response = await http.Response.fromStream(streamedResponse);
+      final body = _decodeResponse(response);
 
-      print("STATUS: ${response.statusCode}");
-      print("BODY: ${response.body}");
+      if (_isSuccess(response.statusCode)) {
+        final data = body['data'];
 
-      final data = jsonDecode(response.body);
+        final incidenciaJson = data is Map<String, dynamic>
+            ? data['incidencia'] ?? data
+            : body['incidencia'];
 
-      if (response.statusCode == 201) {
-        return IncidenteModel.fromJson(data['incidencia']);
+        return Success<IncidenteModel>(IncidenteModel.fromJson(incidenciaJson));
       }
 
-      throw Exception(data['message'] ?? 'Error al registrar incidencia');
-    } catch (e) {
-      throw Exception('Error al registrar incidencia: $e');
-    }
-  }
-
-  // =====================================================
-  // 2. GET INCIDENCIA
-  // =====================================================
-  Future<IncidenteModel> getIncidencia(int incidenciaId) async {
-    final headers = await _getJsonHeaders();
-
-    final response = await http.get(
-      Uri.parse(apiDetalleIncidencia(incidenciaId)),
-      headers: headers,
-    );
-
-    final data = jsonDecode(response.body);
-
-    if (response.statusCode == 200) {
-      return IncidenteModel.fromJson(data['incidencia']);
-    }
-
-    throw Exception(data['message']);
-  }
-
-  // =====================================================
-  // 3. GET EVIDENCIAS DE UNA INCIDENCIA
-  // =====================================================
-  Future<List<IncidenciaArchivoModel>> getEvidenciasIncidencia(
-    int incidenciaId,
-  ) async {
-    final headers = await _getJsonHeaders();
-
-    final response = await http.get(
-      Uri.parse(apiEvidenciasIncidencia(incidenciaId)),
-      headers: headers,
-    );
-
-    final data = jsonDecode(response.body);
-
-    if (response.statusCode == 200) {
-      return data['evidencias'];
-    }
-
-    throw Exception(data['message']);
-  }
-
-  // =====================================================
-  // 4. AGREGAR EVIDENCIA A UNA INCIDENCIA
-  // =====================================================
-  Future<void> agregarEvidencias(int incidenciaId, List<File> archivos) async {
-    final headers = await _getAuthHeaders();
-
-    final request = http.MultipartRequest(
-      "POST",
-      Uri.parse(apiAgregarEvidencia(incidenciaId)),
-    );
-
-    request.headers.addAll(headers);
-
-    for (final archivo in archivos) {
-      request.files.add(
-        await http.MultipartFile.fromPath('archivos', archivo.path),
+      return _buildError<IncidenteModel>(body, response.statusCode);
+    } catch (error) {
+      return ErrorData<IncidenteModel>(
+        message: 'Error al registrar incidencia.',
+        error: error.toString(),
       );
     }
+  }
 
-    final response = await request.send();
+  // =====================================================
+  // 2. MIS INCIDENCIAS
+  // =====================================================
+  Future<Resource<List<IncidenteModel>>> getMisIncidencias({
+    required String token,
+    int page = 1,
+    int limit = 10,
+    String incluirArchivos = 'false',
+  }) async {
+    try {
+      final uri = Uri.parse(API_MIS_INCIDENCIAS).replace(
+        queryParameters: {
+          'page': page.toString(),
+          'limit': limit.toString(),
+          'mode': 'app',
+          'incluir_archivos': incluirArchivos,
+        },
+      );
 
-    if (response.statusCode != 200) {
-      final body = await response.stream.bytesToString();
+      final response = await http.get(uri, headers: _getJsonHeaders(token));
 
-      throw Exception(body);
+      final body = _decodeResponse(response);
+
+      if (_isSuccess(response.statusCode)) {
+        final data = body['data'];
+        final List list = data?['data'] ?? [];
+
+        final incidencias = list
+            .map((e) => IncidenteModel.fromJson(e))
+            .toList();
+
+        return Success<List<IncidenteModel>>(incidencias);
+      }
+
+      return _buildError<List<IncidenteModel>>(body, response.statusCode);
+    } catch (error) {
+      return ErrorData<List<IncidenteModel>>(
+        message: 'Error al obtener mis incidencias.',
+        error: error.toString(),
+      );
     }
   }
 
   // =====================================================
-  // 5. ELIMINAR EVIDENCIA DE UNA INCIDENCIA
+  // 3. DETALLE DE INCIDENCIA
   // =====================================================
-  Future<void> eliminarEvidencia(int evidenciaId) async {
-    final headers = await _getJsonHeaders();
+  Future<Resource<IncidenteModel>> getIncidenciaById({
+    required int incidenciaId,
+    required String token,
+    String mode = 'app',
+  }) async {
+    try {
+      final uri = Uri.parse(
+        API_DETALLE_INCIDENCIA(incidenciaId),
+      ).replace(queryParameters: {'mode': mode});
 
-    final response = await http.delete(
-      Uri.parse(apiEliminarEvidencia(evidenciaId)),
-      headers: headers,
-    );
+      final response = await http.get(uri, headers: _getJsonHeaders(token));
 
-    if (response.statusCode != 200) {
-      final data = jsonDecode(response.body);
+      final body = _decodeResponse(response);
 
-      throw Exception(data['message']);
+      if (_isSuccess(response.statusCode)) {
+        return Success<IncidenteModel>(IncidenteModel.fromJson(body['data']));
+      }
+
+      return _buildError<IncidenteModel>(body, response.statusCode);
+    } catch (error) {
+      return ErrorData<IncidenteModel>(
+        message: 'Error al obtener incidencia.',
+        error: error.toString(),
+      );
     }
   }
 
   // =====================================================
-  // 6. MAPA DE INCIDENCIAS ACTIVAS
+  // 4. OBTENER ARCHIVOS DE INCIDENCIA
   // =====================================================
-  Future<List<IncidenteModel>> getMapaIncidenciasActivas() async {
-    final headers = await _getJsonHeaders();
+  Future<Resource<List<IncidenciaArchivoModel>>> getArchivosIncidencia({
+    required int incidenciaId,
+    required String token,
+  }) async {
+    try {
+      final response = await http.get(
+        Uri.parse(API_ARCHIVOS_INCIDENCIA(incidenciaId)),
+        headers: _getJsonHeaders(token),
+      );
 
-    final response = await http.get(
-      Uri.parse(API_MAPA_ACTIVAS),
-      headers: headers,
-    );
+      final body = _decodeResponse(response);
 
-    final data = jsonDecode(response.body);
+      if (_isSuccess(response.statusCode)) {
+        final data = body['data'];
+        final List list = data?['data'] ?? [];
 
-    if (response.statusCode == 200) {
-      return data['incidencias'];
+        final archivos = list
+            .map((e) => IncidenciaArchivoModel.fromJson(e))
+            .toList();
+
+        return Success<List<IncidenciaArchivoModel>>(archivos);
+      }
+
+      return _buildError<List<IncidenciaArchivoModel>>(
+        body,
+        response.statusCode,
+      );
+    } catch (error) {
+      return ErrorData<List<IncidenciaArchivoModel>>(
+        message: 'Error al obtener archivos de incidencia.',
+        error: error.toString(),
+      );
     }
-
-    throw Exception(data['message']);
   }
 
   // =====================================================
-  // 7. DASHBOARD DE INCIDENCIA
+  // 5. AGREGAR ARCHIVOS A INCIDENCIA
   // =====================================================
-  Future<Map<String, dynamic>> getDashboardIncidencias() async {
-    final headers = await _getJsonHeaders();
+  Future<Resource<bool>> agregarArchivosIncidencia({
+    required int incidenciaId,
+    required List<File> archivos,
+    required String token,
+  }) async {
+    try {
+      final request = http.MultipartRequest(
+        'POST',
+        Uri.parse(API_AGREGAR_ARCHIVOS(incidenciaId)),
+      );
 
-    final response = await http.get(
-      Uri.parse(API_DASHBOARD_RESUMEN),
-      headers: headers,
-    );
+      request.headers.addAll(_getAuthHeaders(token));
 
-    final data = jsonDecode(response.body);
+      for (final archivo in archivos) {
+        if (!archivo.existsSync()) continue;
 
-    if (response.statusCode == 200) {
-      return data;
+        request.files.add(
+          await http.MultipartFile.fromPath('archivos', archivo.path),
+        );
+      }
+
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+      final body = _decodeResponse(response);
+
+      if (_isSuccess(response.statusCode)) {
+        return Success<bool>(true);
+      }
+
+      return _buildError<bool>(body, response.statusCode);
+    } catch (error) {
+      return ErrorData<bool>(
+        message: 'Error al agregar archivos a la incidencia.',
+        error: error.toString(),
+      );
     }
-
-    throw Exception(data['message']);
   }
 
   // =====================================================
-  // 8. INCIDENCIAS CERCANAS
+  // 6. ELIMINAR ARCHIVO DE INCIDENCIA
   // =====================================================
-  Future<List<IncidenteModel>> getNearbyIncidents({
+  Future<Resource<bool>> eliminarArchivoIncidencia({
+    required int incidenciaId,
+    required int archivoId,
+    required String token,
+  }) async {
+    try {
+      final response = await http.delete(
+        Uri.parse(
+          API_ELIMINAR_ARCHIVO(
+            incidenciaId: incidenciaId,
+            archivoId: archivoId,
+          ),
+        ),
+        headers: _getJsonHeaders(token),
+      );
+
+      final body = _decodeResponse(response);
+
+      if (_isSuccess(response.statusCode)) {
+        return Success<bool>(true);
+      }
+
+      return _buildError<bool>(body, response.statusCode);
+    } catch (error) {
+      return ErrorData<bool>(
+        message: 'Error al eliminar archivo de incidencia.',
+        error: error.toString(),
+      );
+    }
+  }
+
+  // =====================================================
+  // 7. INCIDENCIAS CERCANAS
+  // =====================================================
+  Future<Resource<List<IncidenteModel>>> getIncidenciasCercanas({
     required double latitud,
     required double longitud,
-    double radio = 3,
+    required String token,
+    double radio = 500,
+    int limit = 20,
   }) async {
-    final headers = await _getJsonHeaders();
+    try {
+      final uri = Uri.parse(API_INCIDENCIAS_CERCANAS).replace(
+        queryParameters: {
+          'latitud': latitud.toString(),
+          'longitud': longitud.toString(),
+          'radio': radio.toString(),
+          'limit': limit.toString(),
+          'mode': 'app',
+        },
+      );
 
-    final uri = Uri.parse(API_NEARBY_INCIDENTES).replace(
-      queryParameters: {
-        'latitud': latitud.toString(),
-        'longitud': longitud.toString(),
-        'radio': radio.toString(),
-      },
-    );
+      final response = await http.get(uri, headers: _getJsonHeaders(token));
 
-    final response = await http.get(uri, headers: headers);
+      final body = _decodeResponse(response);
 
-    final data = jsonDecode(response.body);
+      if (_isSuccess(response.statusCode)) {
+        final data = body['data'];
+        final List list = data?['data'] ?? [];
 
-    if (response.statusCode == 200) {
-      return (data['incidencias'] as List)
-          .map((e) => IncidenteModel.fromJson(e))
-          .toList();
+        final incidencias = list
+            .map((e) => IncidenteModel.fromJson(e))
+            .toList();
+
+        return Success<List<IncidenteModel>>(incidencias);
+      }
+
+      return _buildError<List<IncidenteModel>>(body, response.statusCode);
+    } catch (error) {
+      return ErrorData<List<IncidenteModel>>(
+        message: 'Error al obtener incidencias cercanas.',
+        error: error.toString(),
+      );
     }
-
-    throw Exception(data['message']);
   }
 }

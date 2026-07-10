@@ -6,5 +6,5 @@ class GetHistorialByPatrullajeUseCase {
   GetHistorialByPatrullajeUseCase(this.historialRepository);
 
   run(int patrullajeId) =>
-      historialRepository.obtenerHistorialPorPatrullaje(patrullajeId);
+      historialRepository.getHistorialByPatrullaje(patrullajeId);
 }

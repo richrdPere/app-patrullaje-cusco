@@ -1,20 +1,21 @@
 import 'package:sis_patrullaje_cusco/src/domain/models/incidencia_model.dart';
 import 'package:sis_patrullaje_cusco/src/domain/repositories/incidente_repository.dart';
+import 'package:sis_patrullaje_cusco/src/domain/utils/Resource.dart';
 
-class GetNearbyIncidentesUseCase {
+class GetIncidenciasCercanasUseCase {
   final IncidenteRepository incidenteRepository;
 
-  GetNearbyIncidentesUseCase(this.incidenteRepository);
+  GetIncidenciasCercanasUseCase(this.incidenteRepository);
 
-  Future<List<IncidenteModel>> run({
+  Future<Resource<List<IncidenteModel>>> run({
     required double latitud,
     required double longitud,
-    double radioKm = 3,
+    double radio = 3,
   }) {
     return incidenteRepository.getIncidenciasCercanas(
       latitud: latitud,
       longitud: longitud,
-      radioKm: radioKm,
+      radio: radio,
     );
   }
 }

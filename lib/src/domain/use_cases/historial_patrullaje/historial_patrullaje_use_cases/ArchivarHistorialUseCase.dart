@@ -5,5 +5,5 @@ class ArchivarHistorialUseCase {
 
   ArchivarHistorialUseCase(this.historialRepository);
 
-  run(int historialId) => historialRepository.archivarHistorial(historialId);
+  run(int historialId) => historialRepository.archivedHistorial(historialId);
 }

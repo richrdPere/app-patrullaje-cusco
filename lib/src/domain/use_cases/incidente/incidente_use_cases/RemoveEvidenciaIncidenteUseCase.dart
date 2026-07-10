@@ -1,11 +1,18 @@
 import 'package:sis_patrullaje_cusco/src/domain/repositories/incidente_repository.dart';
+import 'package:sis_patrullaje_cusco/src/domain/utils/Resource.dart';
 
-class RemoveEvidenciaIncidenteUseCase {
+class RemoveArchivoIncidenciaUseCase {
   final IncidenteRepository incidenteRepository;
 
-  RemoveEvidenciaIncidenteUseCase(this.incidenteRepository);
+  RemoveArchivoIncidenciaUseCase(this.incidenteRepository);
 
-  Future<void> run(int evidenciaId) {
-    return incidenteRepository.removeEvidencia(evidenciaId);
+  Future<Resource<bool>> run({
+    required int incidenciaId,
+    required int archivoId,
+  }) {
+    return incidenteRepository.removeArchivoIncidencia(
+      incidenciaId: incidenciaId,
+      archivoId: archivoId,
+    );
   }
 }

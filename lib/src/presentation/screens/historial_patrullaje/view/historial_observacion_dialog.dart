@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:sis_patrullaje_cusco/src/data/models/historial_patrullaje/historial_patrullaje_model.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/historial_patrullaje/bloc/historial_patrullaje_bloc.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/historial_patrullaje/bloc/historial_patrullaje_event.dart';
 
 class HistorialObservacionDialog extends StatefulWidget {
   final int patrullajeId;
@@ -20,13 +24,9 @@ class _HistorialObservacionDialogState
   final _formKey = GlobalKey<FormState>();
 
   final tituloController = TextEditingController();
-
   final descripcionController = TextEditingController();
-
   String tipo = "OBSERVACION";
-
   String prioridad = "MEDIA";
-
   bool visible = true;
 
   @override
@@ -163,15 +163,30 @@ class _HistorialObservacionDialogState
                       return;
                     }
 
-                    // Obtener GPS
+                    // TODO:
+                    // Obtener la ubicación GPS actual si deseas registrar
+                    // la posición de la observación.
 
-                    // Crear modelo
+                    final historial = HistorialPatrullajeModel(
+                      // patrullajeId: widget.patrullajeId,
+                      tipo: tipo,
+                      titulo: tituloController.text.trim(),
+                      descripcion: descripcionController.text.trim(),
+                      prioridad: prioridad,
+                      latitud: null,
+                      longitud: null,
+                      visibleParaSiguienteTurno: visible,
+                      fechaHora: DateTime.now(),
+                      // estado: "ACTIVO",
+                    );
 
-                    // Bloc.add(RegisterHistorialEvent())
+                    context.read<HistorialPatrullajeBloc>().add(
+                      RegisterHistorialEvent(historial),
+                    );
+
+                    Navigator.pop(context);
                   },
-
                   icon: const Icon(Icons.save),
-
                   label: const Text("Registrar observación"),
                 ),
               ],

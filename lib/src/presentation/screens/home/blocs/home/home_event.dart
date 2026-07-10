@@ -1,4 +1,4 @@
-import 'package:sis_patrullaje_cusco/src/domain/models/patrullaje_model.dart';
+import 'package:sis_patrullaje_cusco/src/data/models/patrullaje/patrullaje_data.dart';
 
 abstract class HomeEvent {}
 
@@ -9,13 +9,13 @@ class LoadPatrullajeActivo extends HomeEvent {}
 class InitSocketListeners extends HomeEvent {}
 
 class NuevoPatrullajeRecibido extends HomeEvent {
-  final PatrullajeModel patrullaje;
+  final PatrullajeData patrullaje;
 
   NuevoPatrullajeRecibido(this.patrullaje);
 }
 
 class PatrullajeActualizadoRecibido extends HomeEvent {
-  final PatrullajeModel patrullaje;
+  final PatrullajeData patrullaje;
   PatrullajeActualizadoRecibido(this.patrullaje);
 }
 

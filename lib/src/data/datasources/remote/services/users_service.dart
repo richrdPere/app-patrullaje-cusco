@@ -3,54 +3,60 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-// Repository
-import 'package:sis_patrullaje_cusco/src/domain/utils/Resource.dart';
-
-// Model
-import 'package:sis_patrullaje_cusco/src/domain/models/usuarios.dart';
-import 'package:sis_patrullaje_cusco/src/domain/repositories/auth_repository.dart';
-
 // Environment
 import 'package:sis_patrullaje_cusco/src/config/constants/environment.dart'
     as url_backend;
 
+// Model
+import 'package:sis_patrullaje_cusco/src/domain/models/usuarios.dart';
+import 'package:sis_patrullaje_cusco/src/domain/utils/Resource.dart';
+
 class UsersService {
-  final AuthRepository authRepository;
-
-  UsersService(this.authRepository);
-
   // APIS
-  String get API_BASE => url_backend.Environment.mainUrl + '/usuario';
-  String get API_UPDATE_USER => '$API_BASE/editar/';
+  String get API_BASE => '${url_backend.Environment.mainUrl}/usuario';
 
-  // ============================
-  // HEADERS
-  // ============================
-  Future<Map<String, String>> _getHeaders() async {
-    final session = await authRepository.getUserSession();
+  String API_UPDATE_USER(int id) => '$API_BASE/editar/$id';
 
-    if (session == null) {
-      throw Exception('No hay sesión activa');
-    }
-
+  // Helpers
+  Map<String, String> _getHeaders(String token) {
     return {
       'Content-Type': 'application/json',
-      'Authorization': 'Bearer ${session.data.token}',
+      'Authorization': 'Bearer $token',
     };
+  }
+
+  Map<String, dynamic> _decodeResponse(http.Response response) {
+    try {
+      return json.decode(response.body) as Map<String, dynamic>;
+    } catch (_) {
+      return {'success': false, 'message': 'Respuesta inválida del servidor'};
+    }
+  }
+
+  ErrorData<T> _buildError<T>(Map<String, dynamic> body, int statusCode) {
+    return ErrorData<T>(
+      message: body['message']?.toString() ?? 'Ocurrió un error.',
+      error: body['error']?.toString(),
+      statusCode: statusCode,
+    );
+  }
+
+  bool _isSuccess(int statusCode) {
+    return statusCode >= 200 && statusCode < 300;
   }
 
   // =====================================================
   // 1. ACTUALIZAR USUARIO
   // =====================================================
-  Future<Resource<Usuario>> updateUsuario(int id, Usuario user) async {
+  Future<Resource<Usuario>> updateUsuario({
+    required int id,
+    required Usuario user,
+    required String token,
+  }) async {
     try {
-      // 1.- Header
-      final headers = await _getHeaders();
+      final url = Uri.parse(API_UPDATE_USER(id));
+      final headers = _getHeaders(token);
 
-      // 2.- URL Base
-      Uri url = Uri.http("$API_UPDATE_USER$id");
-
-      // 3.- Body
       final body = json.encode({
         "persona": {
           "nombres": user.persona.nombres,
@@ -63,29 +69,26 @@ class UsersService {
         },
       });
 
-      // 4.- Request
-      final resp = await http.put(url, headers: headers, body: body);
-      final data = json.decode(resp.body);
+      final response = await http.put(url, headers: headers, body: body);
 
-      // 5.- Response
-      if (resp.statusCode == 200) {
-        // Tu backend devuelve solo message normalmente
-        // si no devuelve usuario → no intentes mapear directo
+      final responseBody = _decodeResponse(response);
 
-        if (data['usuario'] != null) {
-          final userResponse = Usuario.fromJson(data['usuario']);
-          return Success(userResponse);
+      if (_isSuccess(response.statusCode)) {
+        final data = responseBody['data'] ?? responseBody['usuario'];
+
+        if (data != null) {
+          return Success<Usuario>(Usuario.fromJson(data));
         }
 
-        // fallback (si solo viene message)
-        return Success(user);
-      } else {
-        return ErrorData(data['message'] ?? "Error al actualizar usuario");
+        return Success<Usuario>(user);
       }
-    } catch (e) {
-      print("Error: $e");
-      return ErrorData("Error de conexión: $e");
-      // return data['message'];
+
+      return _buildError<Usuario>(responseBody, response.statusCode);
+    } catch (error) {
+      return ErrorData<Usuario>(
+        message: 'Error al actualizar usuario.',
+        error: error.toString(),
+      );
     }
   }
 }

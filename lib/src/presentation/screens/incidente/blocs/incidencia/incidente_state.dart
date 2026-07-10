@@ -4,6 +4,7 @@ import 'package:equatable/equatable.dart';
 import 'package:sis_patrullaje_cusco/src/domain/models/incidencia_archivo_model.dart';
 // import 'package:sis_patrullaje_cusco/src/domain/entities/incidencia_entity.dart';
 import 'package:sis_patrullaje_cusco/src/domain/models/incidencia_model.dart';
+import 'package:sis_patrullaje_cusco/src/domain/utils/Resource.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/enums/incidente_tab_enum.dart';
 
 class IncidenteState extends Equatable {
@@ -19,7 +20,7 @@ class IncidenteState extends Equatable {
   final bool loadingEvidencias;
 
   // INCIDENTES CERCANOS
-  final List<IncidenteModel> nearbyIncidents;
+  final Resource<List<IncidenteModel>>? nearbyIncidents;
   final bool loadingNearby;
 
   // MAPA DE INCIDENTES
@@ -78,7 +79,7 @@ class IncidenteState extends Equatable {
     this.isSheetExpanded = false,
 
     // Cercanos
-    this.nearbyIncidents = const [],
+    this.nearbyIncidents,
     this.loadingNearby = false,
 
     // Mapa
@@ -120,7 +121,7 @@ class IncidenteState extends Equatable {
     bool? isSheetExpanded,
 
     // Cercanos
-    List<IncidenteModel>? nearbyIncidents,
+    Resource<List<IncidenteModel>>? nearbyIncidents,
     bool? loadingNearby,
 
     // Mapa

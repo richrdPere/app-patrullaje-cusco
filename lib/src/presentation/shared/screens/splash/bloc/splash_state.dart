@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:sis_patrullaje_cusco/src/data/models/login/auth_response.dart';
 
 abstract class SplashState extends Equatable {
   const SplashState();
@@ -19,7 +20,10 @@ class SplashLoading extends SplashState {
 
 /// Existe una sesión almacenada
 class SplashAuthenticated extends SplashState {
-  const SplashAuthenticated();
+  final AuthResponse session;
+
+  const SplashAuthenticated(this.session);
+  // const SplashAuthenticated();
 }
 
 /// No existe una sesión

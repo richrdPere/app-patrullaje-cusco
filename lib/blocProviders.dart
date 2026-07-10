@@ -16,6 +16,7 @@ import 'package:sis_patrullaje_cusco/src/presentation/screens/auth/login/bloc/lo
 import 'package:sis_patrullaje_cusco/src/presentation/screens/auth/login/bloc/login_event.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/auth/register/bloc/register_bloc.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/auth/register/bloc/register_event.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/historial_patrullaje/bloc/historial_patrullaje_event.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/home/home_bloc.dart';
 // import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/home/home_event.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/socket/socket_bloc.dart';
@@ -75,7 +76,9 @@ List<BlocProvider> blocProviders = [
     create: (BuildContext context) =>
         SessionBloc(), //..add(const LoadingStarted()),
   ),
-  BlocProvider<LogoutBloc>(create: (BuildContext context) => LogoutBloc(locator<AuthUsesCases>())),
+  BlocProvider<LogoutBloc>(
+    create: (BuildContext context) => LogoutBloc(locator<AuthUsesCases>()),
+  ),
 
   // Profile
   // - Info
@@ -127,7 +130,9 @@ List<BlocProvider> blocProviders = [
 
   // Historial patrullaje
   BlocProvider<HistorialPatrullajeBloc>(
-    create: (BuildContext context) =>
-        HistorialPatrullajeBloc(locator<HistorialPatrullajeUseCases>()),
+    create: (BuildContext context) => HistorialPatrullajeBloc(
+      locator<HistorialPatrullajeUseCases>(),
+      locator<PatrullajeUseCases>(),
+    )..add(LoadHistorialPatrullajeEvent()),
   ),
 ];

@@ -12,7 +12,8 @@ import 'package:sis_patrullaje_cusco/src/presentation/screens/chat/chat_page.dar
 import 'package:sis_patrullaje_cusco/src/presentation/screens/auth/login/view/login_page.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/auth/register/view/register_page.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/historial_patrullaje/view/historial_patrullaje_page.dart';
-import 'package:sis_patrullaje_cusco/src/presentation/screens/home/home_content.dart';
+// import 'package:sis_patrullaje_cusco/src/presentation/screens/home/home_content.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/home/home_page.dart';
 // import 'package:sis_patrullaje_cusco/src/presentation/screens/home/home_page.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/mapa/view/mapa/mapa_page.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/mapa/view/mapa_incident/mapa_incident_page.dart';
@@ -25,9 +26,7 @@ import 'package:sis_patrullaje_cusco/src/presentation/shared/screens/splash/view
 
 String? authRedirect(BuildContext context, GoRouterState state) {
   final session = context.read<SessionBloc>().state;
-
   final loggedIn = session.isAuthenticated;
-
   final location = state.matchedLocation;
 
   // Rutas públicas
@@ -54,7 +53,6 @@ String? authRedirect(BuildContext context, GoRouterState state) {
     if (location == '/splash' || location == '/login') {
       return '/home';
     }
-
     // Puede navegar libremente
     return null;
   }
@@ -69,6 +67,7 @@ final GoRouter appRouter = GoRouter(
   // initialLocation: '/login',
   initialLocation: '/splash',
   debugLogDiagnostics: true,
+  redirect: authRedirect,
   routes: [
     // AUTH
     GoRoute(
@@ -111,7 +110,7 @@ final GoRouter appRouter = GoRouter(
         GoRoute(
           path: '/home',
           name: "home",
-          builder: (_, __) => const HomeContent(),
+          builder: (_, __) => const HomePage(),
         ),
 
         // 2. MAPA

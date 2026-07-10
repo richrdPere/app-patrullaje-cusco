@@ -3,74 +3,151 @@ import 'dart:io';
 import 'package:sis_patrullaje_cusco/src/data/datasources/remote/services/incidente_service.dart';
 import 'package:sis_patrullaje_cusco/src/domain/models/incidencia_archivo_model.dart';
 import 'package:sis_patrullaje_cusco/src/domain/models/incidencia_model.dart';
+import 'package:sis_patrullaje_cusco/src/domain/repositories/auth_repository.dart';
 import 'package:sis_patrullaje_cusco/src/domain/repositories/incidente_repository.dart';
+import 'package:sis_patrullaje_cusco/src/domain/utils/Resource.dart';
 
-class IncidenteRepositoryImpl extends IncidenteRepository {
-  final IncidenteService incidenteService;
+class IncidenteRepositoryImpl implements IncidenteRepository {
+  final IncidenciaService remote;
+  final AuthRepository authRepository;
 
-  IncidenteRepositoryImpl(this.incidenteService);
+  IncidenteRepositoryImpl(this.remote, this.authRepository);
 
-  // 1. REGISTRAR INCIDENTE
+  // 1. REGISTER INCIDENCIA
   @override
-  Future<IncidenteModel> newIncidencia(IncidenteModel params) async {
-    final response = await incidenteService.newIncidente(params);
+  Future<Resource<IncidenteModel>> newIncidencia(
+    IncidenteModel incidente,
+  ) async {
+    final token = await authRepository.getToken();
 
-    if (response == null) {
-      throw Exception("No se pudo crear la incidencia");
+    if (token == null) {
+      return ErrorData<IncidenteModel>(
+        message: "No existe una sesión iniciada.",
+      );
     }
 
-    return response;
+    return await remote.registerIncidencia(incidencia: incidente, token: token);
   }
 
-  // 2. GET INCIDENCIA
+  // 2. OBTENER MIS INCIDENCIAS
   @override
-  Future<IncidenteModel> getIncidencia(int incidenciaId) async {
-    return await incidenteService.getIncidencia(incidenciaId);
-  }
-
-  // 3. GET INCIDENCIAS CERCANA
-  @override
-  Future<List<IncidenteModel>> getIncidenciasCercanas({
-    required double latitud,
-    required double longitud,
-    double radioKm = 3,
+  Future<Resource<List<IncidenteModel>>> getMisIncidencias({
+    int page = 1,
+    int limit = 10,
+    String incluirArchivos = 'false',
   }) async {
-    return await incidenteService.getNearbyIncidents(
-      latitud: latitud,
-      longitud: longitud,
-      radio: radioKm,
+    final token = await authRepository.getToken();
+
+    if (token == null) {
+      return ErrorData<List<IncidenteModel>>(
+        message: "No existe una sesión iniciada.",
+      );
+    }
+
+    return await remote.getMisIncidencias(
+      token: token,
+      page: page,
+      limit: limit,
+      incluirArchivos: incluirArchivos,
     );
   }
 
-  // 4. GET INCIDENCIA ACTIVAS PARA MAPA
+  // 3. OBTENER INCIDENCIA POR ID
   @override
-  Future<List<IncidenteModel>> getIncidenciasActivasMapa() async {
-    return await incidenteService.getMapaIncidenciasActivas();
+  Future<Resource<IncidenteModel>> getIncidenciaById(int incidenciaId) async {
+    final token = await authRepository.getToken();
+
+    if (token == null) {
+      return ErrorData<IncidenteModel>(
+        message: "No existe una sesión iniciada.",
+      );
+    }
+
+    return await remote.getIncidenciaById(
+      incidenciaId: incidenciaId,
+      token: token,
+    );
   }
 
-  // 5. GET DASHBOARD  RESUMEN
+  // 4. OBTENER INCIDENCIA CERCANAS
   @override
-  Future<Map<String, dynamic>> getDashboard() async {
-    return await incidenteService.getDashboardIncidencias();
+  Future<Resource<List<IncidenteModel>>> getIncidenciasCercanas({
+    required double latitud,
+    required double longitud,
+    double radio = 500,
+    int limit = 20,
+  }) async {
+    final token = await authRepository.getToken();
+
+    if (token == null) {
+      return ErrorData<List<IncidenteModel>>(
+        message: "No existe una sesión iniciada.",
+      );
+    }
+
+    return await remote.getIncidenciasCercanas(
+      latitud: latitud,
+      longitud: longitud,
+      radio: radio,
+      limit: limit,
+      token: token,
+    );
   }
 
-  // 6. AGREGAR EVIDENCIAS
+  // 5. OBTENER ARCHIVOS DE INCIDENCIA
   @override
-  Future<void> addEvidencias(int incidenciaId, List<File> archivos) {
-    return incidenteService.agregarEvidencias(incidenciaId, archivos);
-  }
-
-  // 7. ELIMINAR EVIDENCIA
-  @override
-  Future<void> removeEvidencia(int evidenciaId) {
-    return incidenteService.eliminarEvidencia(evidenciaId);
-  }
-
-  // 8. OBTENER EVIDENCIAS DE UNA INCIDENCIA
-  @override
-  Future<List<IncidenciaArchivoModel>> getEvidencias(
+  Future<Resource<List<IncidenciaArchivoModel>>> getArchivosIncidencia(
     int incidenciaId,
   ) async {
-    return await incidenteService.getEvidenciasIncidencia(incidenciaId);
+    final token = await authRepository.getToken();
+
+    if (token == null) {
+      return ErrorData<List<IncidenciaArchivoModel>>(
+        message: "No existe una sesión iniciada.",
+      );
+    }
+
+    return await remote.getArchivosIncidencia(
+      incidenciaId: incidenciaId,
+      token: token,
+    );
+  }
+
+  // 6. AGREGAR ARCHIVOS A INCIDENCIA
+  @override
+  Future<Resource<bool>> addArchivosIncidencia({
+    required int incidenciaId,
+    required List<File> archivos,
+  }) async {
+    final token = await authRepository.getToken();
+
+    if (token == null) {
+      return ErrorData<bool>(message: "No existe una sesión iniciada.");
+    }
+
+    return await remote.agregarArchivosIncidencia(
+      incidenciaId: incidenciaId,
+      archivos: archivos,
+      token: token,
+    );
+  }
+
+  // 7. REMOVER ARCHIVOS DE INCIDENCIA
+  @override
+  Future<Resource<bool>> removeArchivoIncidencia({
+    required int incidenciaId,
+    required int archivoId,
+  }) async {
+    final token = await authRepository.getToken();
+
+    if (token == null) {
+      return ErrorData<bool>(message: "No existe una sesión iniciada.");
+    }
+
+    return await remote.eliminarArchivoIncidencia(
+      incidenciaId: incidenciaId,
+      archivoId: archivoId,
+      token: token,
+    );
   }
 }

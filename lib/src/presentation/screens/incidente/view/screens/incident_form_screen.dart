@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:sis_patrullaje_cusco/src/data/models/patrullaje/patrullaje_data.dart';
 import 'package:sis_patrullaje_cusco/src/domain/models/incidencia_model.dart';
-import 'package:sis_patrullaje_cusco/src/domain/models/patrullaje_model.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/home/home_bloc.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/blocs/incidencia/incidente_bloc.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/blocs/incidencia/incidente_event.dart';
@@ -261,7 +261,7 @@ class _IncidenteFormScreenState extends State<IncidenteFormScreen> {
   Widget _buildSubmitButton(
     BuildContext context,
     IncidenteState state,
-    PatrullajeModel? patrullaje,
+    PatrullajeData? patrullaje,
   ) {
     return SizedBox(
       width: double.infinity,
@@ -281,7 +281,7 @@ class _IncidenteFormScreenState extends State<IncidenteFormScreen> {
   void _submitIncidente(
     BuildContext context,
     IncidenteState state,
-    PatrullajeModel? patrullaje,
+    PatrullajeData? patrullaje,
   ) {
     // todas las validaciones
 

@@ -1,6 +1,6 @@
 import 'package:bloc/bloc.dart';
 
-import 'package:sis_patrullaje_cusco/src/domain/models/historial_patrullaje_model.dart';
+import 'package:sis_patrullaje_cusco/src/data/models/historial_patrullaje/historial_patrullaje_model.dart';
 import 'package:sis_patrullaje_cusco/src/domain/models/incidencia_model.dart';
 
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/historial_patrullaje/HistorialPatrullajeUseCases.dart';
@@ -54,8 +54,8 @@ class IncidenteHandlers {
     emit(state.copyWith(isLoading: true, error: null));
 
     try {
-      final incidencia = await incidenteUseCases.getIncidencia.run(
-        event.incidenciaId,
+      final incidencia = await incidenteUseCases.getMisIncidencias.run(
+       //  event.incidenciaId,
       );
 
       emit(
@@ -94,7 +94,7 @@ class IncidenteHandlers {
     emit(state.copyWith(loadingEvidencias: true, error: null));
 
     try {
-      await incidenteUseCases.addEvidenciasIncidente.run(
+      await incidenteUseCases.addArchivosIncidencia.run(
         incidenciaId: event.incidenciaId,
         archivos: event.archivos,
       );
@@ -118,7 +118,7 @@ class IncidenteHandlers {
     emit(state.copyWith(loadingEvidencias: true, error: null));
 
     try {
-      await incidenteUseCases.removeEvidenciaIncidente.run(event.evidenciaId);
+      await incidenteUseCases.removeEvidenciaIncidente.run(incidenciaId: event.evidenciaId, archivoId: 1);
 
       final evidencias = await incidenteUseCases.getEvidenciasIncidente.run(
         event.incidenciaId,
@@ -160,7 +160,7 @@ class IncidenteHandlers {
     IncidenteModel incidencia,
   ) {
     return HistorialPatrullajeModel(
-      patrullajeId: incidencia.patrullajeId ?? 0,
+      // patrullajeId: incidencia.patrullajeId ?? 0,
       // serenoId: incidencia.usuarioId,
       // zonaId: incidencia.zonaId ?? 0,
       tipo: "ALERTA",
@@ -170,7 +170,7 @@ class IncidenteHandlers {
       latitud: incidencia.latitud,
       longitud: incidencia.longitud,
       visibleParaSiguienteTurno: true,
-      estado: "ACTIVO",
+      // estado: "ACTIVO",
     );
   }
 

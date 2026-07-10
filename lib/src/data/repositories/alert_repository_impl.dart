@@ -1,15 +1,14 @@
 import 'package:sis_patrullaje_cusco/src/domain/repositories/alert_repository.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/geolocator/GeolocatorUseCases.dart';
-// import 'package:socket_io_client/socket_io_client.dart';
+import 'package:sis_patrullaje_cusco/src/domain/repositories/index_repository.dart';
 
 class AlertRepositoryImpl implements AlertRepository {
-  final GeolocatorUseCases geolocatorUseCases;
+  final GeolocatorRepository geolocatorRepository;
 
-  AlertRepositoryImpl(this.geolocatorUseCases);
+  AlertRepositoryImpl(this.geolocatorRepository);
 
   @override
   Future<void> sendAlert() async {
-    final position = await geolocatorUseCases.findPosition.run();
+    final position = await geolocatorRepository.findPosition();
 
     final data = {
       "lat": position.latitude,
@@ -21,6 +20,5 @@ class AlertRepositoryImpl implements AlertRepository {
     // socket.emit("alerta_sereno", data);
 
     print("🚨 ALERTA ENVIADA: $data");
-
   }
 }

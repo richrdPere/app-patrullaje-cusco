@@ -1,153 +1,163 @@
-// ignore_for_file: unused_import
-
-import 'package:dio/dio.dart';
-import 'dart:convert';
-import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'package:sis_patrullaje_cusco/src/domain/entities/location_entity.dart';
-
-// Repository
-import 'package:sis_patrullaje_cusco/src/domain/utils/Resource.dart';
+// ignore_for_file: non_constant_identifier_names, unnecessary_this
 
 // Environment
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:sis_patrullaje_cusco/src/config/constants/environment.dart'
     as url_backend;
 
 // Models
-import 'package:sis_patrullaje_cusco/src/domain/models/patrullaje_model.dart';
-import 'package:sis_patrullaje_cusco/src/domain/repositories/auth_repository.dart';
+import 'package:sis_patrullaje_cusco/src/data/models/patrullaje/patrullaje_data.dart';
+import 'package:sis_patrullaje_cusco/src/domain/entities/location_entity.dart';
+import 'package:sis_patrullaje_cusco/src/domain/utils/Resource.dart';
 
 class PatrullajeService {
-  final AuthRepository authRepository;
-
-  PatrullajeService(this.authRepository);
-
   // APIS
-  String get API_BASE => url_backend.Environment.mainUrl + '/moviles';
+  String get API_BASE => '${url_backend.Environment.mainUrl}/moviles';
 
   String get API_PATRULLAJE_ACTIVO => '$API_BASE/patrullaje/activo';
-  String get API_START_PATRULLAJE => '$API_BASE/patrullaje/';
-  String get API_END_PATRULLAJE => '$API_BASE/patrullaje/';
+  String get API_START_PATRULLAJE => '$API_BASE/patrullaje';
+  String get API_END_PATRULLAJE => '$API_BASE/patrullaje';
   String get API_LOCATION => '$API_BASE/patrullaje/location';
 
-  // ============================
-  // HEADERS
-  // ============================
-  Future<Map<String, String>> _getHeaders() async {
-    final session = await authRepository.getUserSession();
-
-    if (session == null) {
-      throw Exception('No hay sesión activa');
-    }
-
+  Map<String, String> _getHeaders(String token) {
     return {
       'Content-Type': 'application/json',
-      'Authorization': 'Bearer ${session.data.token}',
+      'Authorization': 'Bearer $token',
     };
+  }
+
+  Map<String, dynamic> _decodeResponse(http.Response response) {
+    try {
+      return json.decode(response.body) as Map<String, dynamic>;
+    } catch (_) {
+      return {'success': false, 'message': 'Respuesta inválida del servidor'};
+    }
+  }
+
+  ErrorData<T> _buildError<T>(Map<String, dynamic> body, int statusCode) {
+    return ErrorData<T>(
+      message: body['message']?.toString() ?? 'Ocurrió un error.',
+      error: body['error']?.toString(),
+      statusCode: statusCode,
+    );
   }
 
   // =====================================================
   // 1. GET PATRULLAJE ACTIVO
   // =====================================================
-  Future<PatrullajeModel?> getPatrullajeActivo() async {
+  Future<Resource<PatrullajeData?>> getPatrullajeActivo({
+    required String token,
+  }) async {
     try {
-      // 1.- Header
-      final headers = await _getHeaders();
-
-      // 2.- URL Base
-      Uri url = Uri.parse(API_PATRULLAJE_ACTIVO);
-
-      // 3.- Request
+      final url = Uri.parse(API_PATRULLAJE_ACTIVO);
+      final headers = await _getHeaders(token);
       final resp = await http.get(url, headers: headers);
-      final response = json.decode(resp.body);
+      final body = _decodeResponse(resp);
 
-      print("Patrullaje activo: $response");
+      if (resp.statusCode == 200) {
+        final data = body['data'];
 
-      // ERROR REAL HTTP
-      if (resp.statusCode != 200) {
-        throw Exception(response['message'] ?? 'Error desconocido');
+        if (data == null) {
+          return Success<PatrullajeData?>(null);
+        }
+
+        if (data is! Map<String, dynamic>) {
+          return ErrorData<PatrullajeData?>(
+            message: 'Formato de patrullaje inválido.',
+            error: 'El campo data no contiene un objeto JSON válido.',
+            statusCode: resp.statusCode,
+          );
+        }
+
+        return Success<PatrullajeData>(PatrullajeData.fromJson(data));
       }
 
-      // NULL SAFE
-      if (response == null) return null;
-
-      // OK RESPONSE
-      final data = response['data'];
-
-      if (data == null) return null;
-
-      return PatrullajeModel.fromJson(data);
+      return _buildError<PatrullajeData>(body, resp.statusCode);
     } catch (error) {
-      print('ERROR PATRULLAJE: $error');
-      throw Exception('Error al obtener patrullaje activo: $error');
+      return ErrorData<PatrullajeData>(
+        message: 'Error al obtener patrullaje activo.',
+        error: error.toString(),
+      );
     }
   }
 
   // =====================================================
   // 2. INICIAR PATRULLAJE
   // =====================================================
-  Future<bool> startPatrullaje(int patrullajeId) async {
+  Future<Resource<bool>> startPatrullaje({
+    required int patrullajeId,
+    required String token,
+  }) async {
     try {
-      final headers = await _getHeaders();
+      final headers = await _getHeaders(token);
 
-      Uri url = Uri.parse(API_START_PATRULLAJE + '$patrullajeId/start');
+      final url = Uri.parse('$API_START_PATRULLAJE/$patrullajeId/start');
 
       final resp = await http.post(
         url,
         headers: headers,
-        body: json.encode({"patrullaje_id": patrullajeId}),
+        body: json.encode({'patrullaje_id': patrullajeId}),
       );
 
-      print("STATUS: ${resp.statusCode}");
-      print("BODY: ${resp.body}");
-
-      final data = json.decode(resp.body);
+      final body = _decodeResponse(resp);
 
       if (resp.statusCode == 200) {
-        return true;
+        return Success<bool>(true);
       }
 
-      throw Exception(data['message']);
+      return _buildError<bool>(body, resp.statusCode);
     } catch (error) {
-      throw Exception('Error al iniciar patrullaje: $error');
+      return ErrorData<bool>(
+        message: 'Error al iniciar patrullaje.',
+        error: error.toString(),
+      );
     }
   }
 
   // =====================================================
   // 3. FINALIZAR PATRULLAJE
   // =====================================================
-  Future<bool> endPatrullaje(int patrullajeId) async {
+  Future<Resource<bool>> endPatrullaje({
+    required int patrullajeId,
+    required String token,
+  }) async {
     try {
-      final headers = await _getHeaders();
+      final headers = await _getHeaders(token);
 
-      Uri url = Uri.parse(API_END_PATRULLAJE + '$patrullajeId/END');
+      final url = Uri.parse('$API_END_PATRULLAJE/$patrullajeId/end');
 
       final resp = await http.post(
         url,
         headers: headers,
-        body: json.encode({"patrullaje_id": patrullajeId}),
+        body: json.encode({'patrullaje_id': patrullajeId}),
       );
 
-      final data = json.decode(resp.body);
+      final body = _decodeResponse(resp);
 
       if (resp.statusCode == 200) {
-        return true;
+        return Success<bool>(true);
       }
 
-      throw Exception(data['message']);
+      return _buildError<bool>(body, resp.statusCode);
     } catch (error) {
-      throw Exception('Error al finalizar patrullaje: $error');
+      return ErrorData<bool>(
+        message: 'Error al finalizar patrullaje.',
+        error: error.toString(),
+      );
     }
   }
 
   // =====================================================
-  // 4. ENVIAR UBICACIÓN (TRACKING)
+  // 4. ENVIAR UBICACIÓN
   // =====================================================
-  Future<bool> sendLocation(LocationEntity location) async {
+  Future<Resource<bool>> sendLocation({
+    required LocationEntity location,
+    required String token,
+  }) async {
     try {
-      final headers = await _getHeaders();
-
-      Uri url = Uri.parse(API_LOCATION);
+      final headers = await _getHeaders(token);
+      final url = Uri.parse(API_LOCATION);
 
       final resp = await http.post(
         url,
@@ -155,15 +165,18 @@ class PatrullajeService {
         body: json.encode(locationToJson(location)),
       );
 
-      final data = json.decode(resp.body);
+      final body = _decodeResponse(resp);
 
-      if (resp.statusCode == 200) {
-        return true;
+      if (resp.statusCode == 200 || resp.statusCode == 201) {
+        return Success<bool>(true);
       }
 
-      throw Exception(data['message']);
+      return _buildError<bool>(body, resp.statusCode);
     } catch (error) {
-      throw Exception('Error al enviar ubicación: $error');
+      return ErrorData<bool>(
+        message: 'Error al enviar ubicación.',
+        error: error.toString(),
+      );
     }
   }
 }
