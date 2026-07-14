@@ -1,19 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:sis_patrullaje_cusco/src/domain/entities/patrullaje_entity.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/home/enums/patrullaje_enum.dart';
 
 // Bloc's
 import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/home/home_bloc.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/home/home_event.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/home/home_state.dart';
-
 import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/tracking/tracking_bloc.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/tracking/tracking_event.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/tracking/tracking_state.dart';
-import 'package:sis_patrullaje_cusco/src/presentation/screens/home/home_content.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/mapa/blocs/mapa/mapa_bloc.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/mapa/blocs/mapa/mapa_event.dart';
+
+// Widgets
+import 'package:sis_patrullaje_cusco/src/presentation/screens/home/view/home_content.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});

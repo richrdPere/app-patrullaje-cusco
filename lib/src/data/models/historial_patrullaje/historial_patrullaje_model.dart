@@ -1,21 +1,17 @@
 class HistorialPatrullajeModel {
   final int? id;
-
   final String tipo;
   final String titulo;
   final String descripcion;
   final String prioridad;
-
   final double? latitud;
   final double? longitud;
-
   final bool visibleParaSiguienteTurno;
   final DateTime? fechaHora;
-
-  final Map<String, dynamic>? sereno;
+  final HistorialSerenoModel? sereno;
   final HistorialZonaModel? zona;
 
-  HistorialPatrullajeModel({
+  const HistorialPatrullajeModel({
     this.id,
     required this.tipo,
     required this.titulo,
@@ -29,82 +25,87 @@ class HistorialPatrullajeModel {
     this.zona,
   });
 
-  // =========================================================
-  // FROM JSON
-  // =========================================================
   factory HistorialPatrullajeModel.fromJson(Map<String, dynamic> json) {
     return HistorialPatrullajeModel(
-      id: json["id"],
-      tipo: json["tipo"] ?? "OBSERVACION",
-      titulo: json["titulo"] ?? "",
-      descripcion: json["descripcion"] ?? "",
-      prioridad: json["prioridad"] ?? "MEDIA",
-      latitud: json["latitud"] != null
-          ? double.tryParse(json["latitud"].toString())
+      id: int.tryParse(json['id']?.toString() ?? ''),
+      tipo: json['tipo']?.toString() ?? 'OBSERVACION',
+      titulo: json['titulo']?.toString() ?? '',
+      descripcion: json['descripcion']?.toString() ?? '',
+      prioridad: json['prioridad']?.toString() ?? 'MEDIA',
+      latitud: double.tryParse(json['latitud']?.toString() ?? ''),
+      longitud: double.tryParse(json['longitud']?.toString() ?? ''),
+      visibleParaSiguienteTurno: _parseBool(
+        json['visible_para_siguiente_turno'],
+      ),
+      fechaHora: DateTime.tryParse(json['fecha_hora']?.toString() ?? ''),
+      sereno: json['sereno'] is Map
+          ? HistorialSerenoModel.fromJson(
+              Map<String, dynamic>.from(json['sereno'] as Map),
+            )
           : null,
-      longitud: json["longitud"] != null
-          ? double.tryParse(json["longitud"].toString())
-          : null,
-      visibleParaSiguienteTurno: json["visible_para_siguiente_turno"] ?? true,
-      fechaHora: json["fecha_hora"] != null
-          ? DateTime.parse(json["fecha_hora"])
-          : null,
-      sereno: json["sereno"],
-      zona: json["zona"] != null
-          ? HistorialZonaModel.fromJson(json["zona"])
+      zona: json['zona'] is Map
+          ? HistorialZonaModel.fromJson(
+              Map<String, dynamic>.from(json['zona'] as Map),
+            )
           : null,
     );
   }
 
-  // =========================================================
-  // TO JSON
-  // =========================================================
   Map<String, dynamic> toJson() {
     return {
-      "id": id,
-      "tipo": tipo,
-      "titulo": titulo,
-      "descripcion": descripcion,
-      "prioridad": prioridad,
-      "latitud": latitud,
-      "longitud": longitud,
-      "visible_para_siguiente_turno": visibleParaSiguienteTurno,
-      "fecha_hora": fechaHora?.toIso8601String(),
-      "sereno": sereno,
-      "zona": zona?.toJson(),
+      'id': id,
+      'tipo': tipo,
+      'titulo': titulo,
+      'descripcion': descripcion,
+      'prioridad': prioridad,
+      'latitud': latitud,
+      'longitud': longitud,
+      'visible_para_siguiente_turno': visibleParaSiguienteTurno,
+      'fecha_hora': fechaHora?.toIso8601String(),
+      'sereno': sereno?.toJson(),
+      'zona': zona?.toJson(),
     };
   }
 
-  // =========================================================
-  // COPY WITH
-  // =========================================================
-  HistorialPatrullajeModel copyWith({
-    int? id,
-    String? tipo,
-    String? titulo,
-    String? descripcion,
-    String? prioridad,
-    double? latitud,
-    double? longitud,
-    bool? visibleParaSiguienteTurno,
-    DateTime? fechaHora,
-    Map<String, dynamic>? sereno,
-    HistorialZonaModel? zona,
-  }) {
-    return HistorialPatrullajeModel(
-      id: id ?? this.id,
-      tipo: tipo ?? this.tipo,
-      titulo: titulo ?? this.titulo,
-      descripcion: descripcion ?? this.descripcion,
-      prioridad: prioridad ?? this.prioridad,
-      latitud: latitud ?? this.latitud,
-      longitud: longitud ?? this.longitud,
-      visibleParaSiguienteTurno:
-          visibleParaSiguienteTurno ?? this.visibleParaSiguienteTurno,
-      fechaHora: fechaHora ?? this.fechaHora,
-      sereno: sereno ?? this.sereno,
-      zona: zona ?? this.zona,
+  static bool _parseBool(dynamic value, {bool defaultValue = true}) {
+    if (value == null) return defaultValue;
+    if (value is bool) return value;
+    if (value is num) return value == 1;
+
+    final parsed = value.toString().trim().toLowerCase();
+
+    if (parsed == 'true' || parsed == '1') return true;
+    if (parsed == 'false' || parsed == '0') return false;
+
+    return defaultValue;
+  }
+}
+
+class HistorialSerenoModel {
+  final int id;
+  final String nombres;
+  final String apellidos;
+
+  const HistorialSerenoModel({
+    required this.id,
+    required this.nombres,
+    required this.apellidos,
+  });
+
+  factory HistorialSerenoModel.fromJson(Map<String, dynamic> json) {
+    return HistorialSerenoModel(
+      id: int.tryParse(json['id']?.toString() ?? '') ?? 0,
+      nombres: json['nombres']?.toString() ?? '',
+      apellidos: json['apellidos']?.toString() ?? '',
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {'id': id, 'nombres': nombres, 'apellidos': apellidos};
+  }
+
+  String get nombreCompleto {
+    return '$nombres $apellidos'.trim();
   }
 }
 
@@ -112,13 +113,16 @@ class HistorialZonaModel {
   final int id;
   final String nombre;
 
-  HistorialZonaModel({required this.id, required this.nombre});
+  const HistorialZonaModel({required this.id, required this.nombre});
 
   factory HistorialZonaModel.fromJson(Map<String, dynamic> json) {
-    return HistorialZonaModel(id: json["id"], nombre: json["nombre"] ?? "");
+    return HistorialZonaModel(
+      id: int.tryParse(json['id']?.toString() ?? '') ?? 0,
+      nombre: json['nombre']?.toString() ?? '',
+    );
   }
 
   Map<String, dynamic> toJson() {
-    return {"id": id, "nombre": nombre};
+    return {'id': id, 'nombre': nombre};
   }
 }

@@ -1,4 +1,5 @@
 // Repo
+import 'package:sis_patrullaje_cusco/src/data/models/historial_patrullaje/historial_patrullaje_request.dart';
 import 'package:sis_patrullaje_cusco/src/domain/repositories/auth_repository.dart';
 import 'package:sis_patrullaje_cusco/src/domain/repositories/historial_patrullaje_repository.dart';
 
@@ -7,7 +8,8 @@ import 'package:sis_patrullaje_cusco/src/data/datasources/remote/services/histor
 import 'package:sis_patrullaje_cusco/src/data/models/historial_patrullaje/historial_patrullaje_model.dart';
 import 'package:sis_patrullaje_cusco/src/domain/utils/Resource.dart';
 
-class HistorialPatrullajeRepositoryImpl extends HistorialPatrullajeRepository {
+class HistorialPatrullajeRepositoryImpl
+    implements HistorialPatrullajeRepository {
   final HistorialPatrullajeService historialService;
   final AuthRepository authRepository;
 
@@ -16,11 +18,13 @@ class HistorialPatrullajeRepositoryImpl extends HistorialPatrullajeRepository {
   // REGISTRAR HISTORIAL
   @override
   Future<Resource<HistorialPatrullajeModel>> registerHistorial(
-    HistorialPatrullajeModel historial,
+    HistorialPatrullajeRequest historial,
   ) async {
     final token = await authRepository.getToken();
     if (token == null) {
-      return ErrorData(message: "No existe una sesión iniciada.");
+      return ErrorData<HistorialPatrullajeModel>(
+        message: 'No existe una sesión iniciada.',
+      );
     }
 
     final response = await historialService.registerHistorial(
@@ -38,7 +42,9 @@ class HistorialPatrullajeRepositoryImpl extends HistorialPatrullajeRepository {
   ) async {
     final token = await authRepository.getToken();
     if (token == null) {
-      return ErrorData(message: "No existe una sesión iniciada.");
+      return ErrorData<List<HistorialPatrullajeModel>>(
+        message: "No existe una sesión iniciada.",
+      );
     }
 
     return await historialService.getHistorialByPatrullaje(
@@ -52,7 +58,7 @@ class HistorialPatrullajeRepositoryImpl extends HistorialPatrullajeRepository {
   Future<Resource<bool>> archivedHistorial(int historialId) async {
     final token = await authRepository.getToken();
     if (token == null) {
-      return ErrorData(message: "No existe una sesión iniciada.");
+      return ErrorData<bool>(message: "No existe una sesión iniciada.");
     }
 
     return await historialService.archivedHistorial(
@@ -63,15 +69,19 @@ class HistorialPatrullajeRepositoryImpl extends HistorialPatrullajeRepository {
 
   // UPDATE HISTORIAL
   @override
-  Future<Resource<HistorialPatrullajeModel>> updateHistorial(
-    HistorialPatrullajeModel historial,
-  ) async {
+  Future<Resource<HistorialPatrullajeModel>> updateHistorial({
+    required int idHistorial,
+    required HistorialPatrullajeRequest historial,
+  }) async {
     final token = await authRepository.getToken();
     if (token == null) {
-      return ErrorData(message: "No existe una sesión iniciada.");
+      return ErrorData<HistorialPatrullajeModel>(
+        message: 'No existe una sesión iniciada.',
+      );
     }
 
     return await historialService.updateHistorial(
+      idHistorial: idHistorial,
       historial: historial,
       token: token,
     );
@@ -83,7 +93,9 @@ class HistorialPatrullajeRepositoryImpl extends HistorialPatrullajeRepository {
   ) async {
     final token = await authRepository.getToken();
     if (token == null) {
-      return ErrorData(message: "No existe una sesión iniciada.");
+      return ErrorData<HistorialPatrullajeModel>(
+  message: "No existe una sesión iniciada.",
+);
     }
 
     return await historialService.getHistorialById(

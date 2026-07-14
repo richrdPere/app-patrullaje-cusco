@@ -6,3 +6,12 @@ enum PatrullajeEstado {
   finalizado,
   error,
 }
+
+enum PatrullajeStatus {
+  sinAsignacion,
+  asignado,
+  aceptando,
+  enCurso,
+  finalizado,
+  error,
+}

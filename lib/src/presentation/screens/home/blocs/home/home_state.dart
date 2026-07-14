@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:sis_patrullaje_cusco/src/data/models/patrullaje/patrullaje_data.dart';
-import 'package:sis_patrullaje_cusco/src/domain/entities/patrullaje_entity.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/home/enums/patrullaje_enum.dart';
 
 class HomeState extends Equatable {
   final PatrullajeData? patrullaje;

@@ -33,7 +33,7 @@ class IncidenteHandlers {
 
       final historial = _buildHistorialFromIncidencia(incidencia);
 
-      await historialUseCases.createHistorial.run(historial);
+      // await historialUseCases.createHistorial.run(historial);
 
       emit(
         state.copyWith(isLoading: false, success: true, incidencia: incidencia),

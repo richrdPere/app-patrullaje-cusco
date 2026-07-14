@@ -51,11 +51,3 @@ class Unidad {
   Unidad({required this.codigo, required this.tipo, required this.placa});
 }
 
-enum PatrullajeStatus {
-  sinAsignacion,
-  asignado,
-  aceptando,
-  enCurso,
-  finalizado,
-  error,
-}

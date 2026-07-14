@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'package:sis_patrullaje_cusco/src/data/models/historial_patrullaje/historial_patrullaje_model.dart';
+import 'package:sis_patrullaje_cusco/src/data/models/historial_patrullaje/historial_patrullaje_request.dart';
 
 abstract class HistorialPatrullajeEvent extends Equatable {
   const HistorialPatrullajeEvent();
@@ -9,61 +9,95 @@ abstract class HistorialPatrullajeEvent extends Equatable {
 }
 
 // ======================================================
-// OBTENER HISTORIAL POR PATRULLAJE
+// 1. OBTENER HISTORIAL POR PATRULLAJE
 // ======================================================
 class LoadHistorialPatrullajeEvent extends HistorialPatrullajeEvent {
-  // final int patrullajeId;
+  final int patrullajeId;
+  final bool refresh;
 
-  // const LoadHistorialPatrullajeEvent(this.patrullajeId);
+  const LoadHistorialPatrullajeEvent({
+    required this.patrullajeId,
+    this.refresh = false,
+  });
 
-  // @override
-  // List<Object?> get props => [patrullajeId];
+  @override
+  List<Object?> get props => [
+    patrullajeId,
+    refresh,
+  ];
 }
 
 // ======================================================
-// OBTENER DETALLE
+// 2. OBTENER DETALLE DE HISTORIAL
 // ======================================================
 class LoadHistorialDetalleEvent extends HistorialPatrullajeEvent {
   final int historialId;
 
-  const LoadHistorialDetalleEvent(this.historialId);
+  const LoadHistorialDetalleEvent({
+    required this.historialId,
+  });
 
   @override
   List<Object?> get props => [historialId];
 }
 
 // ======================================================
-// REGISTRAR
+// 3. REGISTRAR HISTORIAL
 // ======================================================
 class RegisterHistorialEvent extends HistorialPatrullajeEvent {
-  final HistorialPatrullajeModel historial;
+  final HistorialPatrullajeRequest request;
 
-  const RegisterHistorialEvent(this.historial);
+  const RegisterHistorialEvent({
+    required this.request,
+  });
 
   @override
-  List<Object?> get props => [historial];
+  List<Object?> get props => [request];
 }
 
 // ======================================================
-// EDITAR
+// 4. ACTUALIZAR HISTORIAL
 // ======================================================
 class UpdateHistorialEvent extends HistorialPatrullajeEvent {
-  final HistorialPatrullajeModel historial;
+  final int historialId;
+  final HistorialPatrullajeRequest request;
 
-  const UpdateHistorialEvent(this.historial);
+  const UpdateHistorialEvent({
+    required this.historialId,
+    required this.request,
+  });
 
   @override
-  List<Object?> get props => [historial];
+  List<Object?> get props => [
+    historialId,
+    request,
+  ];
 }
 
 // ======================================================
-// ARCHIVAR
+// 5. ARCHIVAR HISTORIAL
 // ======================================================
 class ArchiveHistorialEvent extends HistorialPatrullajeEvent {
   final int historialId;
 
-  const ArchiveHistorialEvent(this.historialId);
+  const ArchiveHistorialEvent({
+    required this.historialId,
+  });
 
   @override
   List<Object?> get props => [historialId];
+}
+
+// ======================================================
+// 6. LIMPIAR HISTORIAL SELECCIONADO
+// ======================================================
+class ClearHistorialSelectedEvent extends HistorialPatrullajeEvent {
+  const ClearHistorialSelectedEvent();
+}
+
+// ======================================================
+// 7. LIMPIAR RESULTADO DE ACCIÓN
+// ======================================================
+class ClearHistorialActionEvent extends HistorialPatrullajeEvent {
+  const ClearHistorialActionEvent();
 }

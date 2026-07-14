@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:sis_patrullaje_cusco/src/data/models/historial_patrullaje/historial_patrullaje_model.dart';
-import 'package:sis_patrullaje_cusco/src/presentation/screens/historial_patrullaje/bloc/historial_patrullaje_bloc.dart';
-import 'package:sis_patrullaje_cusco/src/presentation/screens/historial_patrullaje/bloc/historial_patrullaje_event.dart';
 
 class HistorialObservacionDialog extends StatefulWidget {
   final int patrullajeId;
@@ -167,22 +164,22 @@ class _HistorialObservacionDialogState
                     // Obtener la ubicación GPS actual si deseas registrar
                     // la posición de la observación.
 
-                    final historial = HistorialPatrullajeModel(
-                      // patrullajeId: widget.patrullajeId,
-                      tipo: tipo,
-                      titulo: tituloController.text.trim(),
-                      descripcion: descripcionController.text.trim(),
-                      prioridad: prioridad,
-                      latitud: null,
-                      longitud: null,
-                      visibleParaSiguienteTurno: visible,
-                      fechaHora: DateTime.now(),
-                      // estado: "ACTIVO",
-                    );
+                    // final historial = HistorialPatrullajeModel(
+                    //   // patrullajeId: widget.patrullajeId,
+                    //   tipo: tipo,
+                    //   titulo: tituloController.text.trim(),
+                    //   descripcion: descripcionController.text.trim(),
+                    //   prioridad: prioridad,
+                    //   latitud: null,
+                    //   longitud: null,
+                    //   visibleParaSiguienteTurno: visible,
+                    //   fechaHora: DateTime.now(),
+                    //   // estado: "ACTIVO",
+                    // );
 
-                    context.read<HistorialPatrullajeBloc>().add(
-                      RegisterHistorialEvent(historial),
-                    );
+                    // context.read<HistorialPatrullajeBloc>().add(
+                    //   RegisterHistorialEvent(historial),
+                    // );
 
                     Navigator.pop(context);
                   },

@@ -1,11 +1,12 @@
 import 'dart:async';
 import 'package:bloc/bloc.dart';
-import 'package:sis_patrullaje_cusco/src/data/models/patrullaje/patrullaje_data.dart';
-import 'package:sis_patrullaje_cusco/src/domain/entities/patrullaje_entity.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/patrullaje/PatrullajeUseCases.dart';
 import 'package:sis_patrullaje_cusco/src/domain/utils/Resource.dart';
+import 'package:sis_patrullaje_cusco/src/data/models/patrullaje/patrullaje_data.dart';
+import 'package:sis_patrullaje_cusco/src/domain/use_cases/patrullaje/PatrullajeUseCases.dart';
+
 import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/home/home_event.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/home/home_state.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/home/enums/patrullaje_enum.dart';
 
 class HomeBloc extends Bloc<HomeEvent, HomeState> {
   PatrullajeUseCases patrullajeUseCases;

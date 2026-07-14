@@ -12,7 +12,6 @@ class MainShell extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: child,
-
       bottomNavigationBar: CustomBottomNavigation(
         currentIndex: _getCurrentIndex(context),
 
@@ -44,7 +43,8 @@ class MainShell extends StatelessWidget {
   }
 
   int _getCurrentIndex(BuildContext context) {
-    final location = GoRouterState.of(context).uri.toString();
+    // final location = GoRouterState.of(context).uri.toString();
+    final location = GoRouterState.of(context).matchedLocation;
 
     if (location.startsWith('/home')) {
       return 0;

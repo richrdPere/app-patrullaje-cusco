@@ -8,6 +8,7 @@ import 'package:sis_patrullaje_cusco/src/config/constants/environment.dart'
 
 // Models
 import 'package:sis_patrullaje_cusco/src/data/models/historial_patrullaje/historial_patrullaje_model.dart';
+import 'package:sis_patrullaje_cusco/src/data/models/historial_patrullaje/historial_patrullaje_request.dart';
 import 'package:sis_patrullaje_cusco/src/domain/utils/Resource.dart';
 
 class HistorialPatrullajeService {
@@ -30,6 +31,7 @@ class HistorialPatrullajeService {
   String API_ARCHIVAR_HISTORIAL(int historialId) =>
       '$API_BASE/archivar/$historialId';
 
+  // Helpers
   Map<String, String> _getHeaders(String token) {
     return {
       'Content-Type': 'application/json',
@@ -37,7 +39,6 @@ class HistorialPatrullajeService {
     };
   }
 
-  // Helpers
   Map<String, dynamic> _decodeResponse(http.Response response) {
     try {
       return json.decode(response.body) as Map<String, dynamic>;
@@ -65,7 +66,7 @@ class HistorialPatrullajeService {
   // 1. REGISTRAR HISTORIAL
   // *********************************************************
   Future<Resource<HistorialPatrullajeModel>> registerHistorial({
-    required HistorialPatrullajeModel historial,
+    required HistorialPatrullajeRequest historial,
     required String token,
   }) async {
     try {
@@ -75,16 +76,23 @@ class HistorialPatrullajeService {
       final response = await http.post(
         url,
         headers: headers,
-        body: jsonEncode(historial.toJson()),
+        body: jsonEncode(historial.toCreateJson()),
       );
 
       final body = _decodeResponse(response);
 
       if (_isSuccess(response.statusCode)) {
-        final data = body['data'] ?? body['historial'];
+        final data = body['data'];
+
+        if (data is! Map) {
+          return ErrorData<HistorialPatrullajeModel>(
+            message:
+                'La respuesta del servidor no contiene un historial válido.',
+          );
+        }
 
         return Success<HistorialPatrullajeModel>(
-          HistorialPatrullajeModel.fromJson(data),
+          HistorialPatrullajeModel.fromJson(Map<String, dynamic>.from(data)),
         );
       }
 
@@ -100,8 +108,7 @@ class HistorialPatrullajeService {
   // *********************************************************
   // 2. OBTENER HISTORIAL POR PATRULLAJE
   // *********************************************************
-  Future<Resource<List<HistorialPatrullajeModel>>>
-  getHistorialByPatrullaje({
+  Future<Resource<List<HistorialPatrullajeModel>>> getHistorialByPatrullaje({
     required int patrullajeId,
     required String token,
   }) async {
@@ -114,10 +121,16 @@ class HistorialPatrullajeService {
       final body = _decodeResponse(response);
 
       if (_isSuccess(response.statusCode)) {
-        final List historialJson = body['data'] ?? [];
+        final List<dynamic> historialJson = body['data'] is List
+            ? body['data'] as List<dynamic>
+            : [];
 
         final historial = historialJson
-            .map((e) => HistorialPatrullajeModel.fromJson(e))
+            .map(
+              (item) => HistorialPatrullajeModel.fromJson(
+                Map<String, dynamic>.from(item as Map),
+              ),
+            )
             .toList();
 
         return Success<List<HistorialPatrullajeModel>>(historial);
@@ -171,32 +184,34 @@ class HistorialPatrullajeService {
   // 4. EDITAR HISTORIAL
   // *********************************************************
   Future<Resource<HistorialPatrullajeModel>> updateHistorial({
-    required HistorialPatrullajeModel historial,
+    required int idHistorial,
+    required HistorialPatrullajeRequest historial,
     required String token,
   }) async {
     try {
-      if (historial.id == null) {
-        return ErrorData<HistorialPatrullajeModel>(
-          message: 'ID de historial inválido.',
-        );
-      }
-
       final headers = _getHeaders(token);
-      final url = Uri.parse(API_UPDATE_HISTORIAL(historial.id!));
+      final url = Uri.parse(API_UPDATE_HISTORIAL(idHistorial));
 
       final response = await http.put(
         url,
         headers: headers,
-        body: jsonEncode(historial.toJson()),
+        body: jsonEncode(historial.toUpdateJson()),
       );
 
       final body = _decodeResponse(response);
 
       if (_isSuccess(response.statusCode)) {
-        final data = body['data'] ?? body['historial'];
+        final data = body['data'];
+
+        if (data is! Map) {
+          return ErrorData<HistorialPatrullajeModel>(
+            message:
+                'La respuesta del servidor no contiene un historial válido.',
+          );
+        }
 
         return Success<HistorialPatrullajeModel>(
-          HistorialPatrullajeModel.fromJson(data),
+          HistorialPatrullajeModel.fromJson(Map<String, dynamic>.from(data)),
         );
       }
 

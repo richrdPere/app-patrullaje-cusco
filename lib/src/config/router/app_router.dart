@@ -11,9 +11,9 @@ import 'package:sis_patrullaje_cusco/src/presentation/screens/alertas/view/alert
 import 'package:sis_patrullaje_cusco/src/presentation/screens/chat/chat_page.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/auth/login/view/login_page.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/auth/register/view/register_page.dart';
-import 'package:sis_patrullaje_cusco/src/presentation/screens/historial_patrullaje/view/historial_patrullaje_page.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/historial_patrullaje/view/listado/historial_patrullaje_page.dart';
 // import 'package:sis_patrullaje_cusco/src/presentation/screens/home/home_content.dart';
-import 'package:sis_patrullaje_cusco/src/presentation/screens/home/home_page.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/home/view/home_page.dart';
 // import 'package:sis_patrullaje_cusco/src/presentation/screens/home/home_page.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/mapa/view/mapa/mapa_page.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/mapa/view/mapa_incident/mapa_incident_page.dart';
@@ -30,7 +30,7 @@ String? authRedirect(BuildContext context, GoRouterState state) {
   final location = state.matchedLocation;
 
   // Rutas públicas
-  const publicRoutes = {'/splash', '/login'};
+  const publicRoutes = {'/splash', '/login', '/register', '/loading'};
 
   // =========================
   // USUARIO NO AUTENTICADO
@@ -50,7 +50,9 @@ String? authRedirect(BuildContext context, GoRouterState state) {
   // =========================
   if (loggedIn) {
     // Si intenta entrar nuevamente a Splash o Login
-    if (location == '/splash' || location == '/login') {
+    if (location == '/splash' ||
+        location == '/login' ||
+        location == '/register') {
       return '/home';
     }
     // Puede navegar libremente
@@ -151,9 +153,21 @@ final GoRouter appRouter = GoRouter(
 
     // HISTORIAL
     GoRoute(
-      path: '/historial',
-      name: 'historial',
-      builder: (_, __) => const HistorialPatrullajePage(),
+      name: 'historial_patrullaje',
+      path: '/historial-patrullaje/:patrullajeId',
+      builder: (context, state) {
+        final patrullajeId = int.tryParse(
+          state.pathParameters['patrullajeId'] ?? '',
+        );
+
+        if (patrullajeId == null || patrullajeId <= 0) {
+          return const Scaffold(
+            body: Center(child: Text('No se encontró un patrullaje válido.')),
+          );
+        }
+
+        return HistorialPatrullajePage(patrullajeId: patrullajeId);
+      },
     ),
 
     // CHAT
