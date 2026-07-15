@@ -8,7 +8,7 @@ import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/view/scr
 import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/view/screens/evidencia_screen.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/view/screens/historial_incidentes_screen.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/view/screens/incident_form_screen.dart';
-import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/view/screens/video_screen.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/view/screens/observacion_screen.dart';
 
 class ReporteIncidenteDialog extends StatelessWidget {
   const ReporteIncidenteDialog({super.key});
@@ -84,17 +84,14 @@ class ReporteIncidenteDialog extends StatelessWidget {
                   child: switch (state.currentTab) {
                     IncidenteTabEnum.incidente => const IncidenteFormScreen(),
 
-                    IncidenteTabEnum.video => const VideoScreen(),
-
                     IncidenteTabEnum.evidencia => const EvidenciaScreen(),
 
-                    IncidenteTabEnum.emergencia => const EmergenciaScreen(),
+                    IncidenteTabEnum.observacion => const ObservacionScreen(),
 
                     IncidenteTabEnum.historial =>
                       const HistorialIncidentesScreen(),
 
-                    IncidenteTabEnum.observacion =>
-                      const HistorialIncidentesScreen(),
+                    IncidenteTabEnum.emergencia => const EmergenciaScreen(),
                   },
                 ),
 
@@ -123,39 +120,32 @@ IncidenteHeaderInfo _getHeader(IncidenteTabEnum tab) {
   switch (tab) {
     case IncidenteTabEnum.incidente:
       return const IncidenteHeaderInfo(
-        title: 'Nuevo Incidente',
-        subtitle: 'Reporte operativo de patrullaje',
-      );
-
-    case IncidenteTabEnum.video:
-      return const IncidenteHeaderInfo(
-        title: 'Reporte mediante video',
-        subtitle: 'Adjunte un video relacionado a un incidente',
+        title: 'Nuevo incidente',
+        subtitle: 'Registra una ocurrencia durante el patrullaje',
       );
 
     case IncidenteTabEnum.evidencia:
       return const IncidenteHeaderInfo(
         title: 'Evidencias',
-        subtitle:
-            'Adjunte fotografías, videos o audios relacionados al incidente.',
-      );
-
-    case IncidenteTabEnum.emergencia:
-      return const IncidenteHeaderInfo(
-        title: 'Emergencia SOS',
-        subtitle: 'Asistencia inmediata',
+        subtitle: 'Agrega fotografías y videos al reporte',
       );
 
     case IncidenteTabEnum.observacion:
       return const IncidenteHeaderInfo(
         title: 'Observación',
-        subtitle: 'Anota actividad sospechosa',
+        subtitle: 'Registra novedades para el patrullaje',
       );
 
     case IncidenteTabEnum.historial:
       return const IncidenteHeaderInfo(
-        title: 'Historial de Incidentes',
-        subtitle: 'Consulta incidentes recientes y cercanos',
+        title: 'Mis incidencias',
+        subtitle: 'Consulta los reportes registrados',
+      );
+
+    case IncidenteTabEnum.emergencia:
+      return const IncidenteHeaderInfo(
+        title: 'Emergencia SOS',
+        subtitle: 'Solicita apoyo inmediato a la central',
       );
   }
 }
@@ -172,12 +162,10 @@ class _IncidenteBottomTabsState extends State<_IncidenteBottomTabs> {
 
   final tabs = const [
     ('Incidente', IncidenteTabEnum.incidente),
-    ('Video', IncidenteTabEnum.video),
     ('Evidencia', IncidenteTabEnum.evidencia),
     ('Observación', IncidenteTabEnum.observacion),
     ('Historial', IncidenteTabEnum.historial),
     ('SOS', IncidenteTabEnum.emergencia),
-   
   ];
 
   late final List<GlobalKey> _tabKeys;
@@ -259,7 +247,7 @@ class _IncidenteBottomTabsState extends State<_IncidenteBottomTabs> {
                     child: GestureDetector(
                       onTap: () {
                         context.read<IncidenteBloc>().add(
-                          CambiarTabEvent(tab.$2),
+                          CambiarTabIncidenteEvent(tab.$2),
                         );
                       },
 

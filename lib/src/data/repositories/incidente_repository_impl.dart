@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:sis_patrullaje_cusco/src/data/datasources/remote/services/incidente_service.dart';
+import 'package:sis_patrullaje_cusco/src/data/models/incidencia/register_incidencia_req.dart';
 import 'package:sis_patrullaje_cusco/src/domain/models/incidencia_archivo_model.dart';
 import 'package:sis_patrullaje_cusco/src/domain/models/incidencia_model.dart';
 import 'package:sis_patrullaje_cusco/src/domain/repositories/auth_repository.dart';
@@ -16,7 +17,7 @@ class IncidenteRepositoryImpl implements IncidenteRepository {
   // 1. REGISTER INCIDENCIA
   @override
   Future<Resource<IncidenteModel>> newIncidencia(
-    IncidenteModel incidente,
+    RegisterIncidenciaRequest incidente,
   ) async {
     final token = await authRepository.getToken();
 
@@ -26,7 +27,7 @@ class IncidenteRepositoryImpl implements IncidenteRepository {
       );
     }
 
-    return await remote.registerIncidencia(incidencia: incidente, token: token);
+    return await remote.registerIncidencia(requestData: incidente, token: token);
   }
 
   // 2. OBTENER MIS INCIDENCIAS

@@ -2,71 +2,106 @@ import 'dart:io';
 
 import 'package:equatable/equatable.dart';
 import 'package:sis_patrullaje_cusco/src/domain/models/incidencia_archivo_model.dart';
-// import 'package:sis_patrullaje_cusco/src/domain/entities/incidencia_entity.dart';
 import 'package:sis_patrullaje_cusco/src/domain/models/incidencia_model.dart';
 import 'package:sis_patrullaje_cusco/src/domain/utils/Resource.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/enums/incidente_tab_enum.dart';
 
 class IncidenteState extends Equatable {
-  // GENERAL
-  final bool isLoading;
-  final bool success;
-  final String? error;
+  // ======================================================
+  // RESPUESTAS DE ACCIONES
+  // ======================================================
 
-  // INCIDENTE
-  final IncidenteModel? incidencia;
+  /// Respuesta al crear una incidencia.
+  final Resource<IncidenteModel>? createResponse;
+
+  /// Respuesta al agregar o eliminar archivos.
+  final Resource<bool>? archivoActionResponse;
+
+  // ======================================================
+  // MIS INCIDENCIAS
+  // ======================================================
+
+  final List<IncidenteModel> misIncidencias;
+  final Resource<List<IncidenteModel>>? misIncidenciasResponse;
+
+  final int page;
+  final int limit;
+  final bool hasMore;
+  final bool isLoadingMore;
+
+  // ======================================================
+  // DETALLE DE INCIDENCIA
+  // ======================================================
   final IncidenteModel? incidenciaSeleccionada;
-  final List<IncidenciaArchivoModel> evidencias;
-  final bool loadingEvidencias;
+  final Resource<IncidenteModel>? detalleResponse;
 
+  // ======================================================
+  // ARCHIVOS REMOTOS
+  // ======================================================
+  final List<IncidenciaArchivoModel> archivosIncidencia;
+  final Resource<List<IncidenciaArchivoModel>>? archivosResponse;
+
+  // ======================================================
   // INCIDENTES CERCANOS
-  final Resource<List<IncidenteModel>>? nearbyIncidents;
-  final bool loadingNearby;
+  // ======================================================
+  final List<IncidenteModel> incidentesCercanos;
+  final Resource<List<IncidenteModel>>? cercanosResponse;
 
-  // MAPA DE INCIDENTES
-  final List<IncidenteModel> mapaIncidentes;
-  final bool loadingMapa;
-
-  // DASHBOARD
-  final Map<String, dynamic>? dashboard;
-  final bool loadingDashboard;
-
-  // MEDIA
-  final List<File> archivos;
+  // ======================================================
+  // ARCHIVOS LOCALES
+  // ======================================================
+  final List<File> archivosLocales;
 
   final bool loadingMedia;
   final bool recordingVideo;
   final bool recordingAudio;
+  final String? mediaError;
 
-  // LOCATION
+  // ======================================================
+  // UBICACIÓN
+  // ======================================================
   final double? latitud;
   final double? longitud;
   final String? direccion;
-
   final bool loadingLocation;
 
-  // UI
+  // ======================================================
+  // INTERFAZ
+  // ======================================================
   final IncidenteTabEnum currentTab;
   final bool isSheetExpanded;
 
   const IncidenteState({
-    this.isLoading = false,
-    this.success = false,
-    this.error,
+    // Respuestas
+    this.createResponse,
+    this.archivoActionResponse,
 
-    // Incidencias
-    this.incidencia,
+    // Mis incidencias
+    this.misIncidencias = const [],
+    this.misIncidenciasResponse,
+    this.page = 1,
+    this.limit = 10,
+    this.hasMore = true,
+    this.isLoadingMore = false,
+
+    // Detalle
     this.incidenciaSeleccionada,
+    this.detalleResponse,
 
-    // Evidencias
-    this.evidencias = const [],
-    this.loadingEvidencias = false,
+    // Archivos remotos
+    this.archivosIncidencia = const [],
+    this.archivosResponse,
 
-    // Media local
-    this.archivos = const [],
+    // Cercanos
+    this.incidentesCercanos = const [],
+    this.cercanosResponse,
+
+    // Archivos locales
+    this.archivosLocales = const [],
     this.loadingMedia = false,
     this.recordingVideo = false,
     this.recordingAudio = false,
+    this.mediaError,
 
     // Ubicación
     this.latitud,
@@ -77,125 +112,212 @@ class IncidenteState extends Equatable {
     // UI
     this.currentTab = IncidenteTabEnum.incidente,
     this.isSheetExpanded = false,
-
-    // Cercanos
-    this.nearbyIncidents,
-    this.loadingNearby = false,
-
-    // Mapa
-    this.mapaIncidentes = const [],
-    this.loadingMapa = false,
-
-    // Dashboard
-    this.dashboard,
-    this.loadingDashboard = false,
   });
 
+  // ======================================================
+  // HELPERS
+  // ======================================================
+
+  bool get isCreating => createResponse is Loading;
+
+  bool get isLoadingMisIncidencias =>
+      misIncidenciasResponse is Loading && page == 1;
+
+  bool get isLoadingDetalle => detalleResponse is Loading;
+
+  bool get isLoadingArchivos => archivosResponse is Loading;
+
+  bool get isProcessingArchivo => archivoActionResponse is Loading;
+
+  bool get isLoadingCercanos => cercanosResponse is Loading;
+
+  bool get tieneUbicacion => latitud != null && longitud != null;
+
+  bool get tieneArchivosLocales => archivosLocales.isNotEmpty;
+
+  bool get tieneIncidenciaSeleccionada => incidenciaSeleccionada != null;
+
+  // ======================================================
+  // COPY WITH
+  // ======================================================
+
   IncidenteState copyWith({
-    bool? isLoading,
-    bool? success,
-    String? error,
+    // Respuestas
+    Resource<IncidenteModel>? createResponse,
+    bool clearCreateResponse = false,
 
-    // Incidencias
-    IncidenteModel? incidencia,
+    Resource<bool>? archivoActionResponse,
+    bool clearArchivoActionResponse = false,
+
+    // Mis incidencias
+    List<IncidenteModel>? misIncidencias,
+    Resource<List<IncidenteModel>>? misIncidenciasResponse,
+    bool clearMisIncidenciasResponse = false,
+    int? page,
+    int? limit,
+    bool? hasMore,
+    bool? isLoadingMore,
+
+    // Detalle
     IncidenteModel? incidenciaSeleccionada,
+    bool clearIncidenciaSeleccionada = false,
 
-    // Evidencias
-    List<IncidenciaArchivoModel>? evidencias,
-    bool? loadingEvidencias,
+    Resource<IncidenteModel>? detalleResponse,
+    bool clearDetalleResponse = false,
 
-    // Media
-    List<File>? archivos,
+    // Archivos remotos
+    List<IncidenciaArchivoModel>? archivosIncidencia,
+
+    Resource<List<IncidenciaArchivoModel>>? archivosResponse,
+    bool clearArchivosResponse = false,
+
+    // Cercanos
+    List<IncidenteModel>? incidentesCercanos,
+
+    Resource<List<IncidenteModel>>? cercanosResponse,
+    bool clearCercanosResponse = false,
+
+    // Archivos locales
+    List<File>? archivosLocales,
     bool? loadingMedia,
     bool? recordingVideo,
     bool? recordingAudio,
 
+    String? mediaError,
+    bool clearMediaError = false,
+
     // Ubicación
     double? latitud,
+    bool clearLatitud = false,
+
     double? longitud,
+    bool clearLongitud = false,
+
     String? direccion,
+    bool clearDireccion = false,
+
     bool? loadingLocation,
 
     // UI
     IncidenteTabEnum? currentTab,
     bool? isSheetExpanded,
-
-    // Cercanos
-    Resource<List<IncidenteModel>>? nearbyIncidents,
-    bool? loadingNearby,
-
-    // Mapa
-    List<IncidenteModel>? mapaIncidentes,
-    bool? loadingMapa,
-
-    // Dashboard
-    Map<String, dynamic>? dashboard,
-    bool? loadingDashboard,
   }) {
     return IncidenteState(
-      isLoading: isLoading ?? this.isLoading,
-      success: success ?? this.success,
-      error: error ?? this.error,
+      // Respuestas
+      createResponse: clearCreateResponse
+          ? null
+          : createResponse ?? this.createResponse,
 
-      // Incidencias
-      incidencia: incidencia ?? this.incidencia,
-      incidenciaSeleccionada:
-          incidenciaSeleccionada ?? this.incidenciaSeleccionada,
+      archivoActionResponse: clearArchivoActionResponse
+          ? null
+          : archivoActionResponse ?? this.archivoActionResponse,
 
-      // Evidencias
-      evidencias: evidencias ?? this.evidencias,
-      loadingEvidencias: loadingEvidencias ?? this.loadingEvidencias,
+      // Mis incidencias
+      misIncidencias: misIncidencias ?? this.misIncidencias,
 
-      // Media
-      archivos: archivos ?? this.archivos,
+      misIncidenciasResponse: clearMisIncidenciasResponse
+          ? null
+          : misIncidenciasResponse ?? this.misIncidenciasResponse,
+
+      page: page ?? this.page,
+      limit: limit ?? this.limit,
+      hasMore: hasMore ?? this.hasMore,
+      isLoadingMore: isLoadingMore ?? this.isLoadingMore,
+
+      // Detalle
+      incidenciaSeleccionada: clearIncidenciaSeleccionada
+          ? null
+          : incidenciaSeleccionada ?? this.incidenciaSeleccionada,
+
+      detalleResponse: clearDetalleResponse
+          ? null
+          : detalleResponse ?? this.detalleResponse,
+
+      // Archivos remotos
+      archivosIncidencia: archivosIncidencia ?? this.archivosIncidencia,
+
+      archivosResponse: clearArchivosResponse
+          ? null
+          : archivosResponse ?? this.archivosResponse,
+
+      // Cercanos
+      incidentesCercanos: incidentesCercanos ?? this.incidentesCercanos,
+
+      cercanosResponse: clearCercanosResponse
+          ? null
+          : cercanosResponse ?? this.cercanosResponse,
+
+      // Archivos locales
+      archivosLocales: archivosLocales ?? this.archivosLocales,
       loadingMedia: loadingMedia ?? this.loadingMedia,
       recordingVideo: recordingVideo ?? this.recordingVideo,
       recordingAudio: recordingAudio ?? this.recordingAudio,
+      mediaError: clearMediaError ? null : mediaError ?? this.mediaError,
 
       // Ubicación
-      latitud: latitud ?? this.latitud,
-      longitud: longitud ?? this.longitud,
-      direccion: direccion ?? this.direccion,
+      latitud: clearLatitud ? null : latitud ?? this.latitud,
+      longitud: clearLongitud ? null : longitud ?? this.longitud,
+      direccion: clearDireccion ? null : direccion ?? this.direccion,
       loadingLocation: loadingLocation ?? this.loadingLocation,
 
       // UI
       currentTab: currentTab ?? this.currentTab,
       isSheetExpanded: isSheetExpanded ?? this.isSheetExpanded,
+    );
+  }
 
-      // Cercanos
-      nearbyIncidents: nearbyIncidents ?? this.nearbyIncidents,
-      loadingNearby: loadingNearby ?? this.loadingNearby,
+  // ======================================================
+  // RESET PARCIAL DEL FORMULARIO
+  // ======================================================
 
-      // Mapa
-      mapaIncidentes: mapaIncidentes ?? this.mapaIncidentes,
-      loadingMapa: loadingMapa ?? this.loadingMapa,
-
-      // Dashboard
-      dashboard: dashboard ?? this.dashboard,
-      loadingDashboard: loadingDashboard ?? this.loadingDashboard,
+  IncidenteState limpiarFormulario() {
+    return copyWith(
+      archivosLocales: const [],
+      loadingMedia: false,
+      recordingVideo: false,
+      recordingAudio: false,
+      clearLatitud: true,
+      clearLongitud: true,
+      clearDireccion: true,
+      currentTab: IncidenteTabEnum.incidente,
+      isSheetExpanded: false,
+      clearCreateResponse: true,
+      clearArchivoActionResponse: true,
     );
   }
 
   @override
   List<Object?> get props => [
-    // General
-    isLoading,
-    success,
-    error,
+    // Respuestas
+    createResponse,
+    archivoActionResponse,
 
-    // Incidencias
-    incidencia,
+    // Mis incidencias
+    misIncidencias,
+    misIncidenciasResponse,
+    page,
+    limit,
+    hasMore,
+    isLoadingMore,
+
+    // Detalle
     incidenciaSeleccionada,
+    detalleResponse,
 
-    // Evidencias
-    evidencias,
-    loadingEvidencias,
+    // Archivos remotos
+    archivosIncidencia,
+    archivosResponse,
 
-    // Media
-    archivos,
+    // Cercanos
+    incidentesCercanos,
+    cercanosResponse,
+
+    // Archivos locales
+    archivosLocales,
     loadingMedia,
     recordingVideo,
     recordingAudio,
+    mediaError,
 
     // Ubicación
     latitud,
@@ -206,17 +328,5 @@ class IncidenteState extends Equatable {
     // UI
     currentTab,
     isSheetExpanded,
-
-    // Cercanos
-    nearbyIncidents,
-    loadingNearby,
-
-    // Mapa
-    mapaIncidentes,
-    loadingMapa,
-
-    // Dashboard
-    dashboard,
-    loadingDashboard,
   ];
 }

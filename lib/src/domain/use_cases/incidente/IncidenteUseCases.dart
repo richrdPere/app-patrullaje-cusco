@@ -9,19 +9,19 @@ import 'package:sis_patrullaje_cusco/src/domain/use_cases/incidente/incidente_us
 class IncidenteUseCases {
   AddArchivosIncidenciaUseCase addArchivosIncidencia;
   CreateIncidenteUseCase createIncidente;
-  GetArchivoIncidenciaUseCase getEvidenciasIncidente;
+  GetArchivoIncidenciaUseCase getArchivosIncidente;
   GetIncidenciaByIdUseCase getIncidenciaById;
   GetIncidenciasCercanasUseCase getIncidenciasCercanas;
   GetMisIncidenciasUseCase getMisIncidencias;
-  RemoveArchivoIncidenciaUseCase removeEvidenciaIncidente;
+  RemoveArchivoIncidenciaUseCase removeArchivoIncidente;
 
   IncidenteUseCases({
     required this.addArchivosIncidencia,
     required this.createIncidente,
-    required this.getEvidenciasIncidente,
+    required this.getArchivosIncidente,
     required this.getIncidenciaById,
     required this.getIncidenciasCercanas,
     required this.getMisIncidencias,
-    required this.removeEvidenciaIncidente,
+    required this.removeArchivoIncidente,
   });
 }

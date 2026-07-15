@@ -1,13 +1,11 @@
-import 'dart:io';
-
 import 'package:sis_patrullaje_cusco/src/domain/repositories/media_repository.dart';
 import 'package:sis_patrullaje_cusco/src/domain/utils/Resource.dart';
 
-class PickVideoUseCase {
+class StartAudioRecordingUseCase {
   final MediaRepository repository;
-  PickVideoUseCase(this.repository);
+  StartAudioRecordingUseCase(this.repository);
 
-  Future<Resource<File?>> run() {
-    return repository.pickVideo();
+  Future<Resource<bool>> run() {
+    return repository.startAudioRecording();
   }
 }

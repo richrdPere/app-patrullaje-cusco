@@ -52,7 +52,10 @@ export 'package:sis_patrullaje_cusco/src/domain/use_cases/incidente/IncidenteUse
 // =======================================
 export 'package:sis_patrullaje_cusco/src/domain/use_cases/multimedias/multimedias_use_case/PickImageUseCase.dart';
 export 'package:sis_patrullaje_cusco/src/domain/use_cases/multimedias/multimedias_use_case/PickVideoUseCase.dart';
-export 'package:sis_patrullaje_cusco/src/domain/use_cases/multimedias/multimedias_use_case/RecordVideoUseCase.dart';
+export 'package:sis_patrullaje_cusco/src/domain/use_cases/multimedias/multimedias_use_case/StartAudioRecordingUseCase.dart';
+export 'package:sis_patrullaje_cusco/src/domain/use_cases/multimedias/multimedias_use_case/StartVideoRecordingUseCase.dart';
+export 'package:sis_patrullaje_cusco/src/domain/use_cases/multimedias/multimedias_use_case/StopAudioRecordingUseCase.dart';
+export 'package:sis_patrullaje_cusco/src/domain/use_cases/multimedias/multimedias_use_case/StopVideoRecordingUseCase.dart';
 export 'package:sis_patrullaje_cusco/src/domain/use_cases/multimedias/multimedias_use_case/TakePhotoUseCase.dart';
 export 'package:sis_patrullaje_cusco/src/domain/use_cases/multimedias/MultimediasUsesCases.dart';
 

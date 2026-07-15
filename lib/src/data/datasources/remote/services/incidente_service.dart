@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 // Environment
 import 'package:sis_patrullaje_cusco/src/config/constants/environment.dart'
     as url_backend;
+import 'package:sis_patrullaje_cusco/src/data/models/incidencia/register_incidencia_req.dart';
 
 // Models
 import 'package:sis_patrullaje_cusco/src/domain/models/incidencia_model.dart';
@@ -14,7 +15,6 @@ import 'package:sis_patrullaje_cusco/src/domain/models/incidencia_archivo_model.
 import 'package:sis_patrullaje_cusco/src/domain/utils/Resource.dart';
 
 class IncidenciaService {
-
   // API
   String get API_BASE => '${url_backend.Environment.mainUrl}/incidencias';
 
@@ -64,55 +64,172 @@ class IncidenciaService {
   }
 
   // =====================================================
+  // VALIDAR REQUEST
+  // =====================================================
+  String? _validateRegisterRequest(RegisterIncidenciaRequest request) {
+    if (request.patrullajeId <= 0) {
+      return 'No existe un patrullaje activo válido.';
+    }
+
+    final tipo = request.tipo.trim().toUpperCase();
+
+    const tiposValidos = {
+      'ROBO',
+      'ACCIDENTE',
+      'INCENDIO',
+      'VIOLENCIA',
+      'SOSPECHOSO',
+      'OTRO',
+    };
+
+    if (!tiposValidos.contains(tipo)) {
+      return 'El tipo de incidencia no es válido.';
+    }
+
+    if (request.descripcion.trim().isEmpty) {
+      return 'La descripción es obligatoria.';
+    }
+
+    if (request.latitud < -90 || request.latitud > 90) {
+      return 'La latitud no es válida.';
+    }
+
+    if (request.longitud < -180 || request.longitud > 180) {
+      return 'La longitud no es válida.';
+    }
+
+    if (request.archivos.length > 5) {
+      return 'Solo se permiten hasta 5 archivos.';
+    }
+
+    for (final file in request.archivos) {
+      final extension = _getExtension(file.path);
+
+      const extensionesPermitidas = {
+        'jpg',
+        'jpeg',
+        'png',
+        'heic',
+        'heif',
+        'mp4',
+        'mov',
+      };
+
+      if (!extensionesPermitidas.contains(extension)) {
+        return 'El archivo ${file.path.split(Platform.pathSeparator).last} '
+            'no tiene un formato permitido.';
+      }
+    }
+
+    return null;
+  }
+
+  String _getExtension(String filePath) {
+    final segments = filePath.split('.');
+
+    if (segments.length < 2) {
+      return '';
+    }
+
+    return segments.last.trim().toLowerCase();
+  }
+
+  // =====================================================
   // 1. REGISTRAR INCIDENCIA
   // =====================================================
   Future<Resource<IncidenteModel>> registerIncidencia({
-    required IncidenteModel incidencia,
+    required RegisterIncidenciaRequest requestData,
     required String token,
   }) async {
     try {
+      // =================================================
+      // VALIDACIONES LOCALES
+      // =================================================
+      final validationError = _validateRegisterRequest(requestData);
+
+      if (validationError != null) {
+        return ErrorData<IncidenteModel>(
+          message: validationError,
+          statusCode: 400,
+        );
+      }
+
       final request = http.MultipartRequest(
         'POST',
         Uri.parse(API_CREATE_INCIDENCIA),
       );
 
       request.headers.addAll(_getAuthHeaders(token));
+      request.fields.addAll(requestData.toFields());
 
-      request.fields['tipo'] = incidencia.tipo;
-      request.fields['descripcion'] = incidencia.descripcion;
-      request.fields['latitud'] = incidencia.latitud.toString();
-      request.fields['longitud'] = incidencia.longitud.toString();
-      request.fields['origen'] = incidencia.origen;
-
-      if (incidencia.patrullajeId != null) {
-        request.fields['patrullaje_id'] = incidencia.patrullajeId.toString();
-      }
-
-      if (incidencia.archivos != null && incidencia.archivos!.isNotEmpty) {
-        for (final file in incidencia.archivos!) {
-          if (!file.existsSync()) continue;
-
-          request.files.add(
-            await http.MultipartFile.fromPath('archivos', file.path),
+      // =================================================
+      // ADJUNTAR ARCHIVOS
+      // =================================================
+      for (final file in requestData.archivos) {
+        if (!file.existsSync()) {
+          return ErrorData<IncidenteModel>(
+            message: 'No se encontró uno de los archivos seleccionados.',
+            error: file.path,
+            statusCode: 400,
           );
         }
+
+        request.files.add(
+          await http.MultipartFile.fromPath('archivos', file.path),
+        );
       }
 
+      // =================================================
+      // ENVIAR PETICIÓN
+      // =================================================
       final streamedResponse = await request.send();
       final response = await http.Response.fromStream(streamedResponse);
       final body = _decodeResponse(response);
 
-      if (_isSuccess(response.statusCode)) {
-        final data = body['data'];
-
-        final incidenciaJson = data is Map<String, dynamic>
-            ? data['incidencia'] ?? data
-            : body['incidencia'];
-
-        return Success<IncidenteModel>(IncidenteModel.fromJson(incidenciaJson));
+      if (!_isSuccess(response.statusCode)) {
+        return _buildError<IncidenteModel>(body, response.statusCode);
       }
 
-      return _buildError<IncidenteModel>(body, response.statusCode);
+      // =================================================
+      // VALIDAR RESPUESTA
+      // =================================================
+      final rawData = body['data'];
+
+      if (rawData is! Map) {
+        return ErrorData<IncidenteModel>(
+          message: 'La respuesta del servidor no contiene datos válidos.',
+          statusCode: response.statusCode,
+        );
+      }
+
+      final data = Map<String, dynamic>.from(rawData);
+      final rawIncidencia = data['incidencia'];
+
+      if (rawIncidencia is! Map) {
+        return ErrorData<IncidenteModel>(
+          message: 'No se recibió la incidencia registrada.',
+          statusCode: response.statusCode,
+        );
+      }
+
+      final incidenciaJson = Map<String, dynamic>.from(rawIncidencia);
+
+      // El backend devuelve los archivos separados.
+      incidenciaJson['archivos'] = data['archivos'] is List
+          ? data['archivos']
+          : <dynamic>[];
+
+      return Success<IncidenteModel>(IncidenteModel.fromJson(incidenciaJson));
+    } on SocketException catch (error) {
+      return ErrorData<IncidenteModel>(
+        message: 'No se pudo conectar con el servidor.',
+        error: error.toString(),
+      );
+    } on FormatException catch (error) {
+      return ErrorData<IncidenteModel>(
+        message: 'La respuesta recibida no tiene un formato válido.',
+        error: error.toString(),
+      );
     } catch (error) {
       return ErrorData<IncidenteModel>(
         message: 'Error al registrar incidencia.',

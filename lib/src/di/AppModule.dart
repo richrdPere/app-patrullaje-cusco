@@ -1,5 +1,6 @@
 import 'package:image_picker/image_picker.dart';
 import 'package:injectable/injectable.dart';
+import 'package:record/record.dart';
 import 'package:sis_patrullaje_cusco/src/data/datasources/local/SharefPref.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/socket/socket_bloc.dart';
 
@@ -22,6 +23,9 @@ abstract class AppModule {
 
   @injectable
   ImagePicker get imagePicker => ImagePicker();
+
+  @injectable
+  AudioRecorder get audioRecorder => AudioRecorder();
 
   @injectable
   SharefPref get sharedPref => SharefPref();
@@ -85,7 +89,8 @@ abstract class AppModule {
       UsersRepositoryImpl(usersService, authRepository);
 
   @injectable
-  MediaRepository get mediaRepository => MediaRepositoryImpl(imagePicker);
+  MediaRepository get mediaRepository =>
+      MediaRepositoryImpl(picker: imagePicker, audioRecorder: audioRecorder);
 
   @injectable
   AlertRepository get alertRepository =>
@@ -154,13 +159,11 @@ abstract class AppModule {
   IncidenteUseCases get incidentUseCases => IncidenteUseCases(
     addArchivosIncidencia: AddArchivosIncidenciaUseCase(incidenteRepository),
     createIncidente: CreateIncidenteUseCase(incidenteRepository),
-    getEvidenciasIncidente: GetArchivoIncidenciaUseCase(incidenteRepository),
+    getArchivosIncidente: GetArchivoIncidenciaUseCase(incidenteRepository),
     getIncidenciaById: GetIncidenciaByIdUseCase(incidenteRepository),
     getIncidenciasCercanas: GetIncidenciasCercanasUseCase(incidenteRepository),
     getMisIncidencias: GetMisIncidenciasUseCase(incidenteRepository),
-    removeEvidenciaIncidente: RemoveArchivoIncidenciaUseCase(
-      incidenteRepository,
-    ),
+    removeArchivoIncidente: RemoveArchivoIncidenciaUseCase(incidenteRepository),
   );
 
   // - Historial Patrullaje
@@ -184,10 +187,13 @@ abstract class AppModule {
   // - Multimedias
   @injectable
   MultimediasUseCases get multimediasUseCases => MultimediasUseCases(
-    takePhoto: TakePhotoUseCase(mediaRepository),
-    recordVideo: RecordVideoUseCase(mediaRepository),
     pickImage: PickImageUseCase(mediaRepository),
     pickVideo: PickVideoUseCase(mediaRepository),
+    startAudioRecording: StartAudioRecordingUseCase(mediaRepository),
+    startVideoRecording: StartVideoRecordingUseCase(mediaRepository),
+    stopAudioRecording: StopAudioRecordingUseCase(mediaRepository),
+    stopVideoRecording: StopVideoRecordingUseCase(mediaRepository),
+    takePhoto: TakePhotoUseCase(mediaRepository),
   );
 
   // =============================================================

@@ -1,79 +1,101 @@
 import 'package:bloc/bloc.dart';
-import 'package:flutter/widgets.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/incidente/IncidenteUseCases.dart';
 
-import '../incidente_event.dart';
-import '../incidente_state.dart';
+import 'package:sis_patrullaje_cusco/src/domain/models/incidencia_model.dart';
+import 'package:sis_patrullaje_cusco/src/domain/use_cases/incidente/IncidenteUseCases.dart';
+import 'package:sis_patrullaje_cusco/src/domain/utils/Resource.dart';
+
+import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/blocs/incidencia/incidente_event.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/blocs/incidencia/incidente_state.dart';
 
 class ContextHandlers {
   final IncidenteUseCases incidenteUseCases;
 
   const ContextHandlers({required this.incidenteUseCases});
 
-  // 1. INCIDENTES CERCANOS
+  // ======================================================
+  // 1. OBTENER INCIDENCIAS CERCANAS
+  // ======================================================
+
   Future<void> onObtenerIncidentesCercanos(
     ObtenerIncidentesCercanosEvent event,
     Emitter<IncidenteState> emit,
     IncidenteState state,
   ) async {
-    emit(state.copyWith(loadingNearby: true, error: null));
+    /*
+     * Evita ejecutar una nueva solicitud mientras todavía existe
+     * una consulta de incidencias cercanas en curso.
+     */
+    if (state.isLoadingCercanos) {
+      return;
+    }
+
+    emit(state.copyWith(cercanosResponse: Loading()));
 
     try {
-      if (state.latitud == null || state.longitud == null) {
+      final response = await incidenteUseCases.getIncidenciasCercanas.run(
+        latitud: event.latitud,
+        longitud: event.longitud,
+        radio: event.radio,
+        // limit: event.limit,
+      );
+
+      if (response is Success<List<IncidenteModel>>) {
+        final incidentes = _eliminarDuplicados(response.data);
+
         emit(
           state.copyWith(
-            loadingNearby: false,
-            error: 'Ubicación no disponible',
+            cercanosResponse: response,
+            incidentesCercanos: incidentes,
           ),
         );
 
         return;
       }
 
-      final incidents = await incidenteUseCases.getIncidenciasCercanas.run(
-        latitud: state.latitud!,
-        longitud: state.longitud!,
+      emit(state.copyWith(cercanosResponse: response));
+    } catch (error) {
+      emit(
+        state.copyWith(
+          cercanosResponse: ErrorData<List<IncidenteModel>>(
+            message: 'No se pudieron obtener las incidencias cercanas: $error',
+          ),
+        ),
       );
-
-      emit(state.copyWith(loadingNearby: false, nearbyIncidents: incidents));
-    } catch (e) {
-      emit(state.copyWith(loadingNearby: false, error: e.toString()));
     }
   }
 
-  // 2. MAPA DE INCIDENTES ACTIVOS
-  Future<void> onObtenerMapaIncidentes(
-    ObtenerMapaIncidentesEvent event,
+  // ======================================================
+  // 2. LIMPIAR INCIDENCIAS CERCANAS
+  // ======================================================
+
+  Future<void> onLimpiarIncidentesCercanos(
+    LimpiarIncidentesCercanosEvent event,
     Emitter<IncidenteState> emit,
     IncidenteState state,
   ) async {
-    emit(state.copyWith(loadingMapa: true, error: null));
-
-    try {
-      debugPrint("PROBANDO OBTENRR MAPA");
-      // final incidencias = await incidenteUseCases.getMapaIncidentes.run();
-
-      // emit(state.copyWith(loadingMapa: false, mapaIncidentes: incidencias));
-    } catch (e) {
-      emit(state.copyWith(loadingMapa: false, error: e.toString()));
-    }
+    emit(
+      state.copyWith(incidentesCercanos: const [], clearCercanosResponse: true),
+    );
   }
 
-  // 3. DASHBOARD DE INCIDENTES
-  Future<void> onObtenerDashboard(
-    ObtenerDashboardIncidentesEvent event,
-    Emitter<IncidenteState> emit,
-    IncidenteState state,
-  ) async {
-    emit(state.copyWith(loadingDashboard: true, error: null));
+  // ======================================================
+  // HELPERS
+  // ======================================================
 
-    try {
-      debugPrint("PROBANDO OBTENRR DASHBOARD");
-      // final dashboard = await incidenteUseCases.getDashboardIncidentes.run();
+  List<IncidenteModel> _eliminarDuplicados(List<IncidenteModel> incidencias) {
+    final Map<int, IncidenteModel> incidenciasConId = {};
+    final List<IncidenteModel> incidenciasSinId = [];
 
-      // emit(state.copyWith(loadingDashboard: false, dashboard: dashboard));
-    } catch (e) {
-      emit(state.copyWith(loadingDashboard: false, error: e.toString()));
+    for (final incidencia in incidencias) {
+      final id = incidencia.id;
+
+      if (id == null) {
+        incidenciasSinId.add(incidencia);
+      } else {
+        incidenciasConId[id] = incidencia;
+      }
     }
+
+    return [...incidenciasConId.values, ...incidenciasSinId];
   }
 }

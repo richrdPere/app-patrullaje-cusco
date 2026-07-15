@@ -1,41 +1,64 @@
 import 'package:bloc/bloc.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/geolocator/GeolocatorUseCases.dart';
+import 'package:sis_patrullaje_cusco/src/domain/utils/Resource.dart';
 
-import '../incidente_event.dart';
-import '../incidente_state.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/blocs/incidencia/incidente_event.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/blocs/incidencia/incidente_state.dart';
 
 class LocationHandlers {
   final GeolocatorUseCases geolocatorUseCases;
 
-  LocationHandlers({required this.geolocatorUseCases});
+  const LocationHandlers({required this.geolocatorUseCases});
 
+  // ======================================================
+  // OBTENER UBICACIÓN ACTUAL
+  // ======================================================
   Future<void> onObtenerUbicacion(
     ObtenerUbicacionEvent event,
     Emitter<IncidenteState> emit,
     IncidenteState state,
   ) async {
-    emit(state.copyWith(loadingLocation: true, error: null));
+    if (state.loadingLocation) {
+      return;
+    }
+
+    emit(
+      state.copyWith(
+        loadingLocation: true,
+        clearLatitud: true,
+        clearLongitud: true,
+        clearDireccion: true,
+      ),
+    );
 
     try {
-      final Position position = await geolocatorUseCases.findPosition.run();
+      final response = await geolocatorUseCases.getLocationStream.run();
+      // final response = await geolocatorUseCases.getCurrentPosition();
 
-      final placemark = await geolocatorUseCases.getPlaceMarkData.run(
-        CameraPosition(target: LatLng(position.latitude, position.longitude)),
-      );
+      if (response is Success) {
+        final position = response.data;
 
-      emit(
-        state.copyWith(
-          latitud: position.latitude,
-          longitud: position.longitude,
-          direccion: placemark.address,
-          loadingLocation: false,
-        ),
-      );
-    } catch (e) {
-      emit(state.copyWith(loadingLocation: false, error: e.toString()));
+        emit(
+          state.copyWith(
+            latitud: position.latitude,
+            longitud: position.longitude,
+            loadingLocation: false,
+          ),
+        );
+
+        return;
+      }
+
+      if (response is ErrorData) {
+        emit(state.copyWith(loadingLocation: false));
+
+        return;
+      }
+
+      emit(state.copyWith(loadingLocation: false));
+    } catch (error) {
+      emit(state.copyWith(loadingLocation: false));
     }
   }
 }

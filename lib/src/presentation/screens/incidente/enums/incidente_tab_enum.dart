@@ -4,7 +4,8 @@ enum IncidenteTabEnum {
   emergencia, 
   historial, 
   observacion,
-  video }
+  // video 
+  }
 
 enum IncidenteRapidoEnum {
   robo,

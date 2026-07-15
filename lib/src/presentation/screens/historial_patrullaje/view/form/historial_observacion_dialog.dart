@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:sis_patrullaje_cusco/src/data/models/historial_patrullaje/historial_patrullaje_model.dart';
+// import 'package:sis_patrullaje_cusco/src/data/models/historial_patrullaje/historial_patrullaje_model.dart';
 
 class HistorialObservacionDialog extends StatefulWidget {
   final int patrullajeId;

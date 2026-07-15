@@ -1,198 +1,317 @@
 import 'package:bloc/bloc.dart';
 
-import 'package:sis_patrullaje_cusco/src/data/models/historial_patrullaje/historial_patrullaje_model.dart';
 import 'package:sis_patrullaje_cusco/src/domain/models/incidencia_model.dart';
-
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/historial_patrullaje/HistorialPatrullajeUseCases.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/incidente/IncidenteUseCases.dart';
+import 'package:sis_patrullaje_cusco/src/domain/utils/Resource.dart';
 
-import '../incidente_event.dart';
-import '../incidente_state.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/blocs/incidencia/incidente_event.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/blocs/incidencia/incidente_state.dart';
 
 class IncidenteHandlers {
   final IncidenteUseCases incidenteUseCases;
-  final HistorialPatrullajeUseCases historialUseCases;
 
-  IncidenteHandlers({
-    required this.incidenteUseCases,
-    required this.historialUseCases,
-  });
+  const IncidenteHandlers({required this.incidenteUseCases});
 
+  // ======================================================
   // 1. CREAR INCIDENCIA
+  // ======================================================
   Future<void> onCrearIncidente(
     CrearIncidenteEvent event,
     Emitter<IncidenteState> emit,
     IncidenteState state,
   ) async {
-    emit(state.copyWith(isLoading: true, error: null, success: false));
+    emit(
+      state.copyWith(
+        createResponse: Loading(),
+        clearArchivoActionResponse: true,
+      ),
+    );
 
     try {
-      final incidencia = await incidenteUseCases.createIncidente.run(
-        event.params,
+      final response = await incidenteUseCases.createIncidente.run(
+        event.request,
       );
 
-      final historial = _buildHistorialFromIncidencia(incidencia);
+      if (response is Success<IncidenteModel>) {
+        final incidenciaCreada = response.data;
 
-      // await historialUseCases.createHistorial.run(historial);
+        emit(
+          state.copyWith(
+            createResponse: response,
+            incidenciaSeleccionada: incidenciaCreada,
+
+            // Se limpian los archivos locales después de crear.
+            archivosLocales: const [],
+
+            // Se actualiza el listado local sin volver a consultar.
+            misIncidencias: _agregarIncidenciaSinDuplicar(
+              incidenciaCreada,
+              state.misIncidencias,
+            ),
+          ),
+        );
+
+        return;
+      }
+
+      emit(state.copyWith(createResponse: response));
+    } catch (error) {
+      emit(
+        state.copyWith(
+          createResponse: ErrorData<IncidenteModel>(
+            message: 'No se pudo registrar la incidencia: $error',
+          ),
+        ),
+      );
+    }
+  }
+
+  // ======================================================
+  // 2. OBTENER MIS INCIDENCIAS
+  // ======================================================
+  Future<void> onObtenerMisIncidencias(
+    ObtenerMisIncidenciasEvent event,
+    Emitter<IncidenteState> emit,
+    IncidenteState state,
+  ) async {
+    final bool cargarDesdeInicio = event.page == 1 || event.refresh;
+
+    emit(
+      state.copyWith(
+        misIncidenciasResponse: Loading(),
+        page: event.page,
+        limit: event.limit,
+        hasMore: cargarDesdeInicio ? true : state.hasMore,
+        isLoadingMore: false,
+      ),
+    );
+
+    try {
+      final response = await incidenteUseCases.getMisIncidencias.run(
+        page: event.page,
+        limit: event.limit,
+        incluirArchivos: event.incluirArchivos,
+      );
+
+      if (response is Success<List<IncidenteModel>>) {
+        final nuevasIncidencias = response.data;
+
+        final incidenciasActualizadas = cargarDesdeInicio
+            ? nuevasIncidencias
+            : _combinarIncidenciasSinDuplicados(
+                state.misIncidencias,
+                nuevasIncidencias,
+              );
+
+        emit(
+          state.copyWith(
+            misIncidenciasResponse: response,
+            misIncidencias: incidenciasActualizadas,
+            page: event.page,
+            limit: event.limit,
+            hasMore: nuevasIncidencias.length >= event.limit,
+            isLoadingMore: false,
+          ),
+        );
+
+        return;
+      }
 
       emit(
-        state.copyWith(isLoading: false, success: true, incidencia: incidencia),
+        state.copyWith(misIncidenciasResponse: response, isLoadingMore: false),
       );
-    } catch (e) {
+    } catch (error) {
       emit(
-        state.copyWith(isLoading: false, success: false, error: e.toString()),
+        state.copyWith(
+          misIncidenciasResponse: ErrorData<List<IncidenteModel>>(
+            message: 'No se pudieron obtener las incidencias: $error',
+          ),
+          isLoadingMore: false,
+        ),
       );
     }
   }
 
-  // 2. OBTENER DETALLE INCIDENCIA
-  Future<void> onObtenerIncidencia(
-    ObtenerIncidenciaEvent event,
+  // ======================================================
+  // 3. CARGAR MÁS INCIDENCIAS
+  // ======================================================
+  Future<void> onCargarMasMisIncidencias(
+    CargarMasMisIncidenciasEvent event,
     Emitter<IncidenteState> emit,
     IncidenteState state,
   ) async {
-    emit(state.copyWith(isLoading: true, error: null));
-
-    try {
-      final incidencia = await incidenteUseCases.getMisIncidencias.run(
-       //  event.incidenciaId,
-      );
-
-      emit(
-        state.copyWith(isLoading: false, incidenciaSeleccionada: incidencia),
-      );
-    } catch (e) {
-      emit(state.copyWith(isLoading: false, error: e.toString()));
-    }
-  }
-
-  // 3. OBTENER EVIDENCIAS
-  Future<void> onObtenerEvidencias(
-    ObtenerEvidenciasEvent event,
-    Emitter<IncidenteState> emit,
-    IncidenteState state,
-  ) async {
-    emit(state.copyWith(loadingEvidencias: true, error: null));
-
-    try {
-      final evidencias = await incidenteUseCases.getEvidenciasIncidente.run(
-        event.incidenciaId,
-      );
-
-      emit(state.copyWith(loadingEvidencias: false, evidencias: evidencias));
-    } catch (e) {
-      emit(state.copyWith(loadingEvidencias: false, error: e.toString()));
-    }
-  }
-
-  // 4. AGREGAR EVIDENCIAS
-  Future<void> onAgregarEvidencias(
-    AgregarEvidenciasEvent event,
-    Emitter<IncidenteState> emit,
-    IncidenteState state,
-  ) async {
-    emit(state.copyWith(loadingEvidencias: true, error: null));
-
-    try {
-      await incidenteUseCases.addArchivosIncidencia.run(
-        incidenciaId: event.incidenciaId,
-        archivos: event.archivos,
-      );
-
-      final evidencias = await incidenteUseCases.getEvidenciasIncidente.run(
-        event.incidenciaId,
-      );
-
-      emit(state.copyWith(loadingEvidencias: false, evidencias: evidencias));
-    } catch (e) {
-      emit(state.copyWith(loadingEvidencias: false, error: e.toString()));
-    }
-  }
-
-  // 5. ELIMINAR EVIDENCIA
-  Future<void> onEliminarEvidencia(
-    EliminarEvidenciaEvent event,
-    Emitter<IncidenteState> emit,
-    IncidenteState state,
-  ) async {
-    emit(state.copyWith(loadingEvidencias: true, error: null));
-
-    try {
-      await incidenteUseCases.removeEvidenciaIncidente.run(incidenciaId: event.evidenciaId, archivoId: 1);
-
-      final evidencias = await incidenteUseCases.getEvidenciasIncidente.run(
-        event.incidenciaId,
-      );
-
-      emit(state.copyWith(loadingEvidencias: false, evidencias: evidencias));
-    } catch (e) {
-      emit(state.copyWith(loadingEvidencias: false, error: e.toString()));
-    }
-  }
-
-  // 6. REPORTE RÁPIDO
-  Future<void> onReporteRapido(
-    ReporteRapidoEvent event,
-    Emitter<IncidenteState> emit,
-    IncidenteState state,
-    Function(IncidenteEvent) add,
-  ) async {
-    if (state.latitud == null || state.longitud == null) {
-      emit(state.copyWith(error: 'Ubicación no disponible'));
-
+    if (state.isLoadingMore || !state.hasMore) {
       return;
     }
 
-    final incidente = IncidenteModel(
-      tipo: event.tipo.name.toUpperCase(),
-      descripcion: 'Reporte rápido generado',
-      latitud: state.latitud!,
-      longitud: state.longitud!,
-    );
+    final int siguientePagina = state.page + 1;
 
-    add(CrearIncidenteEvent(incidente));
-  }
+    emit(state.copyWith(isLoadingMore: true));
 
-  // ==================================================
-  // HELPERS
-  // ==================================================
-  HistorialPatrullajeModel _buildHistorialFromIncidencia(
-    IncidenteModel incidencia,
-  ) {
-    return HistorialPatrullajeModel(
-      // patrullajeId: incidencia.patrullajeId ?? 0,
-      // serenoId: incidencia.usuarioId,
-      // zonaId: incidencia.zonaId ?? 0,
-      tipo: "ALERTA",
-      titulo: "Incidencia reportada: ${incidencia.tipo}",
-      descripcion: incidencia.descripcion,
-      prioridad: _mapPrioridad(incidencia.tipo),
-      latitud: incidencia.latitud,
-      longitud: incidencia.longitud,
-      visibleParaSiguienteTurno: true,
-      // estado: "ACTIVO",
-    );
-  }
+    try {
+      final response = await incidenteUseCases.getMisIncidencias.run(
+        page: siguientePagina,
+        limit: state.limit,
+        incluirArchivos: 'false',
+      );
 
-  String _mapPrioridad(String tipo) {
-    switch (tipo) {
-      case "ROBO":
-        return "ALTA";
+      if (response is Success<List<IncidenteModel>>) {
+        final nuevasIncidencias = response.data;
 
-      case "INCENDIO":
-        return "CRITICA";
+        emit(
+          state.copyWith(
+            misIncidenciasResponse: response,
+            misIncidencias: _combinarIncidenciasSinDuplicados(
+              state.misIncidencias,
+              nuevasIncidencias,
+            ),
+            page: siguientePagina,
+            hasMore: nuevasIncidencias.length >= state.limit,
+            isLoadingMore: false,
+          ),
+        );
 
-      case "VIOLENCIA":
-        return "ALTA";
+        return;
+      }
 
-      case "ACCIDENTE":
-        return "MEDIA";
-
-      case "SOSPECHOSO":
-        return "MEDIA";
-
-      default:
-        return "BAJA";
+      emit(
+        state.copyWith(misIncidenciasResponse: response, isLoadingMore: false),
+      );
+    } catch (error) {
+      emit(
+        state.copyWith(
+          misIncidenciasResponse: ErrorData<List<IncidenteModel>>(
+            message: 'No se pudieron cargar más incidencias: $error',
+          ),
+          isLoadingMore: false,
+        ),
+      );
     }
+  }
+
+  // ======================================================
+  // 4. OBTENER INCIDENCIA POR ID
+  // ======================================================
+  Future<void> onObtenerIncidenciaPorId(
+    ObtenerIncidenciaPorIdEvent event,
+    Emitter<IncidenteState> emit,
+    IncidenteState state,
+  ) async {
+    emit(
+      state.copyWith(
+        detalleResponse: Loading(),
+        clearIncidenciaSeleccionada: true,
+      ),
+    );
+
+    try {
+      final response = await incidenteUseCases.getIncidenciaById.run(
+        event.incidenciaId,
+      );
+
+      if (response is Success<IncidenteModel>) {
+        final incidencia = response.data;
+
+        emit(
+          state.copyWith(
+            detalleResponse: response,
+            incidenciaSeleccionada: incidencia,
+
+            // En caso el backend incluya archivos dentro del detalle.
+            archivosIncidencia: incidencia.evidencias,
+          ),
+        );
+
+        return;
+      }
+
+      emit(state.copyWith(detalleResponse: response));
+    } catch (error) {
+      emit(
+        state.copyWith(
+          detalleResponse: ErrorData<IncidenteModel>(
+            message: 'No se pudo obtener la incidencia: $error',
+          ),
+        ),
+      );
+    }
+  }
+
+  // ======================================================
+  // 5. LIMPIAR INCIDENCIA SELECCIONADA
+  // ======================================================
+  Future<void> onLimpiarIncidenciaSeleccionada(
+    LimpiarIncidenciaSeleccionadaEvent event,
+    Emitter<IncidenteState> emit,
+    IncidenteState state,
+  ) async {
+    emit(
+      state.copyWith(
+        clearIncidenciaSeleccionada: true,
+        clearDetalleResponse: true,
+        archivosIncidencia: const [],
+        clearArchivosResponse: true,
+        clearArchivoActionResponse: true,
+      ),
+    );
+  }
+
+  // ======================================================
+  // HELPERS
+  // ======================================================
+  List<IncidenteModel> _agregarIncidenciaSinDuplicar(
+    IncidenteModel nuevaIncidencia,
+    List<IncidenteModel> incidenciasActuales,
+  ) {
+    final incidenciaId = nuevaIncidencia.id;
+
+    if (incidenciaId == null) {
+      return [nuevaIncidencia, ...incidenciasActuales];
+    }
+
+    final existe = incidenciasActuales.any(
+      (incidencia) => incidencia.id == incidenciaId,
+    );
+
+    if (existe) {
+      return incidenciasActuales
+          .map(
+            (incidencia) =>
+                incidencia.id == incidenciaId ? nuevaIncidencia : incidencia,
+          )
+          .toList();
+    }
+
+    return [nuevaIncidencia, ...incidenciasActuales];
+  }
+
+  List<IncidenteModel> _combinarIncidenciasSinDuplicados(
+    List<IncidenteModel> actuales,
+    List<IncidenteModel> nuevas,
+  ) {
+    final Map<int, IncidenteModel> incidenciasConId = {};
+    final List<IncidenteModel> incidenciasSinId = [];
+
+    for (final incidencia in actuales) {
+      final id = incidencia.id;
+
+      if (id == null) {
+        incidenciasSinId.add(incidencia);
+      } else {
+        incidenciasConId[id] = incidencia;
+      }
+    }
+
+    for (final incidencia in nuevas) {
+      final id = incidencia.id;
+
+      if (id == null) {
+        incidenciasSinId.add(incidencia);
+      } else {
+        incidenciasConId[id] = incidencia;
+      }
+    }
+
+    return [...incidenciasConId.values, ...incidenciasSinId];
   }
 }

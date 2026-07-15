@@ -9,20 +9,21 @@ import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/blocs/in
 import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/blocs/incidencia/incidente_state.dart';
 
 // Handlers
+import 'handlers/archivo_handlers.dart';
+import 'handlers/context_handlers.dart';
 import 'handlers/incidente_handlers.dart';
 import 'handlers/location_handlers.dart';
 import 'handlers/media_handlers.dart';
 import 'handlers/ui_handlers.dart';
-import 'handlers/context_handlers.dart';
 
 class IncidenteBloc extends Bloc<IncidenteEvent, IncidenteState> {
   final IncidenteUseCases incidenteUseCases;
   final GeolocatorUseCases geolocatorUseCases;
   final MultimediasUseCases mediaUseCases;
-
   final HistorialPatrullajeUseCases historialUseCases;
 
   late final IncidenteHandlers _incidenteHandlers;
+  late final ArchivoHandlers _archivoHandlers;
   late final LocationHandlers _locationHandlers;
   late final MediaHandlers _mediaHandlers;
   late final UiHandlers _uiHandlers;
@@ -34,119 +35,154 @@ class IncidenteBloc extends Bloc<IncidenteEvent, IncidenteState> {
     this.mediaUseCases,
     this.historialUseCases,
   ) : super(const IncidenteState()) {
-    // Incidente
+    // ======================================================
+    // INICIALIZACIÓN DE HANDLERS
+    // ======================================================
     _incidenteHandlers = IncidenteHandlers(
       incidenteUseCases: incidenteUseCases,
-      historialUseCases: historialUseCases,
+      // historialUseCases: historialUseCases,
     );
 
-    // Location
+    _archivoHandlers = ArchivoHandlers(incidenteUseCases: incidenteUseCases);
+
     _locationHandlers = LocationHandlers(
       geolocatorUseCases: geolocatorUseCases,
     );
 
-    // Media
     _mediaHandlers = MediaHandlers(mediaUseCases: mediaUseCases);
 
-    // UI
     _uiHandlers = const UiHandlers();
 
-    // Context
     _contextHandlers = ContextHandlers(incidenteUseCases: incidenteUseCases);
 
-    // INCIDENTE
-    on<CrearIncidenteEvent>(
-      (event, emit) => _incidenteHandlers.onCrearIncidente(event, emit, state),
-    );
-    on<ReporteRapidoEvent>(
-      (event, emit) =>
-          _incidenteHandlers.onReporteRapido(event, emit, state, add),
-    );
+    // ======================================================
+    // INCIDENCIAS
+    // ======================================================
+    on<CrearIncidenteEvent>((event, emit) {
+      return _incidenteHandlers.onCrearIncidente(event, emit, state);
+    });
 
-    on<ObtenerIncidenciaEvent>(
-      (event, emit) =>
-          _incidenteHandlers.onObtenerIncidencia(event, emit, state),
-    );
+    // on<ReporteRapidoEvent>((event, emit) {
+    //   return _incidenteHandlers.onReporteRapido(event, emit, state, add);
+    // });
 
-    on<ObtenerEvidenciasEvent>(
-      (event, emit) =>
-          _incidenteHandlers.onObtenerEvidencias(event, emit, state),
-    );
+    on<ObtenerMisIncidenciasEvent>((event, emit) {
+      return _incidenteHandlers.onObtenerMisIncidencias(event, emit, state);
+    });
 
-    on<AgregarEvidenciasEvent>(
-      (event, emit) =>
-          _incidenteHandlers.onAgregarEvidencias(event, emit, state),
-    );
+    on<CargarMasMisIncidenciasEvent>((event, emit) {
+      return _incidenteHandlers.onCargarMasMisIncidencias(event, emit, state);
+    });
 
-    on<EliminarEvidenciaEvent>(
-      (event, emit) =>
-          _incidenteHandlers.onEliminarEvidencia(event, emit, state),
-    );
+    on<ObtenerIncidenciaPorIdEvent>((event, emit) {
+      return _incidenteHandlers.onObtenerIncidenciaPorId(event, emit, state);
+    });
 
-    // LOCATION
-    on<ObtenerUbicacionEvent>(
-      (event, emit) => _locationHandlers.onObtenerUbicacion(event, emit, state),
-    );
+    on<LimpiarIncidenciaSeleccionadaEvent>((event, emit) {
+      return _incidenteHandlers.onLimpiarIncidenciaSeleccionada(
+        event,
+        emit,
+        state,
+      );
+    });
 
-    // MEDIA
-    on<TomarFotoEvent>(
-      (event, emit) => _mediaHandlers.onTomarFoto(event, emit, state),
-    );
-    on<SeleccionarImagenEvent>(
-      (event, emit) => _mediaHandlers.onSeleccionarImagen(event, emit, state),
-    );
-    on<SeleccionarVideoEvent>(
-      (event, emit) => _mediaHandlers.onSeleccionarVideo(event, emit, state),
-    );
-    on<IniciarGrabacionVideoEvent>(
-      (event, emit) =>
-          _mediaHandlers.onIniciarGrabacionVideo(event, emit, state),
-    );
-    on<DetenerGrabacionVideoEvent>(
-      (event, emit) =>
-          _mediaHandlers.onDetenerGrabacionVideo(event, emit, state),
-    );
-    on<EliminarArchivoEvent>(
-      (event, emit) => _mediaHandlers.onEliminarArchivo(event, emit, state),
-    );
-    on<LimpiarArchivosEvent>(
-      (event, emit) => _mediaHandlers.onLimpiarArchivos(event, emit, state),
-    );
+    // ======================================================
+    // ARCHIVOS REMOTOS
+    // ======================================================
+    on<ObtenerArchivosIncidenciaEvent>((event, emit) {
+      return _archivoHandlers.onObtenerArchivosIncidencia(event, emit, state);
+    });
 
+    on<AgregarArchivosIncidenciaEvent>((event, emit) {
+      return _archivoHandlers.onAgregarArchivosIncidencia(event, emit, state);
+    });
+
+    on<EliminarArchivoIncidenciaEvent>((event, emit) {
+      return _archivoHandlers.onEliminarArchivoIncidencia(event, emit, state);
+    });
+
+    on<LimpiarArchivosIncidenciaEvent>((event, emit) {
+      return _archivoHandlers.onLimpiarArchivosIncidencia(event, emit, state);
+    });
+
+    // ======================================================
+    // UBICACIÓN
+    // ======================================================
+    on<ObtenerUbicacionEvent>((event, emit) {
+      return _locationHandlers.onObtenerUbicacion(event, emit, state);
+    });
+
+    // ======================================================
+    // MEDIA LOCAL
+    // ======================================================
+    on<TomarFotoEvent>((event, emit) {
+      return _mediaHandlers.onTomarFoto(event, emit, state);
+    });
+
+    on<SeleccionarImagenEvent>((event, emit) {
+      return _mediaHandlers.onSeleccionarImagen(event, emit, state);
+    });
+
+    on<SeleccionarVideoEvent>((event, emit) {
+      return _mediaHandlers.onSeleccionarVideo(event, emit, state);
+    });
+
+    on<IniciarGrabacionVideoEvent>((event, emit) {
+      return _mediaHandlers.onIniciarGrabacionVideo(event, emit, state);
+    });
+
+    on<DetenerGrabacionVideoEvent>((event, emit) {
+      return _mediaHandlers.onDetenerGrabacionVideo(event, emit, state);
+    });
+
+    on<IniciarGrabacionAudioEvent>((event, emit) {
+      return _mediaHandlers.onIniciarGrabacionAudio(event, emit, state);
+    });
+
+    on<DetenerGrabacionAudioEvent>((event, emit) {
+      return _mediaHandlers.onDetenerGrabacionAudio(event, emit, state);
+    });
+
+    on<EliminarArchivoLocalEvent>((event, emit) {
+      return _mediaHandlers.onEliminarArchivoLocal(event, emit, state);
+    });
+
+    on<LimpiarArchivosLocalesEvent>((event, emit) {
+      return _mediaHandlers.onLimpiarArchivosLocales(event, emit, state);
+    });
+
+    // ======================================================
     // UI
-    on<ResetIncidenteEvent>(
-      (event, emit) => _uiHandlers.onResetIncidente(event, emit),
-    );
+    // ======================================================
+    on<ResetIncidenteEvent>((event, emit) {
+      return _uiHandlers.onResetIncidente(event, emit);
+    });
 
-    on<LimpiarErrorEvent>(
-      (event, emit) => _uiHandlers.onLimpiarError(event, emit, state),
-    );
+    on<LimpiarAccionIncidenteEvent>((event, emit) {
+      return _uiHandlers.onLimpiarAccionIncidente(event, emit, state);
+    });
 
-    on<CambiarTabEvent>(
-      (event, emit) => _uiHandlers.onCambiarTab(event, emit, state),
-    );
+    on<CambiarTabIncidenteEvent>((event, emit) {
+      return _uiHandlers.onCambiarTab(event, emit, state);
+    });
 
-    on<ExpandirSheetEvent>(
-      (event, emit) => _uiHandlers.onExpandirSheet(event, emit, state),
-    );
+    on<ExpandirSheetIncidenteEvent>((event, emit) {
+      return _uiHandlers.onExpandirSheet(event, emit, state);
+    });
 
-    on<ContraerSheetEvent>(
-      (event, emit) => _uiHandlers.onContraerSheet(event, emit, state),
-    );
+    on<ContraerSheetIncidenteEvent>((event, emit) {
+      return _uiHandlers.onContraerSheet(event, emit, state);
+    });
 
-    // CONTEXT
-    on<ObtenerIncidentesCercanosEvent>(
-      (event, emit) =>
-          _contextHandlers.onObtenerIncidentesCercanos(event, emit, state),
-    );
+    // ======================================================
+    // CONTEXTO / INCIDENTES CERCANOS
+    // ======================================================
+    on<ObtenerIncidentesCercanosEvent>((event, emit) {
+      return _contextHandlers.onObtenerIncidentesCercanos(event, emit, state);
+    });
 
-    on<ObtenerMapaIncidentesEvent>(
-      (event, emit) =>
-          _contextHandlers.onObtenerMapaIncidentes(event, emit, state),
-    );
-
-    on<ObtenerDashboardIncidentesEvent>(
-      (event, emit) => _contextHandlers.onObtenerDashboard(event, emit, state),
-    );
+    on<LimpiarIncidentesCercanosEvent>((event, emit) {
+      return _contextHandlers.onLimpiarIncidentesCercanos(event, emit, state);
+    });
   }
 }

@@ -1,12 +1,13 @@
 import 'dart:io';
 
+import 'package:sis_patrullaje_cusco/src/data/models/incidencia/register_incidencia_req.dart';
 import 'package:sis_patrullaje_cusco/src/domain/models/incidencia_archivo_model.dart';
 import 'package:sis_patrullaje_cusco/src/domain/models/incidencia_model.dart';
 import 'package:sis_patrullaje_cusco/src/domain/utils/Resource.dart';
 
 abstract class IncidenteRepository {
   // INCIDENCIAS
-  Future<Resource<IncidenteModel>> newIncidencia(IncidenteModel incidente);
+  Future<Resource<IncidenteModel>> newIncidencia(RegisterIncidenciaRequest incidente);
 
   Future<Resource<List<IncidenteModel>>> getMisIncidencias({
     int page = 1,

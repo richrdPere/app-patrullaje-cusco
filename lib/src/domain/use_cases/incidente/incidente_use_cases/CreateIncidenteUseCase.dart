@@ -1,4 +1,4 @@
-import 'package:sis_patrullaje_cusco/src/domain/models/incidencia_model.dart';
+import 'package:sis_patrullaje_cusco/src/data/models/incidencia/register_incidencia_req.dart';
 import 'package:sis_patrullaje_cusco/src/domain/repositories/incidente_repository.dart';
 
 class CreateIncidenteUseCase {
@@ -6,5 +6,6 @@ class CreateIncidenteUseCase {
 
   CreateIncidenteUseCase(this.incidenteRepository);
 
-  run(IncidenteModel params) => incidenteRepository.newIncidencia(params);
+  run(RegisterIncidenciaRequest params) =>
+      incidenteRepository.newIncidencia(params);
 }
