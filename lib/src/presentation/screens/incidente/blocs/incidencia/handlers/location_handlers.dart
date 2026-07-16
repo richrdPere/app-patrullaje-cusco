@@ -1,7 +1,9 @@
 import 'package:bloc/bloc.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:sis_patrullaje_cusco/src/domain/entities/location_entity.dart';
 
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/geolocator/GeolocatorUseCases.dart';
-import 'package:sis_patrullaje_cusco/src/domain/utils/Resource.dart';
+// import 'package:sis_patrullaje_cusco/src/domain/utils/Resource.dart';
 
 import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/blocs/incidencia/incidente_event.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/blocs/incidencia/incidente_state.dart';
@@ -17,47 +19,42 @@ class LocationHandlers {
   Future<void> onObtenerUbicacion(
     ObtenerUbicacionEvent event,
     Emitter<IncidenteState> emit,
-    IncidenteState state,
+    IncidenteState currentState,
   ) async {
-    if (state.loadingLocation) {
+    if (currentState.loadingLocation) {
       return;
     }
 
-    emit(
-      state.copyWith(
-        loadingLocation: true,
-        clearLatitud: true,
-        clearLongitud: true,
-        clearDireccion: true,
-      ),
+    final state = currentState.copyWith(
+      loadingLocation: true,
+      clearLatitud: true,
+      clearLongitud: true,
+      clearDireccion: true,
     );
 
+    emit(state);
+
     try {
-      final response = await geolocatorUseCases.getLocationStream.run();
-      // final response = await geolocatorUseCases.getCurrentPosition();
+      final LocationEntity location = await geolocatorUseCases
+          .getCurrentLocation
+          .run(tipo: 'EMERGENCIA');
 
-      if (response is Success) {
-        final position = response.data;
+      debugPrint(
+        'UBICACIÓN OBTENIDA: '
+        '${location.latitud}, ${location.longitud}',
+      );
 
-        emit(
-          state.copyWith(
-            latitud: position.latitude,
-            longitud: position.longitude,
-            loadingLocation: false,
-          ),
-        );
+      emit(
+        state.copyWith(
+          latitud: location.latitud,
+          longitud: location.longitud,
+          loadingLocation: false,
+        ),
+      );
+    } catch (error, stackTrace) {
+      debugPrint('EXCEPCIÓN AL OBTENER UBICACIÓN: $error');
+      debugPrintStack(stackTrace: stackTrace);
 
-        return;
-      }
-
-      if (response is ErrorData) {
-        emit(state.copyWith(loadingLocation: false));
-
-        return;
-      }
-
-      emit(state.copyWith(loadingLocation: false));
-    } catch (error) {
       emit(state.copyWith(loadingLocation: false));
     }
   }

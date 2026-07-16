@@ -2,7 +2,12 @@ import 'package:image_picker/image_picker.dart';
 import 'package:injectable/injectable.dart';
 import 'package:record/record.dart';
 import 'package:sis_patrullaje_cusco/src/data/datasources/local/SharefPref.dart';
+
 import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/socket/socket_bloc.dart';
+
+// Environment
+import 'package:sis_patrullaje_cusco/src/config/constants/environment.dart'
+    as url_backend;
 
 // Service
 import 'package:sis_patrullaje_cusco/src/data/datasources/remote/index_service.dart';
@@ -18,6 +23,9 @@ import 'package:sis_patrullaje_cusco/src/domain/use_cases/index_uses_cases.dart'
 
 @module
 abstract class AppModule {
+  @Named('googleMapsApiKey')
+  String get googleMapsApiKey => url_backend.Environment.googleMapsAPI;
+
   @lazySingleton
   SocketRepository socketRepository() => SocketRepositoryImpl();
 
@@ -52,13 +60,26 @@ abstract class AppModule {
   // =============================================================
   // 2. REPOSITORY
   // =============================================================
+
+  // - Auth
   @injectable
   AuthRepository get authRepository =>
       AuthRepositoryImpl(authService, sharedPref);
 
+  // - Geolocator
   @injectable
   GeolocatorRepository get geolocatorRepository => GeolocatorRepositoryImpl();
 
+  // - Geocoding
+  @injectable
+  GeocodingRepository get geocodingRepository => GeocodingRepositoryImpl();
+
+  // - Directions
+  @injectable
+  DirectionsRepository get directionsRepository =>
+      DirectionsRepositoryImpl(googleMapsApiKey: googleMapsApiKey);
+
+  // - Patrullaje
   @injectable
   PatrullajeRepository patrullajeRepository(
     PatrullajeService patrullajeService,
@@ -69,14 +90,17 @@ abstract class AppModule {
     socketRepository,
   );
 
+  // - Tracking
   @injectable
   TrackingRepository trackingRepository(SocketRepository socketRepository) =>
       TrackingRepositoryImpl(geolocatorRepository, socketRepository);
 
+  // - Incidente
   @injectable
   IncidenteRepository get incidenteRepository =>
       IncidenteRepositoryImpl(incidenteService, authRepository);
 
+  // - Historial patrullaje
   @injectable
   HistorialPatrullajeRepository get historialPatrullajeRepository =>
       HistorialPatrullajeRepositoryImpl(
@@ -84,14 +108,17 @@ abstract class AppModule {
         authRepository,
       );
 
+  // - Users
   @injectable
   UsersRepository get usersRepository =>
       UsersRepositoryImpl(usersService, authRepository);
 
+  // - Media audiovisla
   @injectable
   MediaRepository get mediaRepository =>
       MediaRepositoryImpl(picker: imagePicker, audioRecorder: audioRecorder);
 
+  // - Alerta
   @injectable
   AlertRepository get alertRepository =>
       AlertRepositoryImpl(geolocatorRepository);
@@ -113,13 +140,34 @@ abstract class AppModule {
   // - Geolocator
   @injectable
   GeolocatorUseCases get geolocatorUseCases => GeolocatorUseCases(
-    findPosition: FindPositionUseCase(geolocatorRepository),
-    createMarker: CreateMarkerUseCase(geolocatorRepository),
-    getMarker: GetMarkerUseCase(geolocatorRepository),
-    getPlaceMarkData: GetPlaceMarkDataUseCase(geolocatorRepository),
-    getPolyline: GetPolylineUseCase(geolocatorRepository),
+    checkLocationPermission: CheckLocationPermissionUseCase(
+      geolocatorRepository,
+    ),
+    getCurrentLocation: GetCurrentLocationUseCase(geolocatorRepository),
+    getLastKnowLocation: GetLastKnowLocationUseCase(geolocatorRepository),
     getLocationStream: GetLocationStreamUseCase(geolocatorRepository),
+    isLocationServiceEnable: IsLocationServiceEnableUseCase(
+      geolocatorRepository,
+    ),
+    openAppSettings: OpenAppSettingsUseCase(geolocatorRepository),
+    openLocationSettings: OpenLocationSettingsUseCase(geolocatorRepository),
+    requestLocationPermission: RequestLocationPermissionUseCase(
+      geolocatorRepository,
+    ),
   );
+
+  // - Geocoding
+  @injectable
+  GeocodingUsesCases get geocodingUsesCases => GeocodingUsesCases(
+    getPlacemarkFromLocation: GetPlacemarkFromLocationUseCase(
+      geocodingRepository,
+    ),
+  );
+
+  // - Directions
+  @injectable
+  DirectionsUsesCase get directionsUsesCase =>
+      DirectionsUsesCase(getRoute: GetRouteUseCase(directionsRepository));
 
   // - Patrullaje
   @injectable

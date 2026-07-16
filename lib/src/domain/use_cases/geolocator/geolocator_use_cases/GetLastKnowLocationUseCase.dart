@@ -1,9 +1,10 @@
 import 'package:sis_patrullaje_cusco/src/domain/entities/location_entity.dart';
 import 'package:sis_patrullaje_cusco/src/domain/repositories/geolocator_repository.dart';
 
-class GetLocationStreamUseCase {
+class GetLastKnowLocationUseCase {
   GeolocatorRepository geolocatorRepository;
-  GetLocationStreamUseCase(this.geolocatorRepository);
+  GetLastKnowLocationUseCase(this.geolocatorRepository);
 
-  Stream<LocationEntity> run() => geolocatorRepository.getLocationStream();
+  Future<LocationEntity?> run({String tipo = 'MANUAL'}) =>
+      geolocatorRepository.getLastKnownLocation(tipo: tipo);
 }

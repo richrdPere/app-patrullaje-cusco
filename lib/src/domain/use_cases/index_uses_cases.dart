@@ -17,12 +17,14 @@ export 'package:sis_patrullaje_cusco/src/domain/use_cases/auth/AuthUseCases.dart
 // =======================================
 // GEOLOCATOR
 // =======================================
-export 'package:sis_patrullaje_cusco/src/domain/use_cases/geolocator/geolocator_use_cases/CreateMarkerUseCase.dart';
-export 'package:sis_patrullaje_cusco/src/domain/use_cases/geolocator/geolocator_use_cases/FindPositionUseCase.dart';
+export 'package:sis_patrullaje_cusco/src/domain/use_cases/geolocator/geolocator_use_cases/CheckLocationPermissionUseCase.dart';
+export 'package:sis_patrullaje_cusco/src/domain/use_cases/geolocator/geolocator_use_cases/GetCurrentLocationUseCase.dart';
+export 'package:sis_patrullaje_cusco/src/domain/use_cases/geolocator/geolocator_use_cases/GetLastKnowLocationUseCase.dart';
 export 'package:sis_patrullaje_cusco/src/domain/use_cases/geolocator/geolocator_use_cases/GetLocationStreamUseCase.dart';
-export 'package:sis_patrullaje_cusco/src/domain/use_cases/geolocator/geolocator_use_cases/GetMarkerUseCase.dart';
-export 'package:sis_patrullaje_cusco/src/domain/use_cases/geolocator/geolocator_use_cases/GetPlaceMarkDataUseCase.dart';
-export 'package:sis_patrullaje_cusco/src/domain/use_cases/geolocator/geolocator_use_cases/GetPolyLineUseCase.dart';
+export 'package:sis_patrullaje_cusco/src/domain/use_cases/geolocator/geolocator_use_cases/IsLocationServiceEnableUseCase.dart';
+export 'package:sis_patrullaje_cusco/src/domain/use_cases/geolocator/geolocator_use_cases/OpenAppSettingsUseCase.dart';
+export 'package:sis_patrullaje_cusco/src/domain/use_cases/geolocator/geolocator_use_cases/OpenLocationSettingsUseCase.dart';
+export 'package:sis_patrullaje_cusco/src/domain/use_cases/geolocator/geolocator_use_cases/RequestLocationPermissionUseCase.dart';
 export 'package:sis_patrullaje_cusco/src/domain/use_cases/geolocator/GeolocatorUseCases.dart';
 
 // =======================================
@@ -95,3 +97,15 @@ export 'package:sis_patrullaje_cusco/src/domain/use_cases/tracking/TrackingUseCa
 // =======================================
 export 'package:sis_patrullaje_cusco/src/domain/use_cases/users/users_uses_cases/UpdateUserUseCase.dart';
 export 'package:sis_patrullaje_cusco/src/domain/use_cases/users/UsersUseCases.dart';
+
+// =======================================
+// GEOCODING
+// =======================================
+export 'package:sis_patrullaje_cusco/src/domain/use_cases/geocoding/geocoding_uses_cases/GetPlacemarkFromLocationUseCase.dart';
+export 'package:sis_patrullaje_cusco/src/domain/use_cases/geocoding/GeocodingUsesCases.dart';
+
+// =======================================
+// DIRECTIONS
+// =======================================
+export 'package:sis_patrullaje_cusco/src/domain/use_cases/directions/directions_uses_cases/GetRouteUseCase.dart';
+export 'package:sis_patrullaje_cusco/src/domain/use_cases/directions/DirectionsUsesCase.dart';

@@ -3,15 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:sis_patrullaje_cusco/injection.dart';
 import 'package:sis_patrullaje_cusco/src/config/core/session/session_bloc.dart';
 // import 'package:sis_patrullaje_cusco/src/domain/use_cases/alerta/AlertUseCases.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/auth/AuthUseCases.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/geolocator/GeolocatorUseCases.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/historial_patrullaje/HistorialPatrullajeUseCases.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/incidente/IncidenteUseCases.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/multimedias/MultimediasUsesCases.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/patrullaje/PatrullajeUseCases.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/socket/SocketUseCases.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/tracking/TrackingUseCases.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/users/UsersUseCases.dart';
+import 'package:sis_patrullaje_cusco/src/domain/use_cases/index_uses_cases.dart';
+
 import 'package:sis_patrullaje_cusco/src/presentation/screens/auth/login/bloc/login_bloc.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/auth/login/bloc/login_event.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/auth/register/bloc/register_bloc.dart';
@@ -96,7 +89,11 @@ List<BlocProvider> blocProviders = [
   // GPS y Mapa
   BlocProvider<GpsBloc>(create: (BuildContext context) => GpsBloc()),
   BlocProvider<MapaBloc>(
-    create: (BuildContext context) => MapaBloc(locator<GeolocatorUseCases>()),
+    create: (BuildContext context) => MapaBloc(
+      locator<GeolocatorUseCases>(),
+      locator<GeocodingUsesCases>(),
+      locator<DirectionsUsesCase>(),
+    ),
   ),
 
   BlocProvider<MapaIncidentBloc>(
@@ -130,8 +127,7 @@ List<BlocProvider> blocProviders = [
 
   // Historial patrullaje
   BlocProvider<HistorialPatrullajeBloc>(
-    create: (BuildContext context) => HistorialPatrullajeBloc(
-      locator<HistorialPatrullajeUseCases>(),
-    ),
+    create: (BuildContext context) =>
+        HistorialPatrullajeBloc(locator<HistorialPatrullajeUseCases>()),
   ),
 ];

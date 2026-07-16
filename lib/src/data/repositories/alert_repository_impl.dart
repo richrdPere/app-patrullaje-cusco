@@ -8,11 +8,11 @@ class AlertRepositoryImpl implements AlertRepository {
 
   @override
   Future<void> sendAlert() async {
-    final position = await geolocatorRepository.findPosition();
+    final position = await geolocatorRepository.getCurrentLocation();
 
     final data = {
-      "lat": position.latitude,
-      "lng": position.longitude,
+      "lat": position.latitud,
+      "lng": position.longitud,
       "timestamp": DateTime.now().toIso8601String(),
     };
 

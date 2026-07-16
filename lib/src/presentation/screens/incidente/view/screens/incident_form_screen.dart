@@ -68,10 +68,12 @@ class _IncidenteFormScreenState extends State<IncidenteFormScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // CARD
                 _buildPatrullajeCard(patrullaje),
 
                 const SizedBox(height: 20),
 
+                // SELECCION DE INCIDENTE
                 _buildSectionTitle(
                   icon: Icons.category_outlined,
                   title: 'Tipo de incidente',
@@ -85,6 +87,7 @@ class _IncidenteFormScreenState extends State<IncidenteFormScreen> {
 
                 const SizedBox(height: 24),
 
+                // DESCRIPCION DE INCIDENTE
                 _buildSectionTitle(
                   icon: Icons.description_outlined,
                   title: 'Descripción',
@@ -97,6 +100,7 @@ class _IncidenteFormScreenState extends State<IncidenteFormScreen> {
 
                 const SizedBox(height: 24),
 
+                // UBICACION
                 _buildSectionTitle(
                   icon: Icons.location_on_outlined,
                   title: 'Ubicación',
@@ -109,6 +113,7 @@ class _IncidenteFormScreenState extends State<IncidenteFormScreen> {
 
                 const SizedBox(height: 24),
 
+                // EVIDENCIA
                 _buildSectionTitle(
                   icon: Icons.perm_media_outlined,
                   title: 'Evidencias',
@@ -137,7 +142,6 @@ class _IncidenteFormScreenState extends State<IncidenteFormScreen> {
   // ======================================================
   // LISTENER
   // ======================================================
-
   void _onIncidenteStateChanged(BuildContext context, IncidenteState state) {
     final response = state.createResponse;
 
@@ -187,7 +191,6 @@ class _IncidenteFormScreenState extends State<IncidenteFormScreen> {
   // ======================================================
   // PATRULLAJE ACTIVO
   // ======================================================
-
   Widget _buildPatrullajeCard(PatrullajeData? patrullaje) {
     final tienePatrullaje = patrullaje != null;
 
@@ -260,7 +263,6 @@ class _IncidenteFormScreenState extends State<IncidenteFormScreen> {
   // ======================================================
   // TÍTULO DE SECCIÓN
   // ======================================================
-
   Widget _buildSectionTitle({
     required IconData icon,
     required String title,
@@ -301,7 +303,6 @@ class _IncidenteFormScreenState extends State<IncidenteFormScreen> {
   // ======================================================
   // TIPO DE INCIDENTE
   // ======================================================
-
   Widget _buildTipoIncidenteSelector({required bool disabled}) {
     return Wrap(
       spacing: 8,
@@ -343,7 +344,6 @@ class _IncidenteFormScreenState extends State<IncidenteFormScreen> {
   // ======================================================
   // DESCRIPCIÓN
   // ======================================================
-
   Widget _buildDescripcionField({required bool disabled}) {
     return TextFormField(
       controller: _descripcionController,
@@ -390,7 +390,6 @@ class _IncidenteFormScreenState extends State<IncidenteFormScreen> {
   // ======================================================
   // UBICACIÓN
   // ======================================================
-
   Widget _buildUbicacionCard(IncidenteState state) {
     if (state.loadingLocation) {
       return Container(

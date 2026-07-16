@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:bloc/bloc.dart';
-import 'package:flutter/material.dart';
+// import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/geolocator/GeolocatorUseCases.dart';
 
@@ -26,39 +26,39 @@ class MapaIncidentBloc extends Bloc<MapaIncidentEvent, MapaIncidentState> {
         ),
       );
 
-      BitmapDescriptor pickUpDescriptor = await geolocatorUseCases.createMarker
-          .run('assets/img/pin_white.png');
+      // BitmapDescriptor pickUpDescriptor = await geolocatorUseCases.createMarker
+      //     .run('assets/img/pin_white.png');
 
-      BitmapDescriptor destinationDescriptor = await geolocatorUseCases
-          .createMarker
-          .run('assets/img/flag.png');
+      // BitmapDescriptor destinationDescriptor = await geolocatorUseCases
+      //     .createMarker
+      //     .run('assets/img/flag.png');
 
-      Marker markerPickUp = await geolocatorUseCases.getMarker.run(
-        'pickup',
-        state.pickUpLatLng!.latitude,
-        state.pickUpLatLng!.longitude,
-        'Lugar Actual',
-        'Debe moverse acorde a sus funciones asignadas',
-        pickUpDescriptor,
-      );
+      // Marker markerPickUp = await geolocatorUseCases.getMarker.run(
+      //   'pickup',
+      //   state.pickUpLatLng!.latitude,
+      //   state.pickUpLatLng!.longitude,
+      //   'Lugar Actual',
+      //   'Debe moverse acorde a sus funciones asignadas',
+      //   pickUpDescriptor,
+      // );
 
-      Marker markerDestination = await geolocatorUseCases.getMarker.run(
-        'destination',
-        state.destinationLatLng!.latitude,
-        state.destinationLatLng!.longitude,
-        'Lugar del Incidente',
-        'Debe acudir al lugar inmediatamente',
-        destinationDescriptor,
-      );
+      // Marker markerDestination = await geolocatorUseCases.getMarker.run(
+      //   'destination',
+      //   state.destinationLatLng!.latitude,
+      //   state.destinationLatLng!.longitude,
+      //   'Lugar del Incidente',
+      //   'Debe acudir al lugar inmediatamente',
+      //   destinationDescriptor,
+      // );
 
-      emit(
-        state.copyWith(
-          markers: {
-            markerPickUp.markerId: markerPickUp,
-            markerDestination.markerId: markerDestination,
-          },
-        ),
-      );
+      // emit(
+      //   state.copyWith(
+      //     markers: {
+      //       markerPickUp.markerId: markerPickUp,
+      //       markerDestination.markerId: markerDestination,
+      //     },
+      //   ),
+      // );
     });
 
     on<ChangeMapCameraPosition>((event, emit) async {
@@ -75,17 +75,17 @@ class MapaIncidentBloc extends Bloc<MapaIncidentEvent, MapaIncidentState> {
     });
 
     on<AddPolyline>((event, emit) async {
-      List<LatLng> polylineCoordinates = await geolocatorUseCases.getPolyline
-          .run(state.pickUpLatLng!, state.destinationLatLng!);
+      // List<LatLng> polylineCoordinates = await geolocatorUseCases.getPolyline
+      //     .run(state.pickUpLatLng!, state.destinationLatLng!);
 
-      PolylineId id = const PolylineId("MyRoute");
-      Polyline polyline = Polyline(
-        polylineId: id,
-        color: Colors.blueAccent,
-        points: polylineCoordinates,
-        width: 6,
-      );
-      emit(state.copyWith(polylines: {id: polyline}));
+      // PolylineId id = const PolylineId("MyRoute");
+      // Polyline polyline = Polyline(
+      //   polylineId: id,
+      //   color: Colors.blueAccent,
+      //   points: polylineCoordinates,
+      //   width: 6,
+      // );
+      // emit(state.copyWith(polylines: {id: polyline}));
     });
   }
 }

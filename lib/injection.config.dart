@@ -12,6 +12,7 @@
 import 'package:get_it/get_it.dart' as _i174;
 import 'package:image_picker/image_picker.dart' as _i183;
 import 'package:injectable/injectable.dart' as _i526;
+import 'package:record/record.dart' as _i1039;
 import 'package:sis_patrullaje_cusco/src/data/datasources/local/SharefPref.dart'
     as _i118;
 import 'package:sis_patrullaje_cusco/src/data/datasources/remote/index_service.dart'
@@ -39,6 +40,7 @@ extension GetItInjectableX on _i174.GetIt {
     final gh = _i526.GetItHelper(this, environment, environmentFilter);
     final appModule = _$AppModule();
     gh.factory<_i183.ImagePicker>(() => appModule.imagePicker);
+    gh.factory<_i1039.AudioRecorder>(() => appModule.audioRecorder);
     gh.factory<_i118.SharefPref>(() => appModule.sharedPref);
     gh.factory<_i506.AuthService>(() => appModule.authService);
     gh.factory<_i506.UsersService>(() => appModule.usersService);
@@ -51,6 +53,10 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i224.GeolocatorRepository>(
       () => appModule.geolocatorRepository,
     );
+    gh.factory<_i224.GeocodingRepository>(() => appModule.geocodingRepository);
+    gh.factory<_i224.DirectionsRepository>(
+      () => appModule.directionsRepository,
+    );
     gh.factory<_i224.IncidenteRepository>(() => appModule.incidenteRepository);
     gh.factory<_i224.HistorialPatrullajeRepository>(
       () => appModule.historialPatrullajeRepository,
@@ -60,6 +66,8 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i224.AlertRepository>(() => appModule.alertRepository);
     gh.factory<_i952.AuthUsesCases>(() => appModule.authUseCases);
     gh.factory<_i952.GeolocatorUseCases>(() => appModule.geolocatorUseCases);
+    gh.factory<_i952.GeocodingUsesCases>(() => appModule.geocodingUsesCases);
+    gh.factory<_i952.DirectionsUsesCase>(() => appModule.directionsUsesCase);
     gh.factory<_i952.AlertUseCases>(() => appModule.alertUseCases);
     gh.factory<_i952.IncidenteUseCases>(() => appModule.incidentUseCases);
     gh.factory<_i952.HistorialPatrullajeUseCases>(
@@ -69,6 +77,10 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i952.MultimediasUseCases>(() => appModule.multimediasUseCases);
     gh.lazySingleton<_i224.SocketRepository>(
       () => appModule.socketRepository(),
+    );
+    gh.factory<String>(
+      () => appModule.googleMapsApiKey,
+      instanceName: 'googleMapsApiKey',
     );
     gh.factory<_i318.LoadingBloc>(
       () => _i318.LoadingBloc(gh<_i422.AuthUsesCases>()),

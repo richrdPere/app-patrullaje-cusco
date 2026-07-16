@@ -1,5 +1,7 @@
 export 'package:sis_patrullaje_cusco/src/domain/repositories/alert_repository.dart';
 export 'package:sis_patrullaje_cusco/src/domain/repositories/auth_repository.dart';
+export 'package:sis_patrullaje_cusco/src/domain/repositories/directions_repository.dart';
+export 'package:sis_patrullaje_cusco/src/domain/repositories/geocoding_repository.dart';
 export 'package:sis_patrullaje_cusco/src/domain/repositories/geolocator_repository.dart';
 export 'package:sis_patrullaje_cusco/src/domain/repositories/historial_patrullaje_repository.dart';
 export 'package:sis_patrullaje_cusco/src/domain/repositories/incidente_repository.dart';

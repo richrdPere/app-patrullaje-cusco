@@ -2,9 +2,13 @@
 
 // Environment
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:sis_patrullaje_cusco/src/config/constants/environment.dart'
     as url_backend;
+
+// Mapper
+import 'package:sis_patrullaje_cusco/src/data/mapper/location_mapper.dart';
 
 // Models
 import 'package:sis_patrullaje_cusco/src/data/models/patrullaje/patrullaje_data.dart';
@@ -58,6 +62,7 @@ class PatrullajeService {
       if (resp.statusCode == 200) {
         final data = body['data'];
 
+        debugPrint("PATRULLAJE: $data");
         if (data == null) {
           return Success<PatrullajeData?>(null);
         }
@@ -162,7 +167,7 @@ class PatrullajeService {
       final resp = await http.post(
         url,
         headers: headers,
-        body: json.encode(locationToJson(location)),
+        body: json.encode(LocationMapper.toApiJson(location)),
       );
 
       final body = _decodeResponse(resp);
