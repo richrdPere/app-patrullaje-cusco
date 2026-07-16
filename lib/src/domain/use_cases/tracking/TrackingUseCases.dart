@@ -2,8 +2,8 @@ import 'package:sis_patrullaje_cusco/src/domain/use_cases/tracking/tracking_use_
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/tracking/tracking_use_case/SendLocationUserUseCase.dart';
 
 class TrackingUseCases {
-  GetLocationUseCase getLocationStream;
-  SendLocationUserUseCase sendLocation;
+  final GetLocationUseCase getLocationStream;
+  final SendLocationUserUseCase sendLocation;
 
   TrackingUseCases({
     required this.getLocationStream,

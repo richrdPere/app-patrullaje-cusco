@@ -230,7 +230,6 @@ class _MapaPageState extends State<MapaPage> {
   // ======================================================
   // LISTENER: ALERTAS
   // ======================================================
-
   void _listenAlertStatus(BuildContext context, AlertState state) {
     if (state.success) {
       _showSnackBar(context, message: 'Alerta enviada correctamente.');
@@ -246,7 +245,6 @@ class _MapaPageState extends State<MapaPage> {
   // ======================================================
   // DIÁLOGO: GPS DESACTIVADO
   // ======================================================
-
   Future<void> _showLocationServiceDialog(
     BuildContext context, {
     required String message,
@@ -299,7 +297,6 @@ class _MapaPageState extends State<MapaPage> {
   // ======================================================
   // DIÁLOGO: PERMISO PERMANENTEMENTE DENEGADO
   // ======================================================
-
   Future<void> _showPermissionSettingsDialog(
     BuildContext context, {
     required String message,
@@ -350,7 +347,6 @@ class _MapaPageState extends State<MapaPage> {
   // ======================================================
   // SNACKBAR
   // ======================================================
-
   void _showSnackBar(
     BuildContext context, {
     required String message,

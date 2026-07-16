@@ -6,6 +6,7 @@ class SendLocationUserUseCase {
 
   SendLocationUserUseCase(this.trackingRepository);
 
-  run(LocationEntity location, int patrullajeId) =>
-      trackingRepository.sendLocation(location, patrullajeId);
+  Future<void> run(LocationEntity location, int patrullajeId) {
+    return trackingRepository.sendLocation(location, patrullajeId);
+  }
 }

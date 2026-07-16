@@ -74,7 +74,6 @@ class _MapaContentState extends State<MapaContent> {
   // ======================================================
   // BUILD
   // ======================================================
-
   @override
   Widget build(BuildContext context) {
     return Stack(
@@ -103,7 +102,6 @@ class _MapaContentState extends State<MapaContent> {
   // ======================================================
   // GOOGLE MAP
   // ======================================================
-
   Widget _buildGoogleMap(BuildContext context) {
     return GoogleMap(
       mapType: MapType.normal,
@@ -165,7 +163,7 @@ class _MapaContentState extends State<MapaContent> {
 
   Widget _buildSearchContainer(BuildContext context) {
     return Positioned(
-      top: MediaQuery.paddingOf(context).top + 16,
+      top: MediaQuery.paddingOf(context).top - 20,
       left: 16,
       right: 16,
       child: SafeArea(
@@ -283,7 +281,6 @@ class _MapaContentState extends State<MapaContent> {
   // ======================================================
   // BOTÓN: USAR UBICACIÓN ACTUAL
   // ======================================================
-
   Widget _buildCurrentLocationButton(BuildContext context) {
     return Positioned(
       bottom: state.isPickingLocation ? 190 : 170,
@@ -314,7 +311,6 @@ class _MapaContentState extends State<MapaContent> {
   // ======================================================
   // BOTÓN: MODO SELECCIÓN
   // ======================================================
-
   Widget _buildPickingModeButton(BuildContext context) {
     return Positioned(
       bottom: state.isPickingLocation ? 120 : 100,
@@ -340,7 +336,6 @@ class _MapaContentState extends State<MapaContent> {
   // ======================================================
   // BOTÓN: AUTOCENTRADO
   // ======================================================
-
   Widget _buildAutoCenterButton(BuildContext context) {
     return Positioned(
       bottom: state.isPickingLocation ? 260 : 240,
@@ -389,7 +384,10 @@ class _MapaContentState extends State<MapaContent> {
             onPressed: selectedLocation == null
                 ? null
                 : () {
-                    _confirmSelectedLocation(context, selectedLocation);
+                    // _confirmSelectedLocation(context, selectedLocation);
+                    context.read<MapaBloc>().add(
+                      const ConfirmPickedLocationEvent(),
+                    );
                   },
             icon: state.geocodingStatus == MapaGeocodingStatus.loading
                 ? const SizedBox(
@@ -415,24 +413,24 @@ class _MapaContentState extends State<MapaContent> {
     );
   }
 
-  void _confirmSelectedLocation(
-    BuildContext context,
-    LocationEntity selectedLocation,
-  ) {
-    final mapaBloc = context.read<MapaBloc>();
+  // void _confirmSelectedLocation(
+  //   BuildContext context,
+  //   LocationEntity selectedLocation,
+  // ) {
+  //   final mapaBloc = context.read<MapaBloc>();
 
-    mapaBloc.add(GetAddressFromLocationEvent(location: selectedLocation));
+  //   mapaBloc.add(GetAddressFromLocationEvent(location: selectedLocation));
 
-    mapaBloc.add(const SetPickingLocationEvent(enabled: false));
+  //   // mapaBloc.add(const SetPickingLocationEvent(enabled: false));
 
-    final origin = state.pickUpLocation;
+  //   final origin = state.pickUpLocation;
 
-    if (origin != null) {
-      mapaBloc.add(
-        DrawRouteEvent(origin: origin, destination: selectedLocation),
-      );
-    }
-  }
+  //   if (origin != null) {
+  //     mapaBloc.add(
+  //       DrawRouteEvent(origin: origin, destination: selectedLocation),
+  //     );
+  //   }
+  // }
 
   // ======================================================
   // BOTÓN: ENVIAR ALERTA
@@ -540,7 +538,6 @@ class _MapaContentState extends State<MapaContent> {
 // ======================================================
 // MARCADOR CENTRAL
 // ======================================================
-
 class _CenterLocationMarker extends StatelessWidget {
   const _CenterLocationMarker();
 
@@ -571,7 +568,6 @@ class _CenterLocationMarker extends StatelessWidget {
 // ======================================================
 // INFORMACIÓN DE SELECCIÓN
 // ======================================================
-
 class _SelectionInformation extends StatelessWidget {
   const _SelectionInformation();
 
@@ -613,7 +609,6 @@ class _SelectionInformation extends StatelessWidget {
 // ======================================================
 // OVERLAY DE CARGA
 // ======================================================
-
 class _MapaLoadingOverlay extends StatelessWidget {
   const _MapaLoadingOverlay();
 

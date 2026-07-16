@@ -22,8 +22,26 @@ import 'package:sis_patrullaje_cusco/src/presentation/screens/mapa/blocs/mapa/ma
 // Widgets
 import 'package:sis_patrullaje_cusco/src/presentation/screens/home/view/home_content.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  @override
+  void initState() {
+    super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+
+      final homeState = context.read<HomeBloc>().state;
+
+      _handlePatrullajeListener(context, homeState);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -61,7 +79,6 @@ class HomePage extends StatelessWidget {
           // ==================================================
           // CARGANDO PATRULLAJE
           // ==================================================
-
           if (homeState.isLoading &&
               homeState.status != PatrullajeStatus.aceptando) {
             return const _HomeLoading();
@@ -70,7 +87,6 @@ class HomePage extends StatelessWidget {
           // ==================================================
           // ERROR AL CARGAR PATRULLAJE
           // ==================================================
-
           if (homeState.status == PatrullajeStatus.error) {
             return _HomeError(
               message:
@@ -85,10 +101,12 @@ class HomePage extends StatelessWidget {
           // ==================================================
           // CONTENIDO PRINCIPAL
           // ==================================================
-
           return BlocBuilder<TrackingBloc, TrackingState>(
             buildWhen: (previous, current) {
-              return previous.lastLocation != current.lastLocation;
+              return previous.lastLocation != current.lastLocation ||
+                  previous.isTracking != current.isTracking ||
+                  previous.isLoading != current.isLoading ||
+                  previous.error != current.error;
             },
             builder: (context, trackingState) {
               return HomeContent(
@@ -103,9 +121,6 @@ class HomePage extends StatelessWidget {
   }
 
   // ======================================================
-  // LISTENER DEL PATRULLAJE
-  // ======================================================
-
   void _handlePatrullajeListener(BuildContext context, HomeState state) {
     final patrullaje = state.patrullaje;
 
@@ -113,7 +128,6 @@ class HomePage extends StatelessWidget {
       // ==================================================
       // PATRULLAJE ASIGNADO
       // ==================================================
-
       case PatrullajeStatus.asignado:
         if (patrullaje == null) return;
 
@@ -130,15 +144,14 @@ class HomePage extends StatelessWidget {
       // ==================================================
       // PATRULLAJE EN CURSO
       // ==================================================
-
       case PatrullajeStatus.enCurso:
         if (patrullaje == null) return;
-
         /*
          * La zona también se dibuja en EN_CURSO porque la
          * aplicación podría recuperar un patrullaje que ya
          * estaba iniciado antes de abrir HomePage.
          */
+
         _drawAssignedZone(context, patrullaje.zona.coordenadas);
 
         /*
@@ -161,7 +174,6 @@ class HomePage extends StatelessWidget {
       // ==================================================
       // SIN PATRULLAJE ASIGNADO
       // ==================================================
-
       case PatrullajeStatus.sinAsignacion:
         _stopTracking(context);
         _clearPatrullajeMapData(context);
@@ -170,15 +182,12 @@ class HomePage extends StatelessWidget {
       // ==================================================
       // ESTADOS SIN ACCIONES ADICIONALES
       // ==================================================
-
       case PatrullajeStatus.aceptando:
       case PatrullajeStatus.error:
         break;
     }
   }
 
-  // ======================================================
-  // LISTENER DEL TRACKING
   // ======================================================
   void _handleTrackingListener(BuildContext context, TrackingState state) {
     final location = state.lastLocation;
@@ -202,8 +211,6 @@ class HomePage extends StatelessWidget {
   }
 
   // ======================================================
-  // DIBUJAR ZONA ASIGNADA
-  // ======================================================
   void _drawAssignedZone(BuildContext context, List<Coordenada> coordenadas) {
     if (coordenadas.length < 3) {
       context.read<MapaBloc>().add(const ClearAssignedZoneEvent());
@@ -217,17 +224,11 @@ class HomePage extends StatelessWidget {
   }
 
   // ======================================================
-  // DETENER TRACKING
-  // ======================================================
-
   void _stopTracking(BuildContext context) {
     context.read<TrackingBloc>().add(StopTrackingEvent());
   }
 
   // ======================================================
-  // LIMPIAR DATOS DEL PATRULLAJE EN EL MAPA
-  // ======================================================
-
   void _clearPatrullajeMapData(BuildContext context) {
     final mapaBloc = context.read<MapaBloc>();
 
@@ -245,7 +246,6 @@ class HomePage extends StatelessWidget {
 // ======================================================
 // ESTADO DE CARGA
 // ======================================================
-
 class _HomeLoading extends StatelessWidget {
   const _HomeLoading();
 
@@ -258,7 +258,6 @@ class _HomeLoading extends StatelessWidget {
 // ======================================================
 // ESTADO DE ERROR
 // ======================================================
-
 class _HomeError extends StatelessWidget {
   final String message;
   final VoidCallback onRetry;

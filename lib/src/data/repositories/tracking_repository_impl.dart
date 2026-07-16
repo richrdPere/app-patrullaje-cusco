@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:sis_patrullaje_cusco/src/domain/entities/location_entity.dart';
 import 'package:sis_patrullaje_cusco/src/domain/repositories/geolocator_repository.dart';
 import 'package:sis_patrullaje_cusco/src/domain/repositories/socket_repository.dart';
@@ -9,27 +10,53 @@ class TrackingRepositoryImpl implements TrackingRepository {
 
   TrackingRepositoryImpl(this.geolocatorRepository, this.socketRepository);
 
+  // =====================================================
+  // 1. OBTENER STREAM GPS
+  // =====================================================
   @override
-  Stream<LocationEntity> getLocationStream() {
-    return geolocatorRepository.getLocationStream();
+  Stream<LocationEntity> getLocationStream({
+    String tipo = 'TRACKING',
+    int distanceFilter = 5,
+    Duration interval = const Duration(seconds: 5),
+  }) {
+    debugPrint(
+      '📍 TrackingRepositoryImpl.getLocationStream '
+      'tipo=$tipo, distanceFilter=$distanceFilter, interval=$interval',
+    );
+
+    return geolocatorRepository.getLocationStream(
+      tipo: tipo,
+      distanceFilter: distanceFilter,
+      interval: interval,
+    );
   }
 
+  // =====================================================
+  // 2. ENVIAR UBICACIÓN POR SOCKET
+  // =====================================================
   @override
-  void sendLocation(LocationEntity location, int patrullajeId) {
-    final s = socketRepository.getSocket();
+  Future<void> sendLocation(LocationEntity location, int patrullajeId) async {
+    final socket = socketRepository.getSocket();
 
-    s.emit("tracking", {
-      "lat": location.latitud,
-      "lng": location.longitud,
+    if (!socket.connected) {
+      throw StateError(
+        'No se puede enviar la ubicación porque '
+        'el socket no está conectado.',
+      );
+    }
 
-      "velocidad": location.velocidad,
-      "precision": location.precision,
+    final payload = <String, dynamic>{
+      'lat': location.latitud,
+      'lng': location.longitud,
+      'velocidad': location.velocidad,
+      'precision': location.precision,
+      'patrullaje_id': patrullajeId,
+      'timestamp': location.fechaHora.toIso8601String(),
+      'tipo': location.tipo,
+    };
 
-      "patrullaje_id": patrullajeId,
+    debugPrint('📡 Enviando ubicación por socket: $payload');
 
-      "timestamp": DateTime.now().toIso8601String(),
-
-      "tipo": "TRACKING",
-    });
+    socket.emit('tracking', payload);
   }
 }

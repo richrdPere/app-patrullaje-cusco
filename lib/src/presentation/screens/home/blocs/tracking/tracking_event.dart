@@ -13,15 +13,46 @@ class StartTrackingEvent extends TrackingEvent {
   final int patrullajeId;
 
   const StartTrackingEvent(this.patrullajeId);
+
+  @override
+  List<Object?> get props => [patrullajeId];
 }
 
 // Detener tracking
-class StopTrackingEvent extends TrackingEvent {}
+class StopTrackingEvent extends TrackingEvent {
+  const StopTrackingEvent();
+}
 
 // Actualizar ubicacion
 class LocationUpdatedEvent extends TrackingEvent {
   final LocationEntity location;
   const LocationUpdatedEvent(this.location);
+
+  @override
+  List<Object?> get props => [location];
 }
 
+// =====================================================
+// EVENTOS INTERNOS
+// =====================================================
+class TrackingStreamErrorEvent extends TrackingEvent {
+  final int patrullajeId;
+  final String message;
 
+  const TrackingStreamErrorEvent({
+    required this.patrullajeId,
+    required this.message,
+  });
+
+  @override
+  List<Object?> get props => [patrullajeId, message];
+}
+
+class TrackingStreamCompletedEvent extends TrackingEvent {
+  final int patrullajeId;
+
+  const TrackingStreamCompletedEvent({required this.patrullajeId});
+
+  @override
+  List<Object?> get props => [patrullajeId];
+}

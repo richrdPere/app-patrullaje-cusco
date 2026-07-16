@@ -62,7 +62,6 @@ class MapaBloc extends Bloc<MapaEvent, MapaState> {
     // ======================================================
     // SELECCIÓN MANUAL
     // ======================================================
-
     on<TogglePickingLocationEvent>(_onTogglePickingLocation);
     on<SetPickingLocationEvent>(_onSetPickingLocation);
     on<ConfirmPickedLocationEvent>(_onConfirmPickedLocation);
@@ -70,14 +69,12 @@ class MapaBloc extends Bloc<MapaEvent, MapaState> {
     // ======================================================
     // AUTOCENTRADO
     // ======================================================
-
     on<ToggleAutoCenterEvent>(_onToggleAutoCenter);
     on<SetAutoCenterEvent>(_onSetAutoCenter);
 
     // ======================================================
     // ORIGEN Y DESTINO
     // ======================================================
-
     on<PickUpLocationSelectedEvent>(_onPickUpLocationSelected);
     on<DestinationLocationSelectedEvent>(_onDestinationLocationSelected);
     on<ClearSelectedLocationsEvent>(_onClearSelectedLocations);
@@ -384,13 +381,17 @@ class MapaBloc extends Bloc<MapaEvent, MapaState> {
   // ======================================================
   // 7. CÁMARA DETENIDA
   // ======================================================
-
   Future<void> _onMapCameraIdle(
     MapCameraIdleEvent event,
     Emitter<MapaState> emit,
   ) async {
+    // Solo procesamos el centro de la cámara mientras
+    // el usuario está seleccionando un destino.
     if (!state.isPickingLocation) return;
+
     if (_isLoadingAddress) return;
+
+    // Evita geocodificar cuando el mapa está demasiado alejado.
     if (state.cameraPosition.zoom < 15) return;
 
     final selectedLocation = state.cameraTargetLocation;
@@ -415,9 +416,13 @@ class MapaBloc extends Bloc<MapaEvent, MapaState> {
         emit(
           state.copyWith(
             geocodingStatus: MapaGeocodingStatus.empty,
+
+            // Es un destino provisional hasta que el usuario confirme.
             destinationLocation: selectedLocation,
             destinationDescription: 'Ubicación seleccionada',
+
             placemarkData: null,
+            geocodingErrorMessage: null,
           ),
         );
 
@@ -427,18 +432,20 @@ class MapaBloc extends Bloc<MapaEvent, MapaState> {
       emit(
         state.copyWith(
           geocodingStatus: MapaGeocodingStatus.success,
-          placemarkData: placemark,
+
+          // Destino provisional.
           destinationLocation: selectedLocation,
           destinationDescription: placemark.address,
+          placemarkData: placemark,
           geocodingErrorMessage: null,
         ),
       );
 
-      final origin = state.pickUpLocation;
+      // final origin = state.pickUpLocation;
 
-      if (origin != null) {
-        add(DrawRouteEvent(origin: origin, destination: selectedLocation));
-      }
+      // if (origin != null) {
+      //   add(DrawRouteEvent(origin: origin, destination: selectedLocation));
+      // }
     } catch (error) {
       emit(
         state.copyWith(
@@ -456,7 +463,6 @@ class MapaBloc extends Bloc<MapaEvent, MapaState> {
   // ======================================================
   // 8. ACTIVAR O DESACTIVAR SELECCIÓN
   // ======================================================
-
   void _onTogglePickingLocation(
     TogglePickingLocationEvent event,
     Emitter<MapaState> emit,
@@ -474,16 +480,61 @@ class MapaBloc extends Bloc<MapaEvent, MapaState> {
   // ======================================================
   // 9. CONFIRMAR UBICACIÓN SELECCIONADA
   // ======================================================
-
   Future<void> _onConfirmPickedLocation(
     ConfirmPickedLocationEvent event,
     Emitter<MapaState> emit,
   ) async {
-    final selectedLocation = state.cameraTargetLocation;
+    final selectedLocation =
+        state.destinationLocation ?? state.cameraTargetLocation;
 
-    if (selectedLocation == null) return;
+    if (selectedLocation == null) {
+      emit(
+        state.copyWith(
+          locationErrorMessage:
+              'No se pudo determinar la ubicación seleccionada.',
+        ),
+      );
 
-    add(GetAddressFromLocationEvent(location: selectedLocation));
+      return;
+    }
+
+    final origin =
+        state.pickUpLocation ?? state.trackingLocation ?? state.currentLocation;
+
+    final description = state.destinationDescription.trim().isNotEmpty
+        ? state.destinationDescription
+        : state.placemarkData?.address ?? 'Ubicación seleccionada';
+
+    /*
+   * Primero se desactiva el modo selección.
+   *
+   * De esta manera, cuando _fitCameraToRoute mueva la cámara,
+   * MapCameraIdleEvent no volverá a interpretar el centro
+   * como un destino nuevo.
+   */
+    emit(
+      state.copyWith(
+        destinationLocation: selectedLocation,
+        destinationDescription: description,
+        isPickingLocation: false,
+        isAutoCentering: false,
+        locationErrorMessage: null,
+      ),
+    );
+
+    if (origin == null) {
+      emit(
+        state.copyWith(
+          routeStatus: MapaRouteStatus.error,
+          routeErrorMessage: 'No se pudo determinar la ubicación de origen.',
+        ),
+      );
+
+      return;
+    }
+
+    // add(GetAddressFromLocationEvent(location: selectedLocation));
+    add(DrawRouteEvent(origin: origin, destination: selectedLocation));
   }
 
   // ======================================================
@@ -587,6 +638,8 @@ class MapaBloc extends Bloc<MapaEvent, MapaState> {
       return;
     }
 
+    debugPrint("Dibujando zona: ${event.coordenadas}");
+
     final points = event.coordenadas
         .map((coordinate) {
           return LatLng(coordinate.lat, coordinate.lng);
@@ -618,7 +671,6 @@ class MapaBloc extends Bloc<MapaEvent, MapaState> {
   // ======================================================
   // 16. CALCULAR Y DIBUJAR RUTA
   // ======================================================
-
   Future<void> _onDrawRoute(
     DrawRouteEvent event,
     Emitter<MapaState> emit,
@@ -627,6 +679,8 @@ class MapaBloc extends Bloc<MapaEvent, MapaState> {
       state.copyWith(
         routeStatus: MapaRouteStatus.loading,
         routeErrorMessage: null,
+        routePoints: const <LocationEntity>[],
+        polylines: const <PolylineId, Polyline>{},
       ),
     );
 
@@ -640,8 +694,9 @@ class MapaBloc extends Bloc<MapaEvent, MapaState> {
         emit(
           state.copyWith(
             routeStatus: MapaRouteStatus.empty,
-            routePoints: const [],
+            routePoints: const <LocationEntity>[],
             polylines: const <PolylineId, Polyline>{},
+            routeErrorMessage: null,
           ),
         );
 
@@ -649,10 +704,22 @@ class MapaBloc extends Bloc<MapaEvent, MapaState> {
       }
 
       final googleMapPoints = routePoints
-          .map((location) {
-            return LatLng(location.latitud, location.longitud);
-          })
+          .map((location) => LatLng(location.latitud, location.longitud))
           .toList(growable: false);
+
+      if (googleMapPoints.length < 2) {
+        emit(
+          state.copyWith(
+            routeStatus: MapaRouteStatus.empty,
+            routePoints: List<LocationEntity>.unmodifiable(routePoints),
+            polylines: const <PolylineId, Polyline>{},
+            routeErrorMessage:
+                'No se puede dibujar una ruta con un solo punto.',
+          ),
+        );
+
+        return;
+      }
 
       const polylineId = PolylineId('route');
 
@@ -666,18 +733,22 @@ class MapaBloc extends Bloc<MapaEvent, MapaState> {
         jointType: JointType.round,
       );
 
+      final updatedPolylines = <PolylineId, Polyline>{polylineId: polyline};
+
       emit(
         state.copyWith(
           routeStatus: MapaRouteStatus.success,
-          routePoints: routePoints,
-          polylines: const <PolylineId, Polyline>{}
-            ..addAll({polylineId: polyline}),
+          routePoints: List<LocationEntity>.unmodifiable(routePoints),
+          polylines: updatedPolylines,
           routeErrorMessage: null,
         ),
       );
 
       await _fitCameraToRoute(googleMapPoints);
-    } catch (error) {
+    } catch (error, stackTrace) {
+      debugPrint('❌ Error dibujando ruta: $error');
+      debugPrintStack(stackTrace: stackTrace);
+
       emit(
         state.copyWith(
           routeStatus: MapaRouteStatus.error,
@@ -705,7 +776,6 @@ class MapaBloc extends Bloc<MapaEvent, MapaState> {
   // ======================================================
   // 18. ACTUALIZAR TRACKING
   // ======================================================
-
   Future<void> _onUpdateTrackingLocation(
     UpdateTrackingLocationEvent event,
     Emitter<MapaState> emit,

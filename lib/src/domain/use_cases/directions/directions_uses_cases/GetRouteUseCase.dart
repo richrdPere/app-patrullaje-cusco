@@ -2,7 +2,7 @@ import 'package:sis_patrullaje_cusco/src/domain/entities/location_entity.dart';
 import 'package:sis_patrullaje_cusco/src/domain/repositories/index_repository.dart';
 
 class GetRouteUseCase {
-  DirectionsRepository directionsRepository;
+  final DirectionsRepository directionsRepository;
 
   GetRouteUseCase(this.directionsRepository);
 

@@ -30,6 +30,7 @@ abstract class GeolocatorRepository {
   Stream<LocationEntity> getLocationStream({
     String tipo = 'TRACKING',
     int distanceFilter = 5,
+    Duration interval = const Duration(seconds: 5),
   });
 }
 
