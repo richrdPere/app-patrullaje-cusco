@@ -3,9 +3,9 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../blocs/incidencia/incidente_bloc.dart';
-import '../../blocs/incidencia/incidente_event.dart';
-import '../../blocs/incidencia/incidente_state.dart';
+import '../../../blocs/incidencia/incidente_bloc.dart';
+import '../../../blocs/incidencia/incidente_event.dart';
+import '../../../blocs/incidencia/incidente_state.dart';
 
 class MediaPreviewWidget extends StatelessWidget {
   static const int maxArchivos = 5;

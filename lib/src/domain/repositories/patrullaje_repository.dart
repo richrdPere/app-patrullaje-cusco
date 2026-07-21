@@ -7,7 +7,10 @@ abstract class PatrullajeRepository {
   // API REST
   Future<Resource<PatrullajeData?>> getPatrullajeActivo();
   Future<Resource<bool>> startPatrullaje(int patrullajeId);
-  Future<Resource<bool>> endPatrullaje(int patrullajeId);
+  Future<Resource<PatrullajeData>> endPatrullaje({
+    required int patrullajeId,
+    String? observacionFinal,
+  });
   Future<Resource<bool>> sendLocation(LocationEntity location);
 
   // Socket - listen

@@ -159,9 +159,9 @@ class _IncidenteFormScreenState extends State<IncidenteFormScreen> {
 
       context.read<IncidenteBloc>().add(const LimpiarAccionIncidenteEvent());
 
-      context.read<IncidenteBloc>().add(
-        const CambiarTabIncidenteEvent(IncidenteTabEnum.historial),
-      );
+      // context.read<IncidenteBloc>().add(
+      //   const CambiarTabIncidenteEvent(IncidenteTabEnum.historial),
+      // );
 
       return;
     }

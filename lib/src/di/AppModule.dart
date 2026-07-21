@@ -209,6 +209,10 @@ abstract class AppModule {
     createIncidente: CreateIncidenteUseCase(incidenteRepository),
     getArchivosIncidente: GetArchivoIncidenciaUseCase(incidenteRepository),
     getIncidenciaById: GetIncidenciaByIdUseCase(incidenteRepository),
+    getIncidenciasByPatrullaje: GetIncidenciasByPatrullajeUseCase(
+      incidenteRepository,
+    ),
+    getIncidenciasByZona: GetIncidenciasByZonaUseCase(incidenteRepository),
     getIncidenciasCercanas: GetIncidenciasCercanasUseCase(incidenteRepository),
     getMisIncidencias: GetMisIncidenciasUseCase(incidenteRepository),
     removeArchivoIncidente: RemoveArchivoIncidenciaUseCase(incidenteRepository),

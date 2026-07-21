@@ -37,13 +37,24 @@ class PatrullajeRepositoryImpl implements PatrullajeRepository {
   }
 
   @override
-  Future<Resource<bool>> endPatrullaje(int patrullajeId) async {
+  Future<Resource<PatrullajeData>> endPatrullaje({
+    required int patrullajeId,
+    String? observacionFinal,
+  }) async {
     final token = await authRepository.getToken();
-    if (token == null) {
-      return ErrorData(message: "No existe una sesión iniciada.");
+
+    if (token == null || token.isEmpty) {
+      return ErrorData<PatrullajeData>(
+        message: 'No existe una sesión activa.',
+        error: 'Token de autenticación no encontrado.',
+      );
     }
 
-    return await remote.endPatrullaje(patrullajeId: patrullajeId, token: token);
+    return remote.endPatrullaje(
+      patrullajeId: patrullajeId,
+      token: token,
+      observacionFinal: observacionFinal,
+    );
   }
 
   @override

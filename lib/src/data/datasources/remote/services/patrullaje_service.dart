@@ -47,6 +47,10 @@ class PatrullajeService {
     );
   }
 
+  bool _isSuccess(int statusCode) {
+    return statusCode >= 200 && statusCode < 300;
+  }
+
   // =====================================================
   // 1. GET PATRULLAJE ACTIVO
   // =====================================================
@@ -55,7 +59,7 @@ class PatrullajeService {
   }) async {
     try {
       final url = Uri.parse(API_PATRULLAJE_ACTIVO);
-      final headers = await _getHeaders(token);
+      final headers = _getHeaders(token);
       final resp = await http.get(url, headers: headers);
       final body = _decodeResponse(resp);
 
@@ -95,7 +99,7 @@ class PatrullajeService {
     required String token,
   }) async {
     try {
-      final headers = await _getHeaders(token);
+      final headers = _getHeaders(token);
 
       final url = Uri.parse('$API_START_PATRULLAJE/$patrullajeId/start');
 
@@ -123,31 +127,46 @@ class PatrullajeService {
   // =====================================================
   // 3. FINALIZAR PATRULLAJE
   // =====================================================
-  Future<Resource<bool>> endPatrullaje({
+  Future<Resource<PatrullajeData>> endPatrullaje({
     required int patrullajeId,
     required String token,
+    String? observacionFinal,
   }) async {
     try {
-      final headers = await _getHeaders(token);
+      final headers = _getHeaders(token);
 
       final url = Uri.parse('$API_END_PATRULLAJE/$patrullajeId/end');
 
-      final resp = await http.post(
+      final response = await http.post(
         url,
         headers: headers,
-        body: json.encode({'patrullaje_id': patrullajeId}),
+        body: jsonEncode({
+          if (observacionFinal != null && observacionFinal.trim().isNotEmpty)
+            'observacion_final': observacionFinal.trim(),
+        }),
       );
 
-      final body = _decodeResponse(resp);
+      final body = _decodeResponse(response);
 
-      if (resp.statusCode == 200) {
-        return Success<bool>(true);
+      if (_isSuccess(response.statusCode)) {
+        final dynamic data = body['data'];
+
+        if (data is! Map<String, dynamic>) {
+          return ErrorData<PatrullajeData>(
+            message: 'No se recibió la información del patrullaje finalizado.',
+            error: 'La propiedad data no contiene un objeto válido.',
+          );
+        }
+
+        final patrullaje = PatrullajeData.fromJson(data);
+
+        return Success<PatrullajeData>(patrullaje);
       }
 
-      return _buildError<bool>(body, resp.statusCode);
+      return _buildError<PatrullajeData>(body, response.statusCode);
     } catch (error) {
-      return ErrorData<bool>(
-        message: 'Error al finalizar patrullaje.',
+      return ErrorData<PatrullajeData>(
+        message: 'Error al finalizar el patrullaje.',
         error: error.toString(),
       );
     }
@@ -161,7 +180,7 @@ class PatrullajeService {
     required String token,
   }) async {
     try {
-      final headers = await _getHeaders(token);
+      final headers = _getHeaders(token);
       final url = Uri.parse(API_LOCATION);
 
       final resp = await http.post(

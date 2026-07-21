@@ -27,10 +27,14 @@ class MainPatrullajeButton extends StatelessWidget {
         return SizedBox(
           width: double.infinity,
           child: ElevatedButton.icon(
-            onPressed: () {
-              context.read<HomeBloc>().add(AceptarPatrullaje(patrullaje.id));
-            },
-            icon: const Icon(Icons.check),
+            onPressed: homeState.isLoading
+                ? null
+                : () {
+                    context.read<HomeBloc>().add(
+                      AceptarPatrullaje(patrullaje.id),
+                    );
+                  },
+            icon: const Icon(Icons.check_rounded),
             label: const Text('Aceptar patrullaje'),
           ),
         );
@@ -47,14 +51,30 @@ class MainPatrullajeButton extends StatelessWidget {
         );
 
       case PatrullajeStatus.enCurso:
+        if (homeState.isLoading) {
+          return const Center(
+            child: Column(
+              children: [
+                CircularProgressIndicator(),
+                SizedBox(height: 10),
+                Text('Finalizando patrullaje...'),
+              ],
+            ),
+          );
+        }
+
         return SizedBox(
           width: double.infinity,
           child: ElevatedButton.icon(
             onPressed: () {
               _confirmarFinalizacion(context, patrullaje.id);
             },
-            icon: const Icon(Icons.stop),
+            icon: const Icon(Icons.stop_circle_outlined),
             label: const Text('Finalizar patrullaje'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red.shade600,
+              foregroundColor: Colors.white,
+            ),
           ),
         );
 
@@ -69,36 +89,100 @@ class MainPatrullajeButton extends StatelessWidget {
     BuildContext context,
     int patrullajeId,
   ) async {
-    final confirmar = await showDialog<bool>(
+    final observacionController = TextEditingController();
+
+    final resultado = await showDialog<_FinalizacionResult>(
       context: context,
+      barrierDismissible: false,
       builder: (dialogContext) {
         return AlertDialog(
-          title: const Text('Finalizar patrullaje'),
-          content: const Text(
-            '¿Está seguro de finalizar el patrullaje actual?',
+          title: const Row(
+            children: [
+              Icon(Icons.stop_circle_outlined, color: Colors.red),
+              SizedBox(width: 10),
+              Expanded(child: Text('Finalizar patrullaje')),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Se finalizará el patrullaje actual y se generará el resumen del recorrido, incidencias y observaciones.',
+                ),
+                const SizedBox(height: 18),
+                TextField(
+                  controller: observacionController,
+                  minLines: 3,
+                  maxLines: 5,
+                  maxLength: 500,
+                  textCapitalization: TextCapitalization.sentences,
+                  decoration: const InputDecoration(
+                    labelText: 'Observación final',
+                    hintText:
+                        'Ejemplo: Patrullaje finalizado sin novedades adicionales.',
+                    prefixIcon: Icon(Icons.description_outlined),
+                    alignLabelWithHint: true,
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'La observación es opcional.',
+                  style: Theme.of(
+                    dialogContext,
+                  ).textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
+                ),
+              ],
+            ),
           ),
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.pop(dialogContext, false);
+                Navigator.pop(dialogContext);
               },
               child: const Text('Cancelar'),
             ),
-            FilledButton(
+            FilledButton.icon(
               onPressed: () {
-                Navigator.pop(dialogContext, true);
+                final observacion = observacionController.text.trim();
+
+                Navigator.pop(
+                  dialogContext,
+                  _FinalizacionResult(
+                    observacionFinal: observacion.isEmpty ? null : observacion,
+                  ),
+                );
               },
-              child: const Text('Finalizar'),
+              icon: const Icon(Icons.check_rounded),
+              label: const Text('Confirmar'),
+              style: FilledButton.styleFrom(
+                backgroundColor: Colors.red.shade600,
+              ),
             ),
           ],
         );
       },
     );
 
-    if (confirmar != true || !context.mounted) {
+    observacionController.dispose();
+
+    if (!context.mounted || resultado == null) {
       return;
     }
 
-    context.read<HomeBloc>().add(FinalizarPatrullaje(patrullajeId));
+    context.read<HomeBloc>().add(
+      FinalizarPatrullaje(
+        patrullajeId: patrullajeId,
+        observacionFinal: resultado.observacionFinal,
+      ),
+    );
   }
+}
+
+class _FinalizacionResult {
+  final String? observacionFinal;
+
+  const _FinalizacionResult({this.observacionFinal});
 }

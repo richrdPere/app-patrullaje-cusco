@@ -16,7 +16,7 @@ class MapaIncidentState extends Equatable {
   final String pickUpDescription;
   final String destinationDescription;
 
-  MapaIncidentState({
+  const MapaIncidentState({
     this.position,
     this.controller,
     this.cameraPosition = const CameraPosition(

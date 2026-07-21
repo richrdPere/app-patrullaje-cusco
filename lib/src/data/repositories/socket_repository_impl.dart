@@ -11,7 +11,7 @@ class SocketRepositoryImpl extends SocketRepository {
   Socket? _socket;
 
   SocketRepositoryImpl() {
-    print("🧠 SocketRepository instance: ${this.hashCode}");
+    print("🧠 SocketRepository instance: ${hashCode}");
   }
 
   @override
@@ -30,7 +30,7 @@ class SocketRepositoryImpl extends SocketRepository {
     }
 
     print("CREANDO NUEVO SOCKET CON TOKEN");
-    print("CONNECT usando repo: ${this.hashCode}");
+    print("CONNECT usando repo: ${hashCode}");
 
     _socket = io(
       url_backend.Environment.socketUrl,
@@ -52,8 +52,8 @@ class SocketRepositoryImpl extends SocketRepository {
   @override
   void disconnect() {
     print("DESCONECTANDO SOCKET...");
-    print("DISCONNECT usando repo: ${this.hashCode}");
-    print("_socket disconent: ${_socket}");
+    print("DISCONNECT usando repo: ${hashCode}");
+    print("_socket disconent: $_socket");
 
     if (_socket != null) {
       try {
@@ -79,7 +79,7 @@ class SocketRepositoryImpl extends SocketRepository {
 
   @override
   Socket getSocket() {
-    print("GET SOCKET usando repo: ${this.hashCode}");
+    print("GET SOCKET usando repo: ${hashCode}");
 
     if (_socket == null) {
       throw Exception("Socket no inicializado");

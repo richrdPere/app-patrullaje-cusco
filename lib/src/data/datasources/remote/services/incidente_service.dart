@@ -2,7 +2,10 @@
 
 import 'dart:io';
 import 'dart:convert';
+
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
+import 'package:path/path.dart' as path;
 
 // Environment
 import 'package:sis_patrullaje_cusco/src/config/constants/environment.dart'
@@ -30,6 +33,11 @@ class IncidenciaService {
     required int incidenciaId,
     required int archivoId,
   }) => '$API_BASE/$incidenciaId/archivos/$archivoId';
+
+  String API_INCIDENCIAS_PATRULLAJE(int patrullajeId) =>
+      '$API_BASE/patrullaje/$patrullajeId';
+
+  String API_INCIDENCIAS_ZONA(int zonaId) => '$API_BASE/zona/$zonaId';
 
   // Helpers
   Map<String, String> _getAuthHeaders(String token) {
@@ -134,6 +142,55 @@ class IncidenciaService {
     return segments.last.trim().toLowerCase();
   }
 
+  MediaType? _getMediaType(String filePath) {
+    final extension = _getExtension(filePath);
+
+    switch (extension) {
+      case 'jpg':
+      case 'jpeg':
+        return MediaType('image', 'jpeg');
+
+      case 'png':
+        return MediaType('image', 'png');
+
+      case 'heic':
+        return MediaType('image', 'heic');
+
+      case 'heif':
+        return MediaType('image', 'heif');
+
+      case 'mp4':
+        return MediaType('video', 'mp4');
+
+      case 'mov':
+        return MediaType('video', 'quicktime');
+
+      default:
+        return null;
+    }
+  }
+
+  List<IncidenteModel> _parseIncidenciasList(dynamic rawData) {
+    List<dynamic> rawList = [];
+
+    if (rawData is List) {
+      rawList = rawData;
+    } else if (rawData is Map) {
+      if (rawData['data'] is List) {
+        rawList = List<dynamic>.from(rawData['data']);
+      } else if (rawData['incidencias'] is List) {
+        rawList = List<dynamic>.from(rawData['incidencias']);
+      } else if (rawData['rows'] is List) {
+        rawList = List<dynamic>.from(rawData['rows']);
+      }
+    }
+
+    return rawList
+        .whereType<Map>()
+        .map((item) => IncidenteModel.fromJson(Map<String, dynamic>.from(item)))
+        .toList();
+  }
+
   // =====================================================
   // 1. REGISTRAR INCIDENCIA
   // =====================================================
@@ -174,8 +231,23 @@ class IncidenciaService {
           );
         }
 
+        final contentType = _getMediaType(file.path);
+
+        if (contentType == null) {
+          return ErrorData<IncidenteModel>(
+            message: 'No se pudo determinar el tipo del archivo.',
+            error: file.path,
+            statusCode: 400,
+          );
+        }
+
         request.files.add(
-          await http.MultipartFile.fromPath('archivos', file.path),
+          await http.MultipartFile.fromPath(
+            'archivos',
+            file.path,
+            filename: path.basename(file.path),
+            contentType: contentType,
+          ),
         );
       }
 
@@ -464,6 +536,100 @@ class IncidenciaService {
     } catch (error) {
       return ErrorData<List<IncidenteModel>>(
         message: 'Error al obtener incidencias cercanas.',
+        error: error.toString(),
+      );
+    }
+  }
+
+  // =====================================================
+  // 8. OBTENER INCIDENCIAS POR PATRULLAJE
+  // =====================================================
+  Future<Resource<List<IncidenteModel>>> getIncidenciasByPatrullaje({
+    required String token,
+    required int patrullajeId,
+  }) async {
+    try {
+      if (patrullajeId <= 0) {
+        return ErrorData<List<IncidenteModel>>(
+          message: 'El patrullaje no es válido.',
+          statusCode: 400,
+        );
+      }
+
+      final response = await http.get(
+        Uri.parse(API_INCIDENCIAS_PATRULLAJE(patrullajeId)),
+        headers: _getJsonHeaders(token),
+      );
+
+      final body = _decodeResponse(response);
+
+      if (!_isSuccess(response.statusCode)) {
+        return _buildError<List<IncidenteModel>>(body, response.statusCode);
+      }
+
+      final incidencias = _parseIncidenciasList(body['data']);
+
+      return Success<List<IncidenteModel>>(incidencias);
+    } on SocketException catch (error) {
+      return ErrorData<List<IncidenteModel>>(
+        message: 'No se pudo conectar con el servidor.',
+        error: error.toString(),
+      );
+    } on FormatException catch (error) {
+      return ErrorData<List<IncidenteModel>>(
+        message: 'La respuesta del servidor no tiene un formato válido.',
+        error: error.toString(),
+      );
+    } catch (error) {
+      return ErrorData<List<IncidenteModel>>(
+        message: 'No se pudieron obtener las incidencias del patrullaje.',
+        error: error.toString(),
+      );
+    }
+  }
+
+  // =====================================================
+  // 9. OBTENER INCIDENCIAS POR ZONA
+  // =====================================================
+  Future<Resource<List<IncidenteModel>>> getIncidenciasByZona({
+    required String token,
+    required int zonaId,
+  }) async {
+    try {
+      if (zonaId <= 0) {
+        return ErrorData<List<IncidenteModel>>(
+          message: 'La zona no es válida.',
+          statusCode: 400,
+        );
+      }
+
+      final response = await http.get(
+        Uri.parse(API_INCIDENCIAS_ZONA(zonaId)),
+        headers: _getJsonHeaders(token),
+      );
+
+      final body = _decodeResponse(response);
+
+      if (!_isSuccess(response.statusCode)) {
+        return _buildError<List<IncidenteModel>>(body, response.statusCode);
+      }
+
+      final incidencias = _parseIncidenciasList(body['data']);
+
+      return Success<List<IncidenteModel>>(incidencias);
+    } on SocketException catch (error) {
+      return ErrorData<List<IncidenteModel>>(
+        message: 'No se pudo conectar con el servidor.',
+        error: error.toString(),
+      );
+    } on FormatException catch (error) {
+      return ErrorData<List<IncidenteModel>>(
+        message: 'La respuesta del servidor no tiene un formato válido.',
+        error: error.toString(),
+      );
+    } catch (error) {
+      return ErrorData<List<IncidenteModel>>(
+        message: 'No se pudieron obtener las incidencias de la zona.',
         error: error.toString(),
       );
     }

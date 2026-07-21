@@ -11,7 +11,7 @@ import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/blocs/in
 import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/blocs/incidencia/incidente_event.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/blocs/incidencia/incidente_state.dart';
 
-import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/view/widgets/media_preview_widget.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/view/create_incidente_dialog/widgets/media_preview_widget.dart';
 
 class EvidenciaScreen extends StatefulWidget {
   const EvidenciaScreen({super.key});

@@ -24,7 +24,7 @@ class LoadingBloc extends Bloc<LoadingEvent, LoadingState> {
       final session = await authUsesCases.getUserSession.run();
 
       print("==========================");
-      print("SESION: ${session}");
+      print("SESION: $session");
       print("==========================");
 
       if (session == null) {
@@ -38,7 +38,7 @@ class LoadingBloc extends Bloc<LoadingEvent, LoadingState> {
 
       emit(const LoadingSuccess());
     } catch (e) {
-      print("ERROR: ${e}");
+      print("ERROR: $e");
 
       emit(LoadingFailure(e.toString()));
     }

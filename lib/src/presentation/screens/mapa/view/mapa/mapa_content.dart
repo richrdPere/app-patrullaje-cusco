@@ -160,7 +160,6 @@ class _MapaContentState extends State<MapaContent> {
   // ======================================================
   // BUSCADOR DE ORIGEN Y DESTINO
   // ======================================================
-
   Widget _buildSearchContainer(BuildContext context) {
     return Positioned(
       top: MediaQuery.paddingOf(context).top - 20,
@@ -206,7 +205,6 @@ class _MapaContentState extends State<MapaContent> {
   // ======================================================
   // SELECCIONAR ORIGEN DESDE AUTOCOMPLETE
   // ======================================================
-
   void _onPickUpPredictionSelected(BuildContext context, dynamic prediction) {
     if (prediction == null) return;
 
@@ -240,7 +238,6 @@ class _MapaContentState extends State<MapaContent> {
   // ======================================================
   // SELECCIONAR DESTINO DESDE AUTOCOMPLETE
   // ======================================================
-
   void _onDestinationPredictionSelected(
     BuildContext context,
     dynamic prediction,
@@ -361,7 +358,6 @@ class _MapaContentState extends State<MapaContent> {
   // ======================================================
   // BOTÓN: CONFIRMAR UBICACIÓN SELECCIONADA
   // ======================================================
-
   Widget _buildConfirmLocationButton(BuildContext context) {
     final selectedLocation = state.cameraTargetLocation;
 
@@ -413,29 +409,9 @@ class _MapaContentState extends State<MapaContent> {
     );
   }
 
-  // void _confirmSelectedLocation(
-  //   BuildContext context,
-  //   LocationEntity selectedLocation,
-  // ) {
-  //   final mapaBloc = context.read<MapaBloc>();
-
-  //   mapaBloc.add(GetAddressFromLocationEvent(location: selectedLocation));
-
-  //   // mapaBloc.add(const SetPickingLocationEvent(enabled: false));
-
-  //   final origin = state.pickUpLocation;
-
-  //   if (origin != null) {
-  //     mapaBloc.add(
-  //       DrawRouteEvent(origin: origin, destination: selectedLocation),
-  //     );
-  //   }
-  // }
-
   // ======================================================
   // BOTÓN: ENVIAR ALERTA
   // ======================================================
-
   Widget _buildAlertButton(BuildContext context) {
     return Positioned(
       bottom: 30,

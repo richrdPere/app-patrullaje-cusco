@@ -30,6 +30,9 @@ class HomeContent extends StatelessWidget {
   Widget build(BuildContext context) {
     final patrullaje = homeState.patrullaje;
 
+    final patrullajeId = patrullaje?.id;
+    final zonaId = patrullaje?.zona.id;
+
     final isEmpty =
         homeState.status == PatrullajeStatus.sinAsignacion ||
         patrullaje == null;
@@ -52,16 +55,19 @@ class HomeContent extends StatelessWidget {
                   child: const Center(child: EmptyPatrullaje()),
                 ),
               ] else ...[
+                // Header del patrullaje
                 PatrullajeHeader(homeState: homeState),
                 const SizedBox(height: 20),
 
+                // Boton de patrullaje
                 MainPatrullajeButton(homeState: homeState),
-                const SizedBox(height: 20),
-
-                LocationCard(trackingState: trackingState),
                 const SizedBox(height: 20),
               ],
 
+              // Card de Location
+              LocationCard(trackingState: trackingState),
+
+              // Cards de Incident, alerts y recorrido
               const HomeStatsSection(),
 
               const SizedBox(height: 28),
@@ -76,7 +82,8 @@ class HomeContent extends StatelessWidget {
               const SizedBox(height: 14),
 
               HomeQuickActions(
-                patrullajeId: patrullaje?.id,
+                patrullajeId: patrullajeId,
+                zonaId: zonaId,
                 patrullajeActivo: homeState.status == PatrullajeStatus.enCurso,
               ),
             ],

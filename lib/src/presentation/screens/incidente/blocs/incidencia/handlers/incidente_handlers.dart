@@ -257,6 +257,99 @@ class IncidenteHandlers {
   }
 
   // ======================================================
+  // 6. OBTENER INCIDENCIA CONTEXTO
+  // ======================================================
+  Future<void> onObtenerIncidenciasContexto(
+    ObtenerIncidenciasContextoEvent event,
+    Emitter<IncidenteState> emit,
+    IncidenteState state,
+  ) async {
+    if (event.patrullajeId <= 0 || event.zonaId <= 0) {
+      emit(
+        state.copyWith(
+          contextoResponse: ErrorData<List<IncidenteModel>>(
+            message: 'El patrullaje o la zona asignada no son válidos.',
+            statusCode: 400,
+          ),
+        ),
+      );
+
+      return;
+    }
+
+    emit(
+      state.copyWith(
+        contextoResponse: Loading<List<IncidenteModel>>(),
+        contextoPatrullajeId: event.patrullajeId,
+        contextoZonaId: event.zonaId,
+      ),
+    );
+
+    try {
+      final responses = await Future.wait<Resource<List<IncidenteModel>>>([
+        incidenteUseCases.getIncidenciasByPatrullaje.run(
+          patrullajeId: event.patrullajeId,
+        ),
+        incidenteUseCases.getIncidenciasByZona.run(zonaId: event.zonaId),
+      ]);
+
+      final patrullajeResponse = responses[0];
+      final zonaResponse = responses[1];
+
+      final incidenciasPatrullaje =
+          patrullajeResponse is Success<List<IncidenteModel>>
+          ? patrullajeResponse.data
+          : <IncidenteModel>[];
+
+      final incidenciasZona = zonaResponse is Success<List<IncidenteModel>>
+          ? zonaResponse.data
+          : <IncidenteModel>[];
+
+      final ambasConsultasFallaron =
+          patrullajeResponse is! Success<List<IncidenteModel>> &&
+          zonaResponse is! Success<List<IncidenteModel>>;
+
+      if (ambasConsultasFallaron) {
+        emit(
+          state.copyWith(
+            contextoResponse: ErrorData<List<IncidenteModel>>(
+              message: _obtenerMensajeErrorContexto(
+                patrullajeResponse,
+                zonaResponse,
+              ),
+            ),
+          ),
+        );
+
+        return;
+      }
+
+      final incidenciasCombinadas = _combinarIncidenciasSinDuplicados(
+        incidenciasPatrullaje,
+        incidenciasZona,
+      );
+
+      emit(
+        state.copyWith(
+          incidenciasContexto: incidenciasCombinadas,
+          contextoResponse: Success<List<IncidenteModel>>(
+            incidenciasCombinadas,
+          ),
+        ),
+      );
+    } catch (error) {
+      emit(
+        state.copyWith(
+          contextoResponse: ErrorData<List<IncidenteModel>>(
+            message: 'No se pudieron obtener las incidencias del contexto.',
+            error: error.toString(),
+          ),
+        ),
+      );
+    }
+  }
+
+  // ======================================================
   // HELPERS
   // ======================================================
   List<IncidenteModel> _agregarIncidenciaSinDuplicar(
@@ -313,5 +406,20 @@ class IncidenteHandlers {
     }
 
     return [...incidenciasConId.values, ...incidenciasSinId];
+  }
+
+  String _obtenerMensajeErrorContexto(
+    Resource<List<IncidenteModel>> patrullajeResponse,
+    Resource<List<IncidenteModel>> zonaResponse,
+  ) {
+    if (patrullajeResponse is ErrorData<List<IncidenteModel>>) {
+      return patrullajeResponse.message;
+    }
+
+    if (zonaResponse is ErrorData<List<IncidenteModel>>) {
+      return zonaResponse.message;
+    }
+
+    return 'No se pudieron obtener las incidencias del patrullaje o la zona.';
   }
 }

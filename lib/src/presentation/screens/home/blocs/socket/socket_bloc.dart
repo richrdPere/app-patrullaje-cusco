@@ -13,7 +13,7 @@ class SocketBloc extends Bloc<SocketEvent, SocketState> {
   bool _isConnecting = false;
 
   SocketBloc(this.socketUseCases, this.authUsesCases) : super(SocketState()) {
-    print("🔥 SocketBloc instance: ${this.hashCode}");
+    print("🔥 SocketBloc instance: ${hashCode}");
 
     on<ConnectSocketEvent>(_onConnect);
     on<DisconnectSocketEvent>(_onDisconnect);

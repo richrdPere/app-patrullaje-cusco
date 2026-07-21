@@ -14,7 +14,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
   StreamSubscription? _nuevoPatrullajeSub;
   StreamSubscription? _actualizadoSub;
 
-  HomeBloc(this.patrullajeUseCases) : super(HomeState()) {
+  HomeBloc(this.patrullajeUseCases) : super(const HomeState()) {
     on<LoadPatrullajeActivo>(_onLoadPatrullajeActivo);
     // INICIAR LISTENERS
     on<InitSocketListeners>(_onInitSocketListeners);
@@ -23,6 +23,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     on<PatrullajeActualizadoRecibido>(_onPatrullajeActualizado);
     on<AceptarPatrullaje>(_onAceptarPatrullaje);
     on<FinalizarPatrullaje>(_onFinalizarPatrullaje);
+    on<LimpiarPatrullajeFinalizado>(_onLimpiarPatrullajeFinalizado);
   }
 
   // SOCKET LISTENERS
@@ -153,6 +154,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
         patrullaje: event.patrullaje,
         status: nuevoEstado,
         isLoading: false,
+        clearError: true,
       ),
     );
   }
@@ -177,27 +179,80 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     FinalizarPatrullaje event,
     Emitter<HomeState> emit,
   ) async {
-    emit(state.copyWith(isLoading: true));
+    if (state.isLoading) return;
+
+    emit(state.copyWith(isLoading: true, clearError: true));
 
     try {
-      await patrullajeUseCases.endPatrullaje.run(event.patrullajeId);
+      final observacionFinal = event.observacionFinal?.trim();
+
+      final response = await patrullajeUseCases.endPatrullaje.run(
+        patrullajeId: event.patrullajeId,
+        observacionFinal: observacionFinal == null || observacionFinal.isEmpty
+            ? null
+            : observacionFinal,
+      );
+
+      if (response is Success<PatrullajeData>) {
+        final patrullajeFinalizado = response.data;
+
+        emit(
+          state.copyWith(
+            isLoading: false,
+            patrullaje: patrullajeFinalizado,
+            status: PatrullajeStatus.finalizado,
+            clearError: true,
+          ),
+        );
+
+        return;
+      }
+
+      if (response is ErrorData<PatrullajeData>) {
+        emit(
+          state.copyWith(
+            isLoading: false,
+            error: response.fullMessage,
+            status: PatrullajeStatus.error,
+          ),
+        );
+
+        return;
+      }
 
       emit(
         state.copyWith(
           isLoading: false,
-          patrullaje: null,
-          status: PatrullajeStatus.finalizado,
+          error: 'Respuesta desconocida al finalizar el patrullaje.',
+          status: PatrullajeStatus.error,
         ),
       );
-    } catch (e) {
+    } catch (error) {
       emit(
         state.copyWith(
           isLoading: false,
-          error: e.toString(),
+          error: 'Ocurrió un error al finalizar el patrullaje: $error',
           status: PatrullajeStatus.error,
         ),
       );
     }
+  }
+
+  // =========================
+  // 5. LIMPIAR PATRULLAJE
+  // =========================
+  void _onLimpiarPatrullajeFinalizado(
+    LimpiarPatrullajeFinalizado event,
+    Emitter<HomeState> emit,
+  ) {
+    emit(
+      state.copyWith(
+        clearPatrullaje: true,
+        clearError: true,
+        isLoading: false,
+        status: PatrullajeStatus.sinAsignacion,
+      ),
+    );
   }
 
   // =========================

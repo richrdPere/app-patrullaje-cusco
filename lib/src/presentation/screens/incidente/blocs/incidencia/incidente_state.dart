@@ -48,6 +48,15 @@ class IncidenteState extends Equatable {
   final Resource<List<IncidenteModel>>? cercanosResponse;
 
   // ======================================================
+  // INCIDENCIAS DEL CONTEXTO OPERATIVO
+  // ======================================================
+  final List<IncidenteModel> incidenciasContexto;
+  final Resource<List<IncidenteModel>>? contextoResponse;
+
+  final int? contextoPatrullajeId;
+  final int? contextoZonaId;
+
+  // ======================================================
   // ARCHIVOS LOCALES
   // ======================================================
   final List<File> archivosLocales;
@@ -96,6 +105,12 @@ class IncidenteState extends Equatable {
     this.incidentesCercanos = const [],
     this.cercanosResponse,
 
+    // Contexto operativo
+    this.incidenciasContexto = const [],
+    this.contextoResponse,
+    this.contextoPatrullajeId,
+    this.contextoZonaId,
+
     // Archivos locales
     this.archivosLocales = const [],
     this.loadingMedia = false,
@@ -137,6 +152,13 @@ class IncidenteState extends Equatable {
 
   bool get tieneIncidenciaSeleccionada => incidenciaSeleccionada != null;
 
+  bool get isLoadingContexto => contextoResponse is Loading;
+
+  bool get tieneIncidenciasContexto => incidenciasContexto.isNotEmpty;
+
+  bool get tieneContextoOperativo =>
+      contextoPatrullajeId != null && contextoZonaId != null;
+
   // ======================================================
   // COPY WITH
   // ======================================================
@@ -176,6 +198,18 @@ class IncidenteState extends Equatable {
 
     Resource<List<IncidenteModel>>? cercanosResponse,
     bool clearCercanosResponse = false,
+
+    // Contexto operativo
+    List<IncidenteModel>? incidenciasContexto,
+
+    Resource<List<IncidenteModel>>? contextoResponse,
+    bool clearContextoResponse = false,
+
+    int? contextoPatrullajeId,
+    bool clearContextoPatrullajeId = false,
+
+    int? contextoZonaId,
+    bool clearContextoZonaId = false,
 
     // Archivos locales
     List<File>? archivosLocales,
@@ -247,6 +281,21 @@ class IncidenteState extends Equatable {
           ? null
           : cercanosResponse ?? this.cercanosResponse,
 
+      // Contexto operativo
+      incidenciasContexto: incidenciasContexto ?? this.incidenciasContexto,
+
+      contextoResponse: clearContextoResponse
+          ? null
+          : contextoResponse ?? this.contextoResponse,
+
+      contextoPatrullajeId: clearContextoPatrullajeId
+          ? null
+          : contextoPatrullajeId ?? this.contextoPatrullajeId,
+
+      contextoZonaId: clearContextoZonaId
+          ? null
+          : contextoZonaId ?? this.contextoZonaId,
+
       // Archivos locales
       archivosLocales: archivosLocales ?? this.archivosLocales,
       loadingMedia: loadingMedia ?? this.loadingMedia,
@@ -311,6 +360,12 @@ class IncidenteState extends Equatable {
     // Cercanos
     incidentesCercanos,
     cercanosResponse,
+
+    // Contexto operativo
+    incidenciasContexto,
+    contextoResponse,
+    contextoPatrullajeId,
+    contextoZonaId,
 
     // Archivos locales
     archivosLocales,

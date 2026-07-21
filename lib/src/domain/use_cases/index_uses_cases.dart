@@ -44,6 +44,8 @@ export 'package:sis_patrullaje_cusco/src/domain/use_cases/incidente/incidente_us
 export 'package:sis_patrullaje_cusco/src/domain/use_cases/incidente/incidente_use_cases/CreateIncidenteUseCase.dart';
 export 'package:sis_patrullaje_cusco/src/domain/use_cases/incidente/incidente_use_cases/GetArchivosIncidenciaUseCase.dart';
 export 'package:sis_patrullaje_cusco/src/domain/use_cases/incidente/incidente_use_cases/GetIncidenciaByIdUseCase.dart';
+export 'package:sis_patrullaje_cusco/src/domain/use_cases/incidente/incidente_use_cases/GetIncidenciasByPatrullajeUseCase.dart';
+export 'package:sis_patrullaje_cusco/src/domain/use_cases/incidente/incidente_use_cases/GetIncidenciasByZonaUseCase.dart';
 export 'package:sis_patrullaje_cusco/src/domain/use_cases/incidente/incidente_use_cases/GetIncidenciasCercanasUseCase.dart';
 export 'package:sis_patrullaje_cusco/src/domain/use_cases/incidente/incidente_use_cases/GetMisIncidenciasUseCase.dart';
 export 'package:sis_patrullaje_cusco/src/domain/use_cases/incidente/incidente_use_cases/RemoveEvidenciaIncidenteUseCase.dart';

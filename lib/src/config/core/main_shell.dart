@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/view/reporte_incidente_dialog.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/view/create_incidente_dialog/reporte_incidente_dialog.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/shared/widgets/custom_bottom_navigation.dart';
 
 class MainShell extends StatelessWidget {

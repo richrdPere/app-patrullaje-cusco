@@ -27,7 +27,7 @@ class GooglePlaceAutoComplete extends StatelessWidget {
       padding: EdgeInsets.symmetric(horizontal: 20),
       child: GooglePlaceAutoCompleteTextField(
         textEditingController: controller,
-        googleAPIKey: this.API_GOOGLE_MAPS,
+        googleAPIKey: API_GOOGLE_MAPS,
         boxDecoration: BoxDecoration(color: Colors.white),
         inputDecoration: InputDecoration(
           hintText: hintText,
@@ -60,7 +60,7 @@ class GooglePlaceAutoComplete extends StatelessWidget {
               children: [
                 Icon(Icons.location_on),
                 SizedBox(width: 7),
-                Expanded(child: Text("${prediction.description ?? ""}")),
+                Expanded(child: Text(prediction.description ?? "")),
               ],
             ),
           );

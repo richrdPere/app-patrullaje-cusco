@@ -51,7 +51,7 @@ class _HistorialObservacionDialogState
 
               children: [
                 DropdownButtonFormField<String>(
-                  value: tipo,
+                  initialValue: tipo,
 
                   decoration: const InputDecoration(labelText: "Tipo"),
 
@@ -119,7 +119,7 @@ class _HistorialObservacionDialogState
                 const SizedBox(height: 20),
 
                 DropdownButtonFormField<String>(
-                  value: prioridad,
+                  initialValue: prioridad,
 
                   decoration: const InputDecoration(labelText: "Prioridad"),
 

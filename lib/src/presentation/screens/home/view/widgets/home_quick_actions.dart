@@ -5,21 +5,32 @@ import 'package:sis_patrullaje_cusco/src/presentation/screens/home/view/widgets/
 
 class HomeQuickActions extends StatelessWidget {
   final int? patrullajeId;
+  final int? zonaId;
   final bool patrullajeActivo;
 
   const HomeQuickActions({
     super.key,
     required this.patrullajeId,
+    required this.zonaId,
     required this.patrullajeActivo,
   });
 
   @override
   Widget build(BuildContext context) {
+    final puedeConsultarPatrullaje =
+        patrullajeActivo && patrullajeId != null && patrullajeId! > 0;
+
+    final puedeConsultarIncidencias =
+        puedeConsultarPatrullaje && zonaId != null && zonaId! > 0;
+
     return Wrap(
       alignment: WrapAlignment.start,
       spacing: 24,
       runSpacing: 20,
       children: [
+        // ======================================================
+        // MAPA
+        // ======================================================
         HomeQuickAction(
           icon: Icons.map_outlined,
           label: 'Ver mapa',
@@ -28,6 +39,9 @@ class HomeQuickActions extends StatelessWidget {
           },
         ),
 
+        // ======================================================
+        // ALERTAS
+        // ======================================================
         HomeQuickAction(
           icon: Icons.warning_amber_rounded,
           label: 'Alertas',
@@ -36,33 +50,45 @@ class HomeQuickActions extends StatelessWidget {
           },
         ),
 
+        // ======================================================
+        // HISTORIAL
+        // ======================================================
         HomeQuickAction(
           icon: Icons.history_rounded,
           label: 'Historial',
-          enabled: patrullajeId != null,
+          enabled: puedeConsultarPatrullaje,
           onTap: () {
             _openHistorial(context);
           },
         ),
 
+        // ======================================================
+        // ZONA
+        // ======================================================
         HomeQuickAction(
           icon: Icons.location_city_outlined,
           label: 'Zona',
-          enabled: patrullajeId != null,
+          enabled: puedeConsultarPatrullaje,
           onTap: () {
             _showPendingOption(context, 'Información de la zona');
           },
         ),
 
+        // ======================================================
+        // INCIDENCIAS
+        // ======================================================
         HomeQuickAction(
           icon: Icons.report_outlined,
           label: 'Incidencias',
-          enabled: patrullajeId != null,
+          enabled: puedeConsultarIncidencias,
           onTap: () {
-            _showPendingOption(context, 'Listado de incidencias');
+            _openIncidenciasContexto(context);
           },
         ),
 
+        // ======================================================
+        // TUTORIALES
+        // ======================================================
         HomeQuickAction(
           icon: Icons.video_collection_outlined,
           label: 'Tutoriales',
@@ -74,17 +100,17 @@ class HomeQuickActions extends StatelessWidget {
     );
   }
 
+  // ======================================================
+  // ABRIR HISTORIAL
+  // ======================================================
   void _openHistorial(BuildContext context) {
     final id = patrullajeId;
 
     if (id == null || id <= 0) {
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(
-          const SnackBar(
-            content: Text('No existe un patrullaje disponible para consultar.'),
-          ),
-        );
+      _showMessage(
+        context,
+        'No existe un patrullaje disponible para consultar.',
+      );
 
       return;
     }
@@ -95,11 +121,61 @@ class HomeQuickActions extends StatelessWidget {
     );
   }
 
+  // ======================================================
+  // ABRIR INCIDENCIAS DEL CONTEXTO
+  // ======================================================
+  void _openIncidenciasContexto(BuildContext context) {
+    final currentPatrullajeId = patrullajeId;
+    final currentZonaId = zonaId;
+
+    if (!patrullajeActivo) {
+      _showMessage(
+        context,
+        'Debes tener un patrullaje activo para consultar incidencias.',
+      );
+
+      return;
+    }
+
+    if (currentPatrullajeId == null || currentPatrullajeId <= 0) {
+      _showMessage(
+        context,
+        'No existe un patrullaje disponible para consultar.',
+      );
+
+      return;
+    }
+
+    if (currentZonaId == null || currentZonaId <= 0) {
+      _showMessage(context, 'El patrullaje actual no tiene una zona asignada.');
+
+      return;
+    }
+
+    context.pushNamed(
+      'incidencias_contexto',
+      pathParameters: {
+        'patrullajeId': currentPatrullajeId.toString(),
+        'zonaId': currentZonaId.toString(),
+      },
+    );
+  }
+
+  // ======================================================
+  // OPCIÓN PENDIENTE
+  // ======================================================
   void _showPendingOption(BuildContext context, String option) {
+    _showMessage(context, '$option estará disponible próximamente.');
+  }
+
+  // ======================================================
+  // MENSAJE
+  // ======================================================
+  void _showMessage(BuildContext context, String message) {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(
-        SnackBar(content: Text('$option estará disponible próximamente.')),
+        SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
       );
   }
 }

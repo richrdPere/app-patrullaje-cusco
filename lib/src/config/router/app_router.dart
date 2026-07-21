@@ -14,6 +14,8 @@ import 'package:sis_patrullaje_cusco/src/presentation/screens/auth/register/view
 import 'package:sis_patrullaje_cusco/src/presentation/screens/historial_patrullaje/view/listado/historial_patrullaje_page.dart';
 // import 'package:sis_patrullaje_cusco/src/presentation/screens/home/home_content.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/home/view/home_page.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/view/detail_incidencia/incidencia_detalle_page.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/view/list_incidentes/incidencias_contexto_page.dart';
 // import 'package:sis_patrullaje_cusco/src/presentation/screens/home/home_page.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/mapa/view/mapa/mapa_page.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/mapa/view/mapa_incident/mapa_incident_page.dart';
@@ -71,7 +73,9 @@ final GoRouter appRouter = GoRouter(
   debugLogDiagnostics: true,
   redirect: authRedirect,
   routes: [
+    // =====================================================
     // AUTH
+    // =====================================================
     GoRoute(
       path: '/splash',
       name: 'splash',
@@ -101,7 +105,9 @@ final GoRouter appRouter = GoRouter(
       builder: (_, __) => const LogoutLoadingPage(),
     ),
 
-    // APP
+    // =====================================================
+    // APLICACIÓN PRINCIPAL
+    // =====================================================
     ShellRoute(
       builder: (context, state, child) {
         return MainShell(child: child);
@@ -167,6 +173,74 @@ final GoRouter appRouter = GoRouter(
         }
 
         return HistorialPatrullajePage(patrullajeId: patrullajeId);
+      },
+    ),
+
+    // INCIDENCIAS DEL PATRULLAJE Y ZONA
+    GoRoute(
+      path: '/incidencias-contexto/:patrullajeId/:zonaId',
+      name: 'incidencias_contexto',
+      builder: (context, state) {
+        final patrullajeId = int.tryParse(
+          state.pathParameters['patrullajeId'] ?? '',
+        );
+
+        final zonaId = int.tryParse(state.pathParameters['zonaId'] ?? '');
+
+        if (patrullajeId == null ||
+            patrullajeId <= 0 ||
+            zonaId == null ||
+            zonaId <= 0) {
+          return const Scaffold(
+            body: SafeArea(
+              child: Center(
+                child: Padding(
+                  padding: EdgeInsets.all(24),
+                  child: Text(
+                    'No se encontró un patrullaje o una zona válidos.',
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+            ),
+          );
+        }
+
+        return IncidenciasContextoPage(
+          patrullajeId: patrullajeId,
+          zonaId: zonaId,
+        );
+      },
+    ),
+
+    // =====================================================
+    // DETALLE DE INCIDENCIA
+    // =====================================================
+    GoRoute(
+      path: '/incidencias/:incidenciaId',
+      name: 'incidencia_detalle',
+      builder: (context, state) {
+        final incidenciaId = int.tryParse(
+          state.pathParameters['incidenciaId'] ?? '',
+        );
+
+        if (incidenciaId == null || incidenciaId <= 0) {
+          return const Scaffold(
+            body: SafeArea(
+              child: Center(
+                child: Padding(
+                  padding: EdgeInsets.all(24),
+                  child: Text(
+                    'No se encontró una incidencia válida.',
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+            ),
+          );
+        }
+
+        return IncidenciaDetallePage(incidenciaId: incidenciaId);
       },
     ),
 

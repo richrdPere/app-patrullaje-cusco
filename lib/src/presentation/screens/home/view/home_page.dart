@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
+import 'package:sis_patrullaje_cusco/src/data/models/patrullaje/patrullaje_data.dart';
 import 'package:sis_patrullaje_cusco/src/domain/entities/patrullaje_entity.dart';
 
 // Enums
@@ -21,6 +23,7 @@ import 'package:sis_patrullaje_cusco/src/presentation/screens/mapa/blocs/mapa/ma
 
 // Widgets
 import 'package:sis_patrullaje_cusco/src/presentation/screens/home/view/home_content.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/home/view/patrullaje_resumen_dialog.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -34,12 +37,12 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
 
       final homeState = context.read<HomeBloc>().state;
 
-      _handlePatrullajeListener(context, homeState);
+      await _handlePatrullajeListener(context, homeState);
     });
   }
 
@@ -121,7 +124,10 @@ class _HomePageState extends State<HomePage> {
   }
 
   // ======================================================
-  void _handlePatrullajeListener(BuildContext context, HomeState state) {
+  Future<void> _handlePatrullajeListener(
+    BuildContext context,
+    HomeState state,
+  ) async {
     final patrullaje = state.patrullaje;
 
     switch (state.status) {
@@ -131,12 +137,6 @@ class _HomePageState extends State<HomePage> {
       case PatrullajeStatus.asignado:
         if (patrullaje == null) return;
 
-        /*
-         * Dibuja la zona asignada en el mapa.
-         *
-         * Todavía no inicia el tracking porque el sereno
-         * aún no ha comenzado formalmente el patrullaje.
-         */
         _drawAssignedZone(context, patrullaje.zona.coordenadas);
 
         break;
@@ -146,29 +146,46 @@ class _HomePageState extends State<HomePage> {
       // ==================================================
       case PatrullajeStatus.enCurso:
         if (patrullaje == null) return;
-        /*
-         * La zona también se dibuja en EN_CURSO porque la
-         * aplicación podría recuperar un patrullaje que ya
-         * estaba iniciado antes de abrir HomePage.
-         */
 
         _drawAssignedZone(context, patrullaje.zona.coordenadas);
 
-        /*
-         * Inicia el stream de geolocalización y el envío
-         * periódico de la ubicación del sereno.
-         */
-        context.read<TrackingBloc>().add(StartTrackingEvent(patrullaje.id));
+        final trackingState = context.read<TrackingBloc>().state;
+
+        final yaEstaRastreandoElPatrullaje =
+            trackingState.isTracking &&
+            trackingState.patrullajeId == patrullaje.id;
+
+        if (!yaEstaRastreandoElPatrullaje) {
+          context.read<TrackingBloc>().add(StartTrackingEvent(patrullaje.id));
+        }
 
         break;
 
       // ==================================================
       // PATRULLAJE FINALIZADO
       // ==================================================
-
       case PatrullajeStatus.finalizado:
         _stopTracking(context);
         _clearPatrullajeMapData(context);
+
+        if (patrullaje?.resumen == null) {
+          if (!context.mounted) return;
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'El patrullaje finalizó, pero no se recibió el resumen.',
+              ),
+            ),
+          );
+
+          context.read<HomeBloc>().add(LimpiarPatrullajeFinalizado());
+
+          return;
+        }
+
+        await _showPatrullajeResumen(context, patrullaje!);
+
         break;
 
       // ==================================================
@@ -177,6 +194,7 @@ class _HomePageState extends State<HomePage> {
       case PatrullajeStatus.sinAsignacion:
         _stopTracking(context);
         _clearPatrullajeMapData(context);
+
         break;
 
       // ==================================================
@@ -189,22 +207,31 @@ class _HomePageState extends State<HomePage> {
   }
 
   // ======================================================
+  Future<void> _showPatrullajeResumen(
+    BuildContext context,
+    PatrullajeData patrullaje,
+  ) async {
+    if (!context.mounted) return;
+
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return PatrullajeResumenDialog(patrullaje: patrullaje);
+      },
+    );
+
+    if (!context.mounted) return;
+
+    context.read<HomeBloc>().add(LimpiarPatrullajeFinalizado());
+  }
+
+  // ======================================================
   void _handleTrackingListener(BuildContext context, TrackingState state) {
     final location = state.lastLocation;
 
     if (location == null) return;
 
-    /*
-     * MapaBloc recibe ahora la entidad completa.
-     *
-     * De esta forma conserva:
-     * - latitud;
-     * - longitud;
-     * - velocidad;
-     * - precisión;
-     * - fecha y hora;
-     * - tipo de ubicación.
-     */
     context.read<MapaBloc>().add(
       UpdateTrackingLocationEvent(location: location),
     );
@@ -225,6 +252,12 @@ class _HomePageState extends State<HomePage> {
 
   // ======================================================
   void _stopTracking(BuildContext context) {
+    final trackingState = context.read<TrackingBloc>().state;
+
+    if (!trackingState.isTracking && !trackingState.isLoading) {
+      return;
+    }
+
     context.read<TrackingBloc>().add(StopTrackingEvent());
   }
 
@@ -232,13 +265,10 @@ class _HomePageState extends State<HomePage> {
   void _clearPatrullajeMapData(BuildContext context) {
     final mapaBloc = context.read<MapaBloc>();
 
-    // Elimina el polígono de la zona asignada.
     mapaBloc.add(const ClearAssignedZoneEvent());
 
-    // Elimina rutas, origen, destino y selecciones temporales.
     mapaBloc.add(const ClearTemporaryMapDataEvent());
 
-    // Desactiva el autocentrado al finalizar el patrullaje.
     mapaBloc.add(const SetAutoCenterEvent(enabled: false));
   }
 }

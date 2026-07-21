@@ -7,7 +7,9 @@ import 'package:sis_patrullaje_cusco/src/domain/utils/Resource.dart';
 
 abstract class IncidenteRepository {
   // INCIDENCIAS
-  Future<Resource<IncidenteModel>> newIncidencia(RegisterIncidenciaRequest incidente);
+  Future<Resource<IncidenteModel>> newIncidencia(
+    RegisterIncidenciaRequest incidente,
+  );
 
   Future<Resource<List<IncidenteModel>>> getMisIncidencias({
     int page = 1,
@@ -22,6 +24,14 @@ abstract class IncidenteRepository {
     required double longitud,
     double radio = 500,
     int limit = 20,
+  });
+
+  Future<Resource<List<IncidenteModel>>> getIncidenciasByPatrullaje({
+    required int patrullajeId,
+  });
+
+  Future<Resource<List<IncidenteModel>>> getIncidenciasByZona({
+    required int zonaId,
   });
 
   // EVIDENCIAS / ARCHIVOS

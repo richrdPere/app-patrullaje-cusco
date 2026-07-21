@@ -118,6 +118,25 @@ class LimpiarIncidentesCercanosEvent extends IncidenteEvent {
   const LimpiarIncidentesCercanosEvent();
 }
 
+/// Obtener incidencias contexto
+class ObtenerIncidenciasContextoEvent extends IncidenteEvent {
+  final int patrullajeId;
+  final int zonaId;
+
+  const ObtenerIncidenciasContextoEvent({
+    required this.patrullajeId,
+    required this.zonaId,
+  });
+
+  @override
+  List<Object?> get props => [patrullajeId, zonaId];
+}
+
+/// Limpia las incidencias asociadas al patrullaje y zona activos.
+class LimpiarIncidenciasContextoEvent extends IncidenteEvent {
+  const LimpiarIncidenciasContextoEvent();
+}
+
 // ======================================================
 // ARCHIVOS DE INCIDENCIA
 // ======================================================

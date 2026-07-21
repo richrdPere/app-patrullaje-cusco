@@ -2,7 +2,7 @@ enum IncidenteTabEnum {
   incidente, 
   evidencia, 
   emergencia, 
-  historial, 
+  // historial, 
   observacion,
   // video 
   }

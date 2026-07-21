@@ -82,7 +82,7 @@ class MapaIncidentContent extends StatelessWidget {
   }
 
   Widget _googleMaps(BuildContext context) {
-    return Container(
+    return SizedBox(
       height: MediaQuery.of(context).size.height * 0.52,
       child: GoogleMap(
         mapType: MapType.normal,

@@ -1,4 +1,3 @@
-import 'package:sis_patrullaje_cusco/src/domain/repositories/alert_repository.dart';
 import 'package:sis_patrullaje_cusco/src/domain/repositories/index_repository.dart';
 
 class AlertRepositoryImpl implements AlertRepository {

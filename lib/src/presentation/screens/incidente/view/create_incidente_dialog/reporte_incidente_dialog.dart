@@ -4,11 +4,11 @@ import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/blocs/in
 import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/blocs/incidencia/incidente_event.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/blocs/incidencia/incidente_state.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/enums/incidente_tab_enum.dart';
-import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/view/screens/emergencia_screen.dart';
-import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/view/screens/evidencia_screen.dart';
-import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/view/screens/historial_incidentes_screen.dart';
-import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/view/screens/incident_form_screen.dart';
-import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/view/screens/observacion_screen.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/view/create_incidente_dialog/screens/emergencia_screen.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/view/create_incidente_dialog/screens/evidencia_screen.dart';
+// import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/view/screens/historial_incidentes_screen.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/view/create_incidente_dialog/screens/incident_form_screen.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/view/create_incidente_dialog/screens/observacion_screen.dart';
 
 class ReporteIncidenteDialog extends StatelessWidget {
   const ReporteIncidenteDialog({super.key});
@@ -88,8 +88,8 @@ class ReporteIncidenteDialog extends StatelessWidget {
 
                     IncidenteTabEnum.observacion => const ObservacionScreen(),
 
-                    IncidenteTabEnum.historial =>
-                      const HistorialIncidentesScreen(),
+                    // IncidenteTabEnum.historial =>
+                    //   const HistorialIncidentesScreen(),
 
                     IncidenteTabEnum.emergencia => const EmergenciaScreen(),
                   },
@@ -136,11 +136,11 @@ IncidenteHeaderInfo _getHeader(IncidenteTabEnum tab) {
         subtitle: 'Registra novedades para el patrullaje',
       );
 
-    case IncidenteTabEnum.historial:
-      return const IncidenteHeaderInfo(
-        title: 'Mis incidencias',
-        subtitle: 'Consulta los reportes registrados',
-      );
+    // case IncidenteTabEnum.historial:
+    //   return const IncidenteHeaderInfo(
+    //     title: 'Mis incidencias',
+    //     subtitle: 'Consulta los reportes registrados',
+    //   );
 
     case IncidenteTabEnum.emergencia:
       return const IncidenteHeaderInfo(
@@ -164,7 +164,7 @@ class _IncidenteBottomTabsState extends State<_IncidenteBottomTabs> {
     ('Incidente', IncidenteTabEnum.incidente),
     ('Evidencia', IncidenteTabEnum.evidencia),
     ('Observación', IncidenteTabEnum.observacion),
-    ('Historial', IncidenteTabEnum.historial),
+    // ('Historial', IncidenteTabEnum.historial),
     ('SOS', IncidenteTabEnum.emergencia),
   ];
 

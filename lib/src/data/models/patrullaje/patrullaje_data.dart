@@ -1,3 +1,4 @@
+import 'package:sis_patrullaje_cusco/src/data/models/patrullaje/patrullaje_resumen_data.dart';
 import 'package:sis_patrullaje_cusco/src/domain/entities/patrullaje_entity.dart';
 
 class PatrullajeData {
@@ -9,6 +10,7 @@ class PatrullajeData {
   final String descripcion;
   final Zona zona;
   final Unidad unidad;
+  final PatrullajeResumenData? resumen;
 
   const PatrullajeData({
     required this.id,
@@ -19,9 +21,12 @@ class PatrullajeData {
     required this.descripcion,
     required this.zona,
     required this.unidad,
+    this.resumen,
   });
 
   factory PatrullajeData.fromJson(Map<String, dynamic> json) {
+    final resumenJson = json['resumen'];
+
     return PatrullajeData(
       id: _toInt(json['id']),
       estado: json['estado']?.toString() ?? '',
@@ -48,6 +53,9 @@ class PatrullajeData {
         tipo: json['unidad']?['tipo']?.toString() ?? '',
         placa: json['unidad']?['placa']?.toString() ?? '',
       ),
+      resumen: resumenJson is Map<String, dynamic>
+          ? PatrullajeResumenData.fromJson(resumenJson)
+          : null,
     );
   }
 
@@ -141,4 +149,3 @@ DateTime? _toDateTime(dynamic value) {
   if (value is DateTime) return value;
   return DateTime.tryParse(value.toString());
 }
-

@@ -34,6 +34,9 @@ class TrackingRepositoryImpl implements TrackingRepository {
   // =====================================================
   // 2. ENVIAR UBICACIÓN POR SOCKET
   // =====================================================
+  // =====================================================
+  // 2. ENVIAR UBICACIÓN POR SOCKET
+  // =====================================================
   @override
   Future<void> sendLocation(LocationEntity location, int patrullajeId) async {
     final socket = socketRepository.getSocket();
@@ -45,18 +48,54 @@ class TrackingRepositoryImpl implements TrackingRepository {
       );
     }
 
+    if (patrullajeId <= 0) {
+      throw ArgumentError.value(
+        patrullajeId,
+        'patrullajeId',
+        'El identificador del patrullaje debe ser válido.',
+      );
+    }
+
     final payload = <String, dynamic>{
-      'lat': location.latitud,
-      'lng': location.longitud,
+      'patrullajeId': patrullajeId,
+      'latitud': location.latitud,
+      'longitud': location.longitud,
       'velocidad': location.velocidad,
       'precision': location.precision,
-      'patrullaje_id': patrullajeId,
-      'timestamp': location.fechaHora.toIso8601String(),
+      'fechaHora': location.fechaHora.toIso8601String(),
       'tipo': location.tipo,
     };
 
-    debugPrint('📡 Enviando ubicación por socket: $payload');
+    debugPrint(
+      '📡 Enviando ubicación por socket '
+      'para patrullaje $patrullajeId: $payload',
+    );
 
     socket.emit('tracking', payload);
   }
+  // @override
+  // Future<void> sendLocation(LocationEntity location, int patrullajeId) async {
+  //   final socket = socketRepository.getSocket();
+
+  //   if (!socket.connected) {
+  //     throw StateError(
+  //       'No se puede enviar la ubicación porque '
+  //       'el socket no está conectado.',
+  //     );
+  //   }
+
+  //   final payload = <String, dynamic>{
+  //     'lat': location.latitud,
+  //     'lng': location.longitud,
+  //     'velocidad': location.velocidad,
+  //     'precision': location.precision,
+  //     'patrullaje_id': patrullajeId,
+  //     'timestamp': location.fechaHora.toIso8601String(),
+  //     'tipo': location.tipo,
+  //   };
+
+  //   debugPrint('📡 Enviando ubicación por socket: $payload');
+
+  //   socket.emit('tracking', payload);
+  // }
 }

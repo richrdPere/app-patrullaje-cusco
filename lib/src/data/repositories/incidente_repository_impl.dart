@@ -27,7 +27,10 @@ class IncidenteRepositoryImpl implements IncidenteRepository {
       );
     }
 
-    return await remote.registerIncidencia(requestData: incidente, token: token);
+    return await remote.registerIncidencia(
+      requestData: incidente,
+      token: token,
+    );
   }
 
   // 2. OBTENER MIS INCIDENCIAS
@@ -150,5 +153,42 @@ class IncidenteRepositoryImpl implements IncidenteRepository {
       archivoId: archivoId,
       token: token,
     );
+  }
+
+  // 8. OBTENER INCIDENCIAS POR PATRULLAJE
+  @override
+  Future<Resource<List<IncidenteModel>>> getIncidenciasByPatrullaje({
+    required int patrullajeId,
+  }) async {
+    final token = await authRepository.getToken();
+
+    if (token == null || token.trim().isEmpty) {
+      return ErrorData<List<IncidenteModel>>(
+        message: 'No existe una sesión válida.',
+        statusCode: 401,
+      );
+    }
+
+    return remote.getIncidenciasByPatrullaje(
+      token: token,
+      patrullajeId: patrullajeId,
+    );
+  }
+
+  // 9. OBTENER INCIDENCIAS POR ZONA
+  @override
+  Future<Resource<List<IncidenteModel>>> getIncidenciasByZona({
+    required int zonaId,
+  }) async {
+    final token = await authRepository.getToken();
+
+    if (token == null || token.trim().isEmpty) {
+      return ErrorData<List<IncidenteModel>>(
+        message: 'No existe una sesión válida.',
+        statusCode: 401,
+      );
+    }
+
+    return remote.getIncidenciasByZona(token: token, zonaId: zonaId);
   }
 }

@@ -28,6 +28,9 @@ class AceptarPatrullaje extends HomeEvent {
 
 class FinalizarPatrullaje extends HomeEvent {
   final int patrullajeId;
+  final String? observacionFinal;
 
-  FinalizarPatrullaje(this.patrullajeId);
+  FinalizarPatrullaje({required this.patrullajeId, this.observacionFinal});
 }
+
+class LimpiarPatrullajeFinalizado extends HomeEvent {}
