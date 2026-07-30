@@ -29,12 +29,19 @@ abstract class AppModule {
   @lazySingleton
   SocketRepository socketRepository() => SocketRepositoryImpl();
 
+  // FIREBASE MESSAGING
+  @lazySingleton
+  FirebaseMessagingService get firebaseMessagingService =>
+      FirebaseMessagingService.instance;
+
+  // MEDIA
   @injectable
   ImagePicker get imagePicker => ImagePicker();
 
   @injectable
   AudioRecorder get audioRecorder => AudioRecorder();
 
+  // SHAREF PREF
   @injectable
   SharefPref get sharedPref => SharefPref();
 
@@ -56,6 +63,9 @@ abstract class AppModule {
   @injectable
   HistorialPatrullajeService get historialPatrullajeService =>
       HistorialPatrullajeService();
+
+  @injectable
+  FcmTokenService get fcmTokenService => FcmTokenService();
 
   // =============================================================
   // 2. REPOSITORY

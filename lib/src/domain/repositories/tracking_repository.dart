@@ -1,4 +1,5 @@
 import 'package:sis_patrullaje_cusco/src/domain/entities/location_entity.dart';
+import 'package:sis_patrullaje_cusco/src/domain/entities/tracking_send_result.dart';
 
 abstract class TrackingRepository {
   Stream<LocationEntity> getLocationStream({
@@ -6,5 +7,8 @@ abstract class TrackingRepository {
     int distanceFilter = 5,
     Duration interval = const Duration(seconds: 5),
   });
-  Future<void> sendLocation(LocationEntity location, int patrullajeId);
+  Future<TrackingSendResult> sendLocation(
+    LocationEntity location,
+    int patrullajeId,
+  );
 }

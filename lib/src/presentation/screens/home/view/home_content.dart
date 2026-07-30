@@ -1,29 +1,40 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import 'package:sis_patrullaje_cusco/src/presentation/screens/home/enums/patrullaje_enum.dart';
 
+// =====================================================
+// BLOCS
+// =====================================================
 import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/home/home_bloc.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/home/home_event.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/home/home_state.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/socket/socket_state.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/tracking/tracking_state.dart';
 
+// =====================================================
+// WIDGETS
+// =====================================================
 import 'package:sis_patrullaje_cusco/src/presentation/screens/home/view/widgets/empty_patrullaje.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/home/view/widgets/home_quick_actions.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/home/view/widgets/home_stats_section.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/home/view/widgets/location_card.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/home/view/widgets/main_patrullaje_button.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/home/view/widgets/patrullaje_header.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/home/view/widgets/tracking_status_card.dart';
 
 import 'package:sis_patrullaje_cusco/src/presentation/shared/widgets/custom_appbar.dart';
 
 class HomeContent extends StatelessWidget {
   final HomeState homeState;
   final TrackingState trackingState;
+  final SocketState socketState;
 
   const HomeContent({
     super.key,
     required this.homeState,
     required this.trackingState,
+    required this.socketState,
   });
 
   @override
@@ -37,46 +48,79 @@ class HomeContent extends StatelessWidget {
         homeState.status == PatrullajeStatus.sinAsignacion ||
         patrullaje == null;
 
+    final patrullajeEnCurso =
+        homeState.status == PatrullajeStatus.enCurso;
+
     return Scaffold(
       appBar: const CustomAppBar(),
       body: RefreshIndicator(
         onRefresh: () async {
-          context.read<HomeBloc>().add(LoadPatrullajeActivo());
+          context.read<HomeBloc>().add(
+            LoadPatrullajeActivo(),
+          );
         },
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 28),
+          padding: const EdgeInsets.fromLTRB(
+            16,
+            16,
+            16,
+            28,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               if (isEmpty) ...[
                 SizedBox(
-                  height: MediaQuery.sizeOf(context).height * 0.30,
-                  child: const Center(child: EmptyPatrullaje()),
+                  height:
+                      MediaQuery.sizeOf(context).height *
+                      0.30,
+                  child: const Center(
+                    child: EmptyPatrullaje(),
+                  ),
                 ),
               ] else ...[
-                // Header del patrullaje
-                PatrullajeHeader(homeState: homeState),
+                PatrullajeHeader(
+                  homeState: homeState,
+                ),
+
                 const SizedBox(height: 20),
 
-                // Boton de patrullaje
-                MainPatrullajeButton(homeState: homeState),
+                MainPatrullajeButton(
+                  homeState: homeState,
+                ),
+
+                // ===========================================
+                // CONEXIÓN Y TRANSMISIÓN
+                // ===========================================
+                if (patrullajeEnCurso) ...[
+                  const SizedBox(height: 16),
+
+                  TrackingStatusCard(
+                    socketState: socketState,
+                    trackingState: trackingState,
+                  ),
+                ],
+
                 const SizedBox(height: 20),
               ],
 
-              // Card de Location
-              LocationCard(trackingState: trackingState),
+              LocationCard(
+                trackingState: trackingState,
+              ),
 
-              // Cards de Incident, alerts y recorrido
               const HomeStatsSection(),
 
               const SizedBox(height: 28),
 
               Text(
                 'Información para el patrullaje',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                style: Theme.of(context)
+                    .textTheme
+                    .titleMedium
+                    ?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
               ),
 
               const SizedBox(height: 14),
@@ -84,7 +128,7 @@ class HomeContent extends StatelessWidget {
               HomeQuickActions(
                 patrullajeId: patrullajeId,
                 zonaId: zonaId,
-                patrullajeActivo: homeState.status == PatrullajeStatus.enCurso,
+                patrullajeActivo: patrullajeEnCurso,
               ),
             ],
           ),

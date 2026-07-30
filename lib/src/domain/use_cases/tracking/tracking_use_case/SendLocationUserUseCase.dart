@@ -1,4 +1,5 @@
 import 'package:sis_patrullaje_cusco/src/domain/entities/location_entity.dart';
+import 'package:sis_patrullaje_cusco/src/domain/entities/tracking_send_result.dart';
 import 'package:sis_patrullaje_cusco/src/domain/repositories/tracking_repository.dart';
 
 class SendLocationUserUseCase {
@@ -6,7 +7,7 @@ class SendLocationUserUseCase {
 
   SendLocationUserUseCase(this.trackingRepository);
 
-  Future<void> run(LocationEntity location, int patrullajeId) {
+  Future<TrackingSendResult> run(LocationEntity location, int patrullajeId) {
     return trackingRepository.sendLocation(location, patrullajeId);
   }
 }

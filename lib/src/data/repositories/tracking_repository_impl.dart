@@ -1,8 +1,9 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+
 import 'package:sis_patrullaje_cusco/src/domain/entities/location_entity.dart';
-import 'package:sis_patrullaje_cusco/src/domain/repositories/geolocator_repository.dart';
-import 'package:sis_patrullaje_cusco/src/domain/repositories/socket_repository.dart';
-import 'package:sis_patrullaje_cusco/src/domain/repositories/tracking_repository.dart';
+import 'package:sis_patrullaje_cusco/src/domain/entities/tracking_send_result.dart';
+import 'package:sis_patrullaje_cusco/src/domain/repositories/index_repository.dart';
 
 class TrackingRepositoryImpl implements TrackingRepository {
   final GeolocatorRepository geolocatorRepository;
@@ -32,27 +33,24 @@ class TrackingRepositoryImpl implements TrackingRepository {
   }
 
   // =====================================================
-  // 2. ENVIAR UBICACIÓN POR SOCKET
-  // =====================================================
-  // =====================================================
-  // 2. ENVIAR UBICACIÓN POR SOCKET
+  // 2. ENVIAR UBICACIÓN Y ESPERAR CONFIRMACIÓN
   // =====================================================
   @override
-  Future<void> sendLocation(LocationEntity location, int patrullajeId) async {
+  Future<TrackingSendResult> sendLocation(
+    LocationEntity location,
+    int patrullajeId,
+  ) async {
     final socket = socketRepository.getSocket();
 
     if (!socket.connected) {
-      throw StateError(
-        'No se puede enviar la ubicación porque '
-        'el socket no está conectado.',
-      );
+      throw StateError('El dispositivo no está conectado al servidor.');
     }
 
     if (patrullajeId <= 0) {
       throw ArgumentError.value(
         patrullajeId,
         'patrullajeId',
-        'El identificador del patrullaje debe ser válido.',
+        'El identificador del patrullaje no es válido.',
       );
     }
 
@@ -66,36 +64,75 @@ class TrackingRepositoryImpl implements TrackingRepository {
       'tipo': location.tipo,
     };
 
-    debugPrint(
-      '📡 Enviando ubicación por socket '
-      'para patrullaje $patrullajeId: $payload',
+    debugPrint('📡 Enviando tracking: $payload');
+
+    final completer = Completer<TrackingSendResult>();
+
+    final timeout = Timer(const Duration(seconds: 8), () {
+      if (!completer.isCompleted) {
+        completer.completeError(
+          TimeoutException(
+            'El servidor no confirmó la recepción de la ubicación.',
+          ),
+        );
+      }
+    });
+
+    socket.emitWithAck(
+      'tracking',
+      payload,
+      ack: (response) {
+        debugPrint(
+          '📥 ACK tracking: '
+          '${response.runtimeType} → $response',
+        );
+
+        if (completer.isCompleted) return;
+
+        timeout.cancel();
+
+        try {
+          if (response is! Map) {
+            throw const FormatException(
+              'La respuesta del servidor no tiene un formato válido.',
+            );
+          }
+
+          final data = Map<String, dynamic>.from(response);
+
+          final success = data['success'] == true;
+          final message =
+              data['message']?.toString() ??
+              data['error']?.toString() ??
+              'El servidor no proporcionó información sobre el tracking.';
+
+          if (!success) {
+            completer.completeError(StateError(message));
+
+            return;
+          }
+
+          final omitted =
+              data['data'] == null && message.toLowerCase().contains('omitida');
+
+          completer.complete(
+            TrackingSendResult(
+              success: true,
+              message: message,
+              confirmedAt: DateTime.now(),
+              omitted: omitted,
+            ),
+          );
+        } catch (error) {
+          completer.completeError(error);
+        }
+      },
     );
 
-    socket.emit('tracking', payload);
+    try {
+      return await completer.future;
+    } finally {
+      timeout.cancel();
+    }
   }
-  // @override
-  // Future<void> sendLocation(LocationEntity location, int patrullajeId) async {
-  //   final socket = socketRepository.getSocket();
-
-  //   if (!socket.connected) {
-  //     throw StateError(
-  //       'No se puede enviar la ubicación porque '
-  //       'el socket no está conectado.',
-  //     );
-  //   }
-
-  //   final payload = <String, dynamic>{
-  //     'lat': location.latitud,
-  //     'lng': location.longitud,
-  //     'velocidad': location.velocidad,
-  //     'precision': location.precision,
-  //     'patrullaje_id': patrullajeId,
-  //     'timestamp': location.fechaHora.toIso8601String(),
-  //     'tipo': location.tipo,
-  //   };
-
-  //   debugPrint('📡 Enviando ubicación por socket: $payload');
-
-  //   socket.emit('tracking', payload);
-  // }
 }

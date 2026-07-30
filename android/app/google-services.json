@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "791903257273",
+    "project_id": "sis-patrullaje-cusco",
+    "storage_bucket": "sis-patrullaje-cusco.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:791903257273:android:a2dc93e87996547b2e9168",
+        "android_client_info": {
+          "package_name": "com.example.sis_patrullaje_cusco"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDR5tN7Pt3_T0kIZSIDULEFlBk_491l6ok"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
