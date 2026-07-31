@@ -10,3 +10,5 @@ export 'package:sis_patrullaje_cusco/src/data/repositories/patrullaje_repository
 export 'package:sis_patrullaje_cusco/src/data/repositories/socket_repository_impl.dart';
 export 'package:sis_patrullaje_cusco/src/data/repositories/tracking_repository_impl.dart';
 export 'package:sis_patrullaje_cusco/src/data/repositories/users_repository_impl.dart';
+
+export 'package:sis_patrullaje_cusco/src/data/repositories/alertas_repository_impl.dart';

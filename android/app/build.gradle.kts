@@ -1,21 +1,12 @@
 plugins {
     id("com.android.application")
-    // Add the Google services Gradle plugin
     id("com.google.gms.google-services")
     id("kotlin-android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
 
-dependencies {
-  // Import the Firebase BoM
-  implementation(platform("com.google.firebase:firebase-bom:34.16.0"))
 
-
-  // TODO: Add the dependencies for Firebase products you want to use
-  // When using the BoM, don't specify versions in Firebase dependencies
-  // https://firebase.google.com/docs/android/setup#available-libraries
-}
 
 android {
     namespace = "com.example.sis_patrullaje_cusco"
@@ -23,13 +14,16 @@ android {
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        // Requerido por flutter_local_notifications.
+        isCoreLibraryDesugaringEnabled = true
+
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 
     kotlin {
     compilerOptions {
-        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
     }
 }
 
@@ -42,6 +36,7 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        multiDexEnabled = true
     }
 
     buildTypes {
@@ -55,4 +50,21 @@ android {
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    // Requerido por core library desugaring.
+    coreLibraryDesugaring(
+        "com.android.tools:desugar_jdk_libs:2.1.4",
+    )
+
+    // Firebase BoM.
+    implementation(
+        platform("com.google.firebase:firebase-bom:34.16.0"),
+    )
+
+    /*
+     * No es obligatorio declarar firebase-messaging manualmente
+     * si ya lo agregaste mediante firebase_messaging en pubspec.yaml.
+     */
 }

@@ -152,7 +152,7 @@ final GoRouter appRouter = GoRouter(
         GoRoute(
           path: '/alertas',
           name: 'alertas',
-          builder: (_, __) => const AlertasPage(),
+          builder: (_, __) => const AlertaPage(),
         ),
       ],
     ),

@@ -111,3 +111,16 @@ export 'package:sis_patrullaje_cusco/src/domain/use_cases/geocoding/GeocodingUse
 // =======================================
 export 'package:sis_patrullaje_cusco/src/domain/use_cases/directions/directions_uses_cases/GetRouteUseCase.dart';
 export 'package:sis_patrullaje_cusco/src/domain/use_cases/directions/DirectionsUsesCase.dart';
+
+// =======================================
+// ALERTAS - NOTIFICACIONES
+// =======================================
+export 'package:sis_patrullaje_cusco/src/domain/use_cases/alerta_notificacion/alerta_notificacion_uses_cases/DesactivarDispositivoUseCase.dart';
+export 'package:sis_patrullaje_cusco/src/domain/use_cases/alerta_notificacion/alerta_notificacion_uses_cases/GetMisAlertasResumenUseCase.dart';
+export 'package:sis_patrullaje_cusco/src/domain/use_cases/alerta_notificacion/alerta_notificacion_uses_cases/GetMisAlertasUseCase.dart';
+export 'package:sis_patrullaje_cusco/src/domain/use_cases/alerta_notificacion/alerta_notificacion_uses_cases/MarcarAtendidaUseCase.dart';
+export 'package:sis_patrullaje_cusco/src/domain/use_cases/alerta_notificacion/alerta_notificacion_uses_cases/MarcarLeidaUseCase.dart';
+export 'package:sis_patrullaje_cusco/src/domain/use_cases/alerta_notificacion/alerta_notificacion_uses_cases/MarcarRecibidaUseCase.dart';
+export 'package:sis_patrullaje_cusco/src/domain/use_cases/alerta_notificacion/alerta_notificacion_uses_cases/RegistrarDispositivoUseCase.dart';
+export 'package:sis_patrullaje_cusco/src/domain/use_cases/alerta_notificacion/alerta_notificacion_uses_cases/ResponderAlertaUseCase.dart';
+export 'package:sis_patrullaje_cusco/src/domain/use_cases/alerta_notificacion/AlertaNotificacionUsesCases.dart';

@@ -18,9 +18,9 @@ class FcmTokenService {
 
   String get API_BASE => '${url_backend.Environment.mainUrl}/alertas';
 
-  String get API_REGISTER_DISPOSITIVO => '$API_BASE/dispositivo/register';
+  String get API_REGISTER_DISPOSITIVO => '$API_BASE/dispositivos/register';
 
-  String get API_DESACTIVAR_DISPOSITIVO => '$API_BASE/dispositivo/desactivar';
+  String get API_DESACTIVAR_DISPOSITIVO => '$API_BASE/dispositivos/desactivar';
 
   // ============================================================
   // HEADERS

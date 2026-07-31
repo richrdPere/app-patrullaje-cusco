@@ -2,6 +2,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:injectable/injectable.dart';
 import 'package:record/record.dart';
 import 'package:sis_patrullaje_cusco/src/data/datasources/local/SharefPref.dart';
+import 'package:sis_patrullaje_cusco/src/data/datasources/remote/services/alerta_service.dart';
 
 import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/socket/socket_bloc.dart';
 
@@ -66,6 +67,9 @@ abstract class AppModule {
 
   @injectable
   FcmTokenService get fcmTokenService => FcmTokenService();
+
+  @injectable // Notificaciones
+  AlertaService get alertaService => AlertaService();
 
   // =============================================================
   // 2. REPOSITORY
@@ -132,6 +136,11 @@ abstract class AppModule {
   @injectable
   AlertRepository get alertRepository =>
       AlertRepositoryImpl(geolocatorRepository);
+
+  // - Alerta notificaciones
+  @injectable
+  AlertaRepository get alertaNotificacionRepository =>
+      AlertaRepositoryImpl(alertaService, fcmTokenService, authRepository);
 
   // =============================================================
   // 3. USES CASES
@@ -258,10 +267,29 @@ abstract class AppModule {
     takePhoto: TakePhotoUseCase(mediaRepository),
   );
 
+  // - Alertas Notificacion
+  @injectable
+  AlertaNotificacionUsesCases get alertaNotificacionUsesCases =>
+      AlertaNotificacionUsesCases(
+        desactivarDispositivo: DesactivarDispositivoUseCase(
+          alertaNotificacionRepository,
+        ),
+        getMisAlertasResumen: GetMisAlertasResumenUseCase(
+          alertaNotificacionRepository,
+        ),
+        getMisAlertas: GetMisAlertasUseCase(alertaNotificacionRepository),
+        marcarAtendida: MarcarAtendidaUseCase(alertaNotificacionRepository),
+        marcarLeida: MarcarLeidaUseCase(alertaNotificacionRepository),
+        marcarRecibida: MarcarRecibidaUseCase(alertaNotificacionRepository),
+        registrarDispositivo: RegistrarDispositivoUseCase(
+          alertaNotificacionRepository,
+        ),
+        responderAlerta: ResponderAlertaUseCase(alertaNotificacionRepository),
+      );
+
   // =============================================================
   // 4. SOCKETS
   // =============================================================
-
   // - Socket
   @lazySingleton
   SocketUseCases socketUseCases(SocketRepository socketRepository) =>

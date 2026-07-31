@@ -4,6 +4,7 @@ import 'package:sis_patrullaje_cusco/injection.dart';
 import 'package:sis_patrullaje_cusco/src/config/core/session/session_bloc.dart';
 // import 'package:sis_patrullaje_cusco/src/domain/use_cases/alerta/AlertUseCases.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/index_uses_cases.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/alertas/bloc/alertas_bloc.dart';
 
 import 'package:sis_patrullaje_cusco/src/presentation/screens/auth/login/bloc/login_bloc.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/auth/login/bloc/login_event.dart';
@@ -129,5 +130,11 @@ List<BlocProvider> blocProviders = [
   BlocProvider<HistorialPatrullajeBloc>(
     create: (BuildContext context) =>
         HistorialPatrullajeBloc(locator<HistorialPatrullajeUseCases>()),
+  ),
+
+  // Alertas notificacion
+  BlocProvider<AlertaBloc>(
+    create: (BuildContext context) =>
+        AlertaBloc(locator<AlertaNotificacionUsesCases>()),
   ),
 ];

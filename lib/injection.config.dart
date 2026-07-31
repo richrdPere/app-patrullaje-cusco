@@ -17,6 +17,8 @@ import 'package:sis_patrullaje_cusco/src/data/datasources/local/SharefPref.dart'
     as _i118;
 import 'package:sis_patrullaje_cusco/src/data/datasources/remote/index_service.dart'
     as _i506;
+import 'package:sis_patrullaje_cusco/src/data/datasources/remote/services/alerta_service.dart'
+    as _i683;
 import 'package:sis_patrullaje_cusco/src/di/AppModule.dart' as _i1038;
 import 'package:sis_patrullaje_cusco/src/domain/repositories/index_repository.dart'
     as _i224;
@@ -24,6 +26,8 @@ import 'package:sis_patrullaje_cusco/src/domain/use_cases/auth/AuthUseCases.dart
     as _i422;
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/index_uses_cases.dart'
     as _i952;
+import 'package:sis_patrullaje_cusco/src/presentation/screens/alertas/bloc/alertas_bloc.dart'
+    as _i916;
 import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/socket/socket_bloc.dart'
     as _i362;
 import 'package:sis_patrullaje_cusco/src/presentation/shared/screens/loading/bloc/loading_bloc.dart'
@@ -50,6 +54,7 @@ extension GetItInjectableX on _i174.GetIt {
       () => appModule.historialPatrullajeService,
     );
     gh.factory<_i506.FcmTokenService>(() => appModule.fcmTokenService);
+    gh.factory<_i683.AlertaService>(() => appModule.alertaService);
     gh.factory<_i224.AuthRepository>(() => appModule.authRepository);
     gh.factory<_i224.GeolocatorRepository>(
       () => appModule.geolocatorRepository,
@@ -65,6 +70,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i224.UsersRepository>(() => appModule.usersRepository);
     gh.factory<_i224.MediaRepository>(() => appModule.mediaRepository);
     gh.factory<_i224.AlertRepository>(() => appModule.alertRepository);
+    gh.factory<_i224.AlertaRepository>(
+      () => appModule.alertaNotificacionRepository,
+    );
     gh.factory<_i952.AuthUsesCases>(() => appModule.authUseCases);
     gh.factory<_i952.GeolocatorUseCases>(() => appModule.geolocatorUseCases);
     gh.factory<_i952.GeocodingUsesCases>(() => appModule.geocodingUsesCases);
@@ -76,6 +84,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i952.UsersUseCases>(() => appModule.usersUseCases);
     gh.factory<_i952.MultimediasUseCases>(() => appModule.multimediasUseCases);
+    gh.factory<_i952.AlertaNotificacionUsesCases>(
+      () => appModule.alertaNotificacionUsesCases,
+    );
     gh.lazySingleton<_i506.FirebaseMessagingService>(
       () => appModule.firebaseMessagingService,
     );
@@ -97,6 +108,9 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i506.PatrullajeService>(),
         gh<_i224.SocketRepository>(),
       ),
+    );
+    gh.factory<_i916.AlertaBloc>(
+      () => _i916.AlertaBloc(gh<_i952.AlertaNotificacionUsesCases>()),
     );
     gh.factory<_i224.TrackingRepository>(
       () => appModule.trackingRepository(gh<_i224.SocketRepository>()),
