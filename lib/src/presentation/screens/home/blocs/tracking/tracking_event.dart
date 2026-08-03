@@ -89,15 +89,17 @@ class TrackingSendSuccessEvent extends TrackingEvent {
   /// Indica que el servidor recibió el punto, pero decidió
   /// no guardarlo por no existir desplazamiento significativo.
   final bool omitted;
+  final bool storedOffline;
 
   const TrackingSendSuccessEvent({
     required this.confirmedAt,
     required this.message,
     this.omitted = false,
+    this.storedOffline = false,
   });
 
   @override
-  List<Object?> get props => [confirmedAt, message, omitted];
+  List<Object?> get props => [confirmedAt, message, omitted, storedOffline];
 }
 
 /// Se emite cuando la ubicación no pudo transmitirse,

@@ -4,6 +4,8 @@ import 'package:sis_patrullaje_cusco/injection.dart';
 import 'package:sis_patrullaje_cusco/src/config/core/session/session_bloc.dart';
 // import 'package:sis_patrullaje_cusco/src/domain/use_cases/alerta/AlertUseCases.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/index_uses_cases.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/global/bloc/sync_bloc.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/global/bloc/sync_event.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/alertas/bloc/alertas_bloc.dart';
 
 import 'package:sis_patrullaje_cusco/src/presentation/screens/auth/login/bloc/login_bloc.dart';
@@ -47,6 +49,11 @@ List<BlocProvider> blocProviders = [
   BlocProvider<SplashBloc>(
     create: (BuildContext context) =>
         SplashBloc(locator<AuthUsesCases>())..add(const SplashStarted()),
+  ),
+
+  // SYNC
+  BlocProvider<SyncBloc>(
+    create: (_) => locator<SyncBloc>()..add(const StartSyncEvent()),
   ),
 
   // Socket (SIN AUTOCONECTAR)

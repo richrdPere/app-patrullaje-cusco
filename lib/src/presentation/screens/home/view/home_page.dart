@@ -21,6 +21,10 @@ import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/trackin
 import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/tracking/tracking_event.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/tracking/tracking_state.dart';
 
+// Sync BLoC
+import 'package:sis_patrullaje_cusco/src/presentation/global/bloc/sync_bloc.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/global/bloc/sync_state.dart';
+
 // Mapa BLoC
 import 'package:sis_patrullaje_cusco/src/presentation/screens/mapa/blocs/mapa/mapa_bloc.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/mapa/blocs/mapa/mapa_event.dart';
@@ -37,16 +41,25 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  bool _connectivityInitialized = false;
+  bool? _previousConnection;
+
   @override
   void initState() {
     super.initState();
-
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
 
       final homeState = context.read<HomeBloc>().state;
 
       await _handlePatrullajeListener(context, homeState);
+
+      if (!mounted) return;
+
+      // Verifica el estado inicial de conectividad.
+      final syncState = context.read<SyncBloc>().state;
+
+      _handleConnectivityListener(context, syncState);
     });
   }
 
@@ -73,6 +86,16 @@ class _HomePageState extends State<HomePage> {
             return previous.lastLocation != current.lastLocation;
           },
           listener: _handleTrackingListener,
+        ),
+
+        // ==================================================
+        // CAMBIOS DE CONECTIVIDAD
+        // ==================================================
+        BlocListener<SyncBloc, SyncState>(
+          listenWhen: (previous, current) {
+            return previous.isConnected != current.isConnected;
+          },
+          listener: _handleConnectivityListener,
         ),
       ],
 
@@ -133,6 +156,58 @@ class _HomePageState extends State<HomePage> {
         },
       ),
     );
+  }
+
+  // ======================================================
+  // CONECTIVIDAD LISTENER
+  // ======================================================
+
+  void _handleConnectivityListener(BuildContext context, SyncState state) {
+    if (!mounted) return;
+
+    final isConnected = state.isConnected;
+
+    // Primer estado recibido.
+    if (!_connectivityInitialized) {
+      _connectivityInitialized = true;
+      _previousConnection = isConnected;
+
+      // Solo mostrar mensaje inicial si no hay conexión.
+      if (!isConnected) {
+        _showOfflineMessage(context);
+      }
+
+      return;
+    }
+
+    // Evita volver a mostrar el mismo mensaje.
+    if (_previousConnection == isConnected) {
+      return;
+    }
+
+    final wasConnected = _previousConnection;
+    _previousConnection = isConnected;
+
+    final messenger = ScaffoldMessenger.maybeOf(context);
+
+    if (messenger == null) {
+      debugPrint('⚠️ No existe ScaffoldMessenger disponible en HomePage.');
+
+      return;
+    }
+
+    messenger.hideCurrentSnackBar();
+
+    if (!isConnected) {
+      _showOfflineMessage(context);
+
+      return;
+    }
+
+    // Solo muestra "De vuelta en línea" si antes estaba sin conexión.
+    if (wasConnected == false) {
+      _showBackOnlineMessage(context);
+    }
   }
 
   // ======================================================
@@ -320,6 +395,112 @@ class _HomePageState extends State<HomePage> {
 
     mapaBloc.add(const SetAutoCenterEvent(enabled: false));
   }
+
+  void _showOfflineMessage(BuildContext context) {
+    final messenger = ScaffoldMessenger.maybeOf(context);
+
+    if (messenger == null) {
+      debugPrint(
+        '⚠️ No se pudo mostrar el mensaje offline: '
+        'ScaffoldMessenger no encontrado.',
+      );
+
+      return;
+    }
+
+    messenger.showSnackBar(
+      SnackBar(
+        duration: const Duration(days: 1),
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        padding: EdgeInsets.zero,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        content: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: Colors.grey.shade900,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.20),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: const Row(
+            children: [
+              Icon(Icons.wifi_off_rounded, color: Colors.white, size: 21),
+              SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Sin conexión. Los datos se guardarán localmente.',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showBackOnlineMessage(BuildContext context) {
+    final messenger = ScaffoldMessenger.maybeOf(context);
+
+    if (messenger == null) {
+      debugPrint(
+        '⚠️ No se pudo mostrar el mensaje online: '
+        'ScaffoldMessenger no encontrado.',
+      );
+
+      return;
+    }
+
+    messenger.showSnackBar(
+      SnackBar(
+        duration: const Duration(seconds: 3),
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        padding: EdgeInsets.zero,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        content: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: Colors.green.shade700,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.20),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: const Row(
+            children: [
+              Icon(Icons.wifi_rounded, color: Colors.white, size: 21),
+              SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'De vuelta en línea.',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 // ======================================================
@@ -374,6 +555,7 @@ class _HomeError extends StatelessWidget {
     );
   }
 }
+
 // import 'package:flutter/material.dart';
 // import 'package:flutter_bloc/flutter_bloc.dart';
 

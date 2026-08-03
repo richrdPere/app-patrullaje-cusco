@@ -16,6 +16,12 @@ enum TrackingTransmissionStatus {
   /// porque no existía desplazamiento significativo.
   omitted,
 
+  /// Ubicación guardada en SQLite.
+  storedOffline,
+
+  /// Ubicaciones pendientes siendo enviadas.
+  synchronizing,
+
   /// La ubicación no pudo enviarse o confirmarse.
   failed,
 }

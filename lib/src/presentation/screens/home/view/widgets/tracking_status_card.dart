@@ -295,6 +295,12 @@ class TrackingStatusCard extends StatelessWidget {
           message: 'Error al transmitir ubicación',
           color: Colors.red,
         );
+      case TrackingTransmissionStatus.storedOffline:
+        // TODO: Handle this case.
+        throw UnimplementedError();
+      case TrackingTransmissionStatus.synchronizing:
+        // TODO: Handle this case.
+        throw UnimplementedError();
     }
   }
 

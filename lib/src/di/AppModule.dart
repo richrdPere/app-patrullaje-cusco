@@ -1,8 +1,12 @@
 import 'package:image_picker/image_picker.dart';
 import 'package:injectable/injectable.dart';
 import 'package:record/record.dart';
+import 'package:sis_patrullaje_cusco/src/config/core/sync/sync_manager.dart';
 import 'package:sis_patrullaje_cusco/src/data/datasources/local/SharefPref.dart';
-import 'package:sis_patrullaje_cusco/src/data/datasources/remote/services/alerta_service.dart';
+import 'package:sis_patrullaje_cusco/src/data/datasources/remote/services/connectivity_service.dart';
+import 'package:sis_patrullaje_cusco/src/data/repositories/connectivity_repository_impl.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/global/bloc/sync_bloc.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 
 import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/socket/socket_bloc.dart';
 
@@ -10,7 +14,10 @@ import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/socket/
 import 'package:sis_patrullaje_cusco/src/config/constants/environment.dart'
     as url_backend;
 
-// Service
+// DATABASE - Local
+import 'package:sis_patrullaje_cusco/src/data/datasources/local/index_local.dart';
+
+// SERVICES - Remote
 import 'package:sis_patrullaje_cusco/src/data/datasources/remote/index_service.dart';
 
 // Repository - DOMAIN
@@ -30,6 +37,27 @@ abstract class AppModule {
   @lazySingleton
   SocketRepository socketRepository() => SocketRepositoryImpl();
 
+  // CONNECTIVITY
+  @lazySingleton
+  Connectivity connectivity() => Connectivity();
+
+  @lazySingleton
+  ConnectivityService connectivityService(Connectivity connectivity) {
+    return ConnectivityServiceImpl(connectivity: connectivity);
+  }
+
+  // SYNC MANAGER
+  @lazySingleton
+  SyncManager syncManager(ConnectivityService connectivityService) {
+    return SyncManager(connectivityService: connectivityService);
+  }
+
+  // SYNC BLOC
+  @factoryMethod
+  SyncBloc syncBloc(SyncManager syncManager) {
+    return SyncBloc(syncManager: syncManager);
+  }
+
   // FIREBASE MESSAGING
   @lazySingleton
   FirebaseMessagingService get firebaseMessagingService =>
@@ -45,6 +73,41 @@ abstract class AppModule {
   // SHAREF PREF
   @injectable
   SharefPref get sharedPref => SharefPref();
+
+  // DATABASE LOCAL
+  @lazySingleton
+  AppDatabasePatrullaje get appDatabasePatrullaje => AppDatabasePatrullaje();
+
+  // - DTO's
+  @lazySingleton
+  UbicacionPendienteDao ubicacionPendienteDao(AppDatabasePatrullaje database) {
+    return UbicacionPendienteDao(appDatabase: database);
+  }
+
+  @lazySingleton
+  IncidenciaPendienteDao incidenciaPendienteDao(
+    AppDatabasePatrullaje database,
+  ) {
+    return IncidenciaPendienteDao(appDatabase: database);
+  }
+
+  @lazySingleton
+  EvidenciaPendienteDao evidenciaPendienteDao(AppDatabasePatrullaje database) {
+    return EvidenciaPendienteDao(appDatabase: database);
+  }
+
+  @lazySingleton
+  IncidenciaOfflineDao incidenciaOfflineDao(
+    AppDatabasePatrullaje database,
+    IncidenciaPendienteDao incidenciaDao,
+    EvidenciaPendienteDao evidenciaDao,
+  ) {
+    return IncidenciaOfflineDao(
+      appDatabase: database,
+      incidenciaDao: incidenciaDao,
+      evidenciaDao: evidenciaDao,
+    );
+  }
 
   // =============================================================
   // 1. SERVICES (DATA SOURCE REMOTO)
@@ -107,7 +170,12 @@ abstract class AppModule {
   // - Tracking
   @injectable
   TrackingRepository trackingRepository(SocketRepository socketRepository) =>
-      TrackingRepositoryImpl(geolocatorRepository, socketRepository);
+      TrackingRepositoryImpl(
+        geolocatorRepository,
+        socketRepository,
+        authRepository,
+        ubicacionPendienteDao(appDatabasePatrullaje),
+      );
 
   // - Incidente
   @injectable

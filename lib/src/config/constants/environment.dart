@@ -1,4 +1,3 @@
-
 // import 'dart:io';
 
 class Environment {
@@ -18,10 +17,10 @@ class Environment {
   //     : 'http://localhost:4000';
 
   // - Celular real - CASA
-  static String mainUrl = 'http://192.168.0.235:4000/api';
-  static String socketUrl = 'http://192.168.0.235:4000';
+  // static String mainUrl = 'http://192.168.0.235:4000/api';
+  // static String socketUrl = 'http://192.168.0.235:4000';
 
   // - Celular real - UNSAAC
-  // static String mainUrl = 'http://192.168.0.135:4000/api';
-  // static String socketUrl = 'http://192.168.0.135:4000';
+  static String mainUrl = 'http://192.168.0.135:4000/api';
+  static String socketUrl = 'http://192.168.0.135:4000';
 }

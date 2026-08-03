@@ -195,6 +195,7 @@ class TrackingBloc extends Bloc<TrackingEvent, TrackingState> {
           confirmedAt: result.confirmedAt,
           message: result.message,
           omitted: result.omitted,
+          storedOffline: result.storedOffline,
         ),
       );
     } catch (error, stackTrace) {
@@ -374,16 +375,37 @@ class TrackingBloc extends Bloc<TrackingEvent, TrackingState> {
       return;
     }
 
-    final status = event.omitted
-        ? TrackingTransmissionStatus.omitted
-        : TrackingTransmissionStatus.transmitted;
+    // final status = event.omitted
+    //     ? TrackingTransmissionStatus.omitted
+    //     : TrackingTransmissionStatus.transmitted;
 
-    debugPrint(
-      event.omitted
-          ? '✅ Ubicación recibida, pero omitida por '
-                'no existir desplazamiento significativo.'
-          : '✅ Ubicación confirmada por el backend.',
-    );
+    final TrackingTransmissionStatus status;
+
+    if (event.storedOffline) {
+      status = TrackingTransmissionStatus.storedOffline;
+    } else if (event.omitted) {
+      status = TrackingTransmissionStatus.omitted;
+    } else {
+      status = TrackingTransmissionStatus.transmitted;
+    }
+
+    // debugPrint(
+    //   event.omitted
+    //       ? '✅ Ubicación recibida, pero omitida por '
+    //             'no existir desplazamiento significativo.'
+    //       : '✅ Ubicación confirmada por el backend.',
+    // );
+
+    if (event.storedOffline) {
+      debugPrint('💾 Ubicación almacenada localmente.');
+    } else if (event.omitted) {
+      debugPrint(
+        '✅ Ubicación recibida, pero omitida por '
+        'no existir desplazamiento significativo.',
+      );
+    } else {
+      debugPrint('✅ Ubicación confirmada por el backend.');
+    }
 
     emit(
       state.copyWith(
