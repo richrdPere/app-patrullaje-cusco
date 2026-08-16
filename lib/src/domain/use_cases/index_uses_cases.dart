@@ -124,3 +124,11 @@ export 'package:sis_patrullaje_cusco/src/domain/use_cases/alerta_notificacion/al
 export 'package:sis_patrullaje_cusco/src/domain/use_cases/alerta_notificacion/alerta_notificacion_uses_cases/RegistrarDispositivoUseCase.dart';
 export 'package:sis_patrullaje_cusco/src/domain/use_cases/alerta_notificacion/alerta_notificacion_uses_cases/ResponderAlertaUseCase.dart';
 export 'package:sis_patrullaje_cusco/src/domain/use_cases/alerta_notificacion/AlertaNotificacionUsesCases.dart';
+
+// =======================================
+// CLASIFICADORES
+// =======================================
+export 'package:sis_patrullaje_cusco/src/domain/use_cases/clasificadores/clasificadores_uses_cases/GetClasificadorArbolUC.dart';
+export 'package:sis_patrullaje_cusco/src/domain/use_cases/clasificadores/clasificadores_uses_cases/GetClasificadorByCodigoUC.dart';
+export 'package:sis_patrullaje_cusco/src/domain/use_cases/clasificadores/clasificadores_uses_cases/GetClasificadoresPaginadoUC.dart';
+export 'package:sis_patrullaje_cusco/src/domain/use_cases/clasificadores/ClasificadoresUsesCases.dart';

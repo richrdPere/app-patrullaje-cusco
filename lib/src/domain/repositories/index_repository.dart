@@ -1,3 +1,5 @@
+export 'package:sis_patrullaje_cusco/src/domain/repositories/clasificadores_repository.dart';
+
 export 'package:sis_patrullaje_cusco/src/domain/repositories/alert_repository.dart';
 export 'package:sis_patrullaje_cusco/src/domain/repositories/alertas_repository.dart';
 export 'package:sis_patrullaje_cusco/src/domain/repositories/auth_repository.dart';

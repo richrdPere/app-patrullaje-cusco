@@ -12,6 +12,7 @@ import 'package:sis_patrullaje_cusco/src/presentation/screens/auth/login/bloc/lo
 import 'package:sis_patrullaje_cusco/src/presentation/screens/auth/login/bloc/login_event.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/auth/register/bloc/register_bloc.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/auth/register/bloc/register_event.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/clasificadores/bloc/clasificadores_bloc.dart';
 // import 'package:sis_patrullaje_cusco/src/presentation/screens/historial_patrullaje/bloc/historial_patrullaje_event.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/home/home_bloc.dart';
 // import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/home/home_event.dart';
@@ -143,5 +144,11 @@ List<BlocProvider> blocProviders = [
   BlocProvider<AlertaBloc>(
     create: (BuildContext context) =>
         AlertaBloc(locator<AlertaNotificacionUsesCases>()),
+  ),
+
+  // Clasificadores
+  BlocProvider<ClasificadoresBloc>(
+    create: (BuildContext context) =>
+        ClasificadoresBloc(locator<ClasificadoresUsesCases>()),
   ),
 ];

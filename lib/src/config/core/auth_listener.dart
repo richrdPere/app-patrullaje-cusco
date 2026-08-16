@@ -155,7 +155,6 @@ class _AuthListenerState extends State<AuthListener>
   // ============================================================
   // VALIDAR JWT
   // ============================================================
-
   bool _esJwtValido(String token) {
     try {
       final tokenLimpio = token.trim();

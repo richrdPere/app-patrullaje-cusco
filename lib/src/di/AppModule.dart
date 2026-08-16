@@ -134,6 +134,9 @@ abstract class AppModule {
   @injectable // Notificaciones
   AlertaService get alertaService => AlertaService();
 
+  @injectable // Clasificadores
+  ClasificadoresService get clasificadoresService => ClasificadoresService();
+
   // =============================================================
   // 2. REPOSITORY
   // =============================================================
@@ -209,6 +212,11 @@ abstract class AppModule {
   @injectable
   AlertaRepository get alertaNotificacionRepository =>
       AlertaRepositoryImpl(alertaService, fcmTokenService, authRepository);
+
+  // - Clasificadores
+  @injectable
+  ClasificadoresRepository get clasificadoresRepository =>
+      ClasificadoresRepositoryImpl(clasificadoresService, authRepository);
 
   // =============================================================
   // 3. USES CASES
@@ -353,6 +361,21 @@ abstract class AppModule {
           alertaNotificacionRepository,
         ),
         responderAlerta: ResponderAlertaUseCase(alertaNotificacionRepository),
+      );
+
+  // - Clasificadores
+  @injectable
+  ClasificadoresUsesCases get clasificadoresUsesCases =>
+      ClasificadoresUsesCases(
+        getClasificadorArbolUC: GetClasificadorArbolUC(
+          clasificadoresRepository,
+        ),
+        getClasificadorByCodigoUC: GetClasificadorByCodigoUC(
+          clasificadoresRepository,
+        ),
+        getClasificadoresPaginadoUC: GetClasificadoresPaginadoUC(
+          clasificadoresRepository,
+        ),
       );
 
   // =============================================================

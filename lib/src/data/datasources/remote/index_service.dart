@@ -6,3 +6,5 @@ export 'package:sis_patrullaje_cusco/src/data/datasources/remote/services/users_
 
 export 'package:sis_patrullaje_cusco/src/data/datasources/remote/firebase/firebase_messaging_service.dart';
 export 'package:sis_patrullaje_cusco/src/data/datasources/remote/notification/fcm_token_service.dart';
+
+export 'package:sis_patrullaje_cusco/src/data/datasources/remote/services/clasificadores_service.dart';
