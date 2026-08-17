@@ -11,7 +11,8 @@ import 'package:sis_patrullaje_cusco/src/presentation/screens/alertas/view/alert
 import 'package:sis_patrullaje_cusco/src/presentation/screens/chat/chat_page.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/auth/login/view/login_page.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/auth/register/view/register_page.dart';
-import 'package:sis_patrullaje_cusco/src/presentation/screens/clasificadores/view/clasificadores_view.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/clasificadores/view/clasificadores_page.dart';
+
 import 'package:sis_patrullaje_cusco/src/presentation/screens/historial_patrullaje/view/listado/historial_patrullaje_page.dart';
 // import 'package:sis_patrullaje_cusco/src/presentation/screens/home/home_content.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/home/view/home_page.dart';
@@ -140,6 +141,56 @@ final GoRouter appRouter = GoRouter(
                 final incident = state.extra as IncidentData;
 
                 return MapaIncidentPage(incident: incident);
+              },
+            ),
+          ],
+        ),
+
+        // =====================================================
+        // 3. OCURRENCIAS
+        // =====================================================
+        GoRoute(
+          path: '/ocurrencias',
+          name: 'ocurrencias',
+          builder: (_, __) => const OcurrenciasPage(),
+          routes: [
+            // *********************************************************
+            // Crear ocurrencia
+            // URL: /ocurrencias/crear
+            // *********************************************************
+            GoRoute(
+              path: 'crear',
+              name: 'ocurrencia_crear',
+              pageBuilder: (context, state) {
+                return MaterialPage<void>(
+                  key: state.pageKey,
+                  fullscreenDialog: true,
+                  child: const OcurrenciaFormPage(),
+                );
+              },
+            ),
+
+            // *********************************************************
+            // Detalle de ocurrencia
+            // URL: /ocurrencias/26
+            // *********************************************************
+            GoRoute(
+              path: ':idOcurrencia',
+              name: 'ocurrencia_detalle',
+              pageBuilder: (context, state) {
+                final int? ocurrenciaId = int.tryParse(
+                  state.pathParameters['idOcurrencia'] ?? '',
+                );
+
+                return MaterialPage(
+                  key: state.pageKey,
+                  fullscreenDialog: true,
+                  child: ocurrenciaId == null
+                      ? const Scaffold(
+                          body: Center(child: Text('Categoría inválida.')),
+                        )
+                      : OcurrenciaDetallePage(ocurrenciaId: ocurrenciaId),
+                );
               },
             ),
           ],
@@ -276,57 +327,14 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/clasificadores',
       name: 'clasificadores',
-      builder: (_, __) => const ClasificadoresView(),
-    ),
 
-    // =====================================================
-    // OCURRENCIAS
-    // =====================================================
-    GoRoute(
-      path: '/ocurrencias',
-      name: 'ocurrencias',
-      builder: (_, __) => const OcurrenciasPage(),
-      routes: [
-        // *********************************************************
-        // Crear ocurrencia
-        // URL: /ocurrencias/crear
-        // *********************************************************
-        GoRoute(
-          path: 'crear',
-          name: 'ocurrencia_crear',
-          pageBuilder: (context, state) {
-            return MaterialPage<void>(
-              key: state.pageKey,
-              fullscreenDialog: true,
-              child: const OcurrenciaFormPage(),
-            );
-          },
-        ),
-
-        // *********************************************************
-        // Detalle de ocurrencia
-        // URL: /ocurrencias/26
-        // *********************************************************
-        GoRoute(
-          path: ':idOcurrencia',
-          name: 'ocurrencia_detalle',
-          pageBuilder: (context, state) {
-            final int? ocurrenciaId = int.tryParse(
-              state.pathParameters['idOcurrencia'] ?? '',
-            );
-
-            return MaterialPage(
-              key: state.pageKey,
-              fullscreenDialog: true,
-              child: ocurrenciaId == null
-                  ? const Scaffold(
-                      body: Center(child: Text('Categoría inválida.')),
-                    )
-                  : OcurrenciaDetallePage(ocurrenciaId: ocurrenciaId),
-            );
-          },
-        ),
-      ],
+      pageBuilder: (context, state) {
+        return MaterialPage<void>(
+          key: state.pageKey,
+          fullscreenDialog: true,
+          child: const ClasificadoresPage(),
+        );
+      },
     ),
   ],
 );

@@ -71,7 +71,8 @@ class _MainShellState extends State<MainShell> {
         break;
 
       case 3:
-        context.go('/usuarios');
+        // context.go('/usuarios');
+        context.go('/ocurrencias');
         break;
 
       case 4:
@@ -99,7 +100,7 @@ class _MainShellState extends State<MainShell> {
       return 1;
     }
 
-    if (location.startsWith('/usuarios')) {
+    if (location.startsWith('/ocurrencias')) {
       return 3;
     }
 

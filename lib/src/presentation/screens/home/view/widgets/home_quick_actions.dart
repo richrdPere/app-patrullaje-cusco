@@ -87,6 +87,30 @@ class HomeQuickActions extends StatelessWidget {
         ),
 
         // ======================================================
+        // CLASIFICADORES
+        // ======================================================
+        HomeQuickAction(
+          icon: Icons.list_outlined,
+          label: 'Codigos',
+          enabled: puedeConsultarIncidencias,
+          onTap: () {
+            context.pushNamed('clasificadores');
+          },
+        ),
+
+        // ======================================================
+        // OCURRENCIAS
+        // ======================================================
+        HomeQuickAction(
+          icon: Icons.edit_document,
+          label: 'Ocurrencias',
+          enabled: puedeConsultarIncidencias,
+          onTap: () {
+            context.goNamed('ocurrencias');
+          },
+        ),
+
+        // ======================================================
         // TUTORIALES
         // ======================================================
         HomeQuickAction(

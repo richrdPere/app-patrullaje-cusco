@@ -162,7 +162,6 @@ class _OcurrenciasContentState extends State<OcurrenciasContent> {
   // ==========================================================
   // PAGINACIÓN
   // ==========================================================
-
   void _previousPage() {
     if (_params.page <= 1) return;
 
