@@ -7,14 +7,14 @@ import 'package:sis_patrullaje_cusco/src/config/constants/environment.dart'
 
 // Helpers
 import 'package:sis_patrullaje_cusco/src/data/datasources/remote/services/helpers/http_Service_helper.dart';
-import 'package:sis_patrullaje_cusco/src/data/models/clasificadores/clasificador_paginated.dart';
-import 'package:sis_patrullaje_cusco/src/data/models/clasificadores/clasificador_query_params.dart';
 import 'package:sis_patrullaje_cusco/src/domain/utils/Resource.dart';
 
 // Models
-import 'package:sis_patrullaje_cusco/src/data/models/clasificadores/clasificador_arbol_data.dart';
 import 'package:sis_patrullaje_cusco/src/data/models/common/api_response.dart';
+import 'package:sis_patrullaje_cusco/src/data/models/clasificadores/clasificador_query_params.dart';
+import 'package:sis_patrullaje_cusco/src/data/models/clasificadores/clasificador_paginated.dart';
 import 'package:sis_patrullaje_cusco/src/data/models/clasificadores/clasificador_codigo_data.dart';
+import 'package:sis_patrullaje_cusco/src/data/models/clasificadores/clasificador_arbol_data.dart';
 
 class ClasificadoresService {
   String get API_BASE => '${url_backend.Environment.mainUrl}/clasificadores';

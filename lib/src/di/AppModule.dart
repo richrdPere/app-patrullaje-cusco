@@ -137,6 +137,9 @@ abstract class AppModule {
   @injectable // Clasificadores
   ClasificadoresService get clasificadoresService => ClasificadoresService();
 
+  @injectable
+  OcurrenciaService get ocurrenciaService => OcurrenciaService();
+
   // =============================================================
   // 2. REPOSITORY
   // =============================================================
@@ -217,6 +220,11 @@ abstract class AppModule {
   @injectable
   ClasificadoresRepository get clasificadoresRepository =>
       ClasificadoresRepositoryImpl(clasificadoresService, authRepository);
+
+  // - Ocurrencias
+  @injectable
+  OcurrenciasRepository get ocurrenciasRepository =>
+      OcurrenciasRepositoryImpl(ocurrenciaService, authRepository);
 
   // =============================================================
   // 3. USES CASES
@@ -377,6 +385,15 @@ abstract class AppModule {
           clasificadoresRepository,
         ),
       );
+
+  // - Ocurrencias
+  @injectable
+  OcurrenciaUsesCases get ocurrenciaUsesCases => OcurrenciaUsesCases(
+    createOcurrenciaUC: CreateOcurrenciaUC(ocurrenciasRepository),
+    getOcurrenciaByIdUC: GetOcurrenciaByIdUC(ocurrenciasRepository),
+    getOcurrenciaPdfUC: GetOcurrenciaPdfUC(ocurrenciasRepository),
+    getOcurrenciasPaginadoUC: GetOcurrenciasPaginadoUC(ocurrenciasRepository),
+  );
 
   // =============================================================
   // 4. SOCKETS

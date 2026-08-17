@@ -63,6 +63,7 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i506.ClasificadoresService>(
       () => appModule.clasificadoresService,
     );
+    gh.factory<_i506.OcurrenciaService>(() => appModule.ocurrenciaService);
     gh.factory<_i224.AuthRepository>(() => appModule.authRepository);
     gh.factory<_i224.GeolocatorRepository>(
       () => appModule.geolocatorRepository,
@@ -84,6 +85,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i224.ClasificadoresRepository>(
       () => appModule.clasificadoresRepository,
     );
+    gh.factory<_i224.OcurrenciasRepository>(
+      () => appModule.ocurrenciasRepository,
+    );
     gh.factory<_i952.AuthUsesCases>(() => appModule.authUseCases);
     gh.factory<_i952.GeolocatorUseCases>(() => appModule.geolocatorUseCases);
     gh.factory<_i952.GeocodingUsesCases>(() => appModule.geocodingUsesCases);
@@ -101,6 +105,7 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i952.ClasificadoresUsesCases>(
       () => appModule.clasificadoresUsesCases,
     );
+    gh.factory<_i952.OcurrenciaUsesCases>(() => appModule.ocurrenciaUsesCases);
     gh.lazySingleton<_i506.FirebaseMessagingService>(
       () => appModule.firebaseMessagingService,
     );

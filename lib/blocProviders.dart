@@ -24,6 +24,7 @@ import 'package:sis_patrullaje_cusco/src/presentation/screens/mapa/blocs/alerta/
 import 'package:sis_patrullaje_cusco/src/presentation/screens/mapa/blocs/gps/gps_bloc.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/mapa/blocs/mapa/mapa_bloc.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/mapa/blocs/mapa_incident/mapa_incident_bloc.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/ocurrencias/bloc/ocurrencia_bloc.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/profile/info/bloc/profile_bloc.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/profile/info/bloc/profile_event.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/profile/update/bloc/update_profile_bloc.dart';
@@ -150,5 +151,11 @@ List<BlocProvider> blocProviders = [
   BlocProvider<ClasificadoresBloc>(
     create: (BuildContext context) =>
         ClasificadoresBloc(locator<ClasificadoresUsesCases>()),
+  ),
+
+  // Ocurrencia
+  BlocProvider<OcurrenciaBloc>(
+    create: (BuildContext context) =>
+        OcurrenciaBloc(locator<OcurrenciaUsesCases>()),
   ),
 ];

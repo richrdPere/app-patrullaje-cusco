@@ -11,6 +11,7 @@ import 'package:sis_patrullaje_cusco/src/presentation/screens/alertas/view/alert
 import 'package:sis_patrullaje_cusco/src/presentation/screens/chat/chat_page.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/auth/login/view/login_page.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/auth/register/view/register_page.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/clasificadores/view/clasificadores_view.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/historial_patrullaje/view/listado/historial_patrullaje_page.dart';
 // import 'package:sis_patrullaje_cusco/src/presentation/screens/home/home_content.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/home/view/home_page.dart';
@@ -19,6 +20,9 @@ import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/view/lis
 // import 'package:sis_patrullaje_cusco/src/presentation/screens/home/home_page.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/mapa/view/mapa/mapa_page.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/mapa/view/mapa_incident/mapa_incident_page.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/ocurrencias/view/detalle/ocurrencia_detalle_page.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/ocurrencias/view/form/ocurrencia_form_page.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/ocurrencias/view/listado/ocurrencias_page.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/profile/info/view/profile_page.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/profile/update/view/profile_update_page.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/usuarios/usuarios_page.dart';
@@ -261,6 +265,65 @@ final GoRouter appRouter = GoRouter(
             final user = state.extra as Usuario;
 
             return ProfileUpdatePage(user: user);
+          },
+        ),
+      ],
+    ),
+
+    // =====================================================
+    // CLASIFICADORES
+    // =====================================================
+    GoRoute(
+      path: '/clasificadores',
+      name: 'clasificadores',
+      builder: (_, __) => const ClasificadoresView(),
+    ),
+
+    // =====================================================
+    // OCURRENCIAS
+    // =====================================================
+    GoRoute(
+      path: '/ocurrencias',
+      name: 'ocurrencias',
+      builder: (_, __) => const OcurrenciasPage(),
+      routes: [
+        // *********************************************************
+        // Crear ocurrencia
+        // URL: /ocurrencias/crear
+        // *********************************************************
+        GoRoute(
+          path: 'crear',
+          name: 'ocurrencia_crear',
+          pageBuilder: (context, state) {
+            return MaterialPage<void>(
+              key: state.pageKey,
+              fullscreenDialog: true,
+              child: const OcurrenciaFormPage(),
+            );
+          },
+        ),
+
+        // *********************************************************
+        // Detalle de ocurrencia
+        // URL: /ocurrencias/26
+        // *********************************************************
+        GoRoute(
+          path: ':idOcurrencia',
+          name: 'ocurrencia_detalle',
+          pageBuilder: (context, state) {
+            final int? ocurrenciaId = int.tryParse(
+              state.pathParameters['idOcurrencia'] ?? '',
+            );
+
+            return MaterialPage(
+              key: state.pageKey,
+              fullscreenDialog: true,
+              child: ocurrenciaId == null
+                  ? const Scaffold(
+                      body: Center(child: Text('Categoría inválida.')),
+                    )
+                  : OcurrenciaDetallePage(ocurrenciaId: ocurrenciaId),
+            );
           },
         ),
       ],

@@ -132,3 +132,12 @@ export 'package:sis_patrullaje_cusco/src/domain/use_cases/clasificadores/clasifi
 export 'package:sis_patrullaje_cusco/src/domain/use_cases/clasificadores/clasificadores_uses_cases/GetClasificadorByCodigoUC.dart';
 export 'package:sis_patrullaje_cusco/src/domain/use_cases/clasificadores/clasificadores_uses_cases/GetClasificadoresPaginadoUC.dart';
 export 'package:sis_patrullaje_cusco/src/domain/use_cases/clasificadores/ClasificadoresUsesCases.dart';
+
+// =======================================
+// OCURRENCIAS
+// =======================================
+export 'package:sis_patrullaje_cusco/src/domain/use_cases/ocurrencias/ocurrencia_uses_cases/CreateOcurrenciaUC.dart';
+export 'package:sis_patrullaje_cusco/src/domain/use_cases/ocurrencias/ocurrencia_uses_cases/GetOcurrenciaByIdUC.dart';
+export 'package:sis_patrullaje_cusco/src/domain/use_cases/ocurrencias/ocurrencia_uses_cases/GetOcurrenciaPdfUC.dart';
+export 'package:sis_patrullaje_cusco/src/domain/use_cases/ocurrencias/ocurrencia_uses_cases/GetOcurrenciasPaginadoUC.dart';
+export 'package:sis_patrullaje_cusco/src/domain/use_cases/ocurrencias/OcurrenciaUsesCases.dart';
