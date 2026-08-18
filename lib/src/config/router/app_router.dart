@@ -1,35 +1,14 @@
-// import 'package:flutter/material.dart';
-// import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sis_patrullaje_cusco/src/config/core/main_shell.dart';
 import 'package:sis_patrullaje_cusco/src/config/core/session/session_bloc.dart';
+import 'package:sis_patrullaje_cusco/src/data/models/patrullaje/patrullaje_listado_data.dart';
 import 'package:sis_patrullaje_cusco/src/domain/entities/incident_data_entity.dart';
 import 'package:sis_patrullaje_cusco/src/domain/models/usuarios.dart';
-import 'package:sis_patrullaje_cusco/src/presentation/screens/alertas/view/alertas_page.dart';
-import 'package:sis_patrullaje_cusco/src/presentation/screens/chat/chat_page.dart';
-import 'package:sis_patrullaje_cusco/src/presentation/screens/auth/login/view/login_page.dart';
-import 'package:sis_patrullaje_cusco/src/presentation/screens/auth/register/view/register_page.dart';
-import 'package:sis_patrullaje_cusco/src/presentation/screens/clasificadores/view/clasificadores_page.dart';
 
-import 'package:sis_patrullaje_cusco/src/presentation/screens/historial_patrullaje/view/listado/historial_patrullaje_page.dart';
-// import 'package:sis_patrullaje_cusco/src/presentation/screens/home/home_content.dart';
-import 'package:sis_patrullaje_cusco/src/presentation/screens/home/view/home_page.dart';
-import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/view/detail_incidencia/incidencia_detalle_page.dart';
-import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/view/list_incidentes/incidencias_contexto_page.dart';
-// import 'package:sis_patrullaje_cusco/src/presentation/screens/home/home_page.dart';
-import 'package:sis_patrullaje_cusco/src/presentation/screens/mapa/view/mapa/mapa_page.dart';
-import 'package:sis_patrullaje_cusco/src/presentation/screens/mapa/view/mapa_incident/mapa_incident_page.dart';
-import 'package:sis_patrullaje_cusco/src/presentation/screens/ocurrencias/view/detalle/ocurrencia_detalle_page.dart';
-import 'package:sis_patrullaje_cusco/src/presentation/screens/ocurrencias/view/form/ocurrencia_form_page.dart';
-import 'package:sis_patrullaje_cusco/src/presentation/screens/ocurrencias/view/listado/ocurrencias_page.dart';
-import 'package:sis_patrullaje_cusco/src/presentation/screens/profile/info/view/profile_page.dart';
-import 'package:sis_patrullaje_cusco/src/presentation/screens/profile/update/view/profile_update_page.dart';
-import 'package:sis_patrullaje_cusco/src/presentation/screens/usuarios/usuarios_page.dart';
-import 'package:sis_patrullaje_cusco/src/presentation/shared/screens/loading/view/loading_page.dart';
-import 'package:sis_patrullaje_cusco/src/presentation/shared/screens/logout/view/logout_page.dart';
-import 'package:sis_patrullaje_cusco/src/presentation/shared/screens/splash/view/splash_page.dart';
+// Screens
+import 'package:sis_patrullaje_cusco/src/presentation/screens/screens.dart';
 
 String? authRedirect(BuildContext context, GoRouterState state) {
   final session = context.read<SessionBloc>().state;
@@ -119,14 +98,18 @@ final GoRouter appRouter = GoRouter(
       },
 
       routes: [
-        // 1. HOME
+        // ==================================================
+        // 1. HOME - PATRULLAJE
+        // ==================================================
         GoRoute(
           path: '/home',
           name: "home",
           builder: (_, __) => const HomePage(),
         ),
 
+        // ==================================================
         // 2. MAPA
+        // ==================================================
         GoRoute(
           path: '/mapa',
           name: "mapa",
@@ -266,6 +249,51 @@ final GoRouter appRouter = GoRouter(
           zonaId: zonaId,
         );
       },
+    ),
+
+    // =====================================================
+    // MIS PATRULLAJES
+    // =====================================================
+    GoRoute(
+      path: '/mis-patrullajes',
+      name: 'mis_patrullajes',
+      builder: (_, __) => const MisPatrullajesPage(),
+      routes: [
+        GoRoute(
+          path: '/mis-patrullajes/:patrullajeId',
+          name: 'patrullaje_detalle',
+          pageBuilder: (context, state) {
+            final patrullajeId = int.tryParse(
+              state.pathParameters['patrullajeId'] ?? '',
+            );
+
+            final extra = state.extra;
+
+            return MaterialPage<void>(
+              key: state.pageKey,
+              fullscreenDialog: true,
+              child:
+                  patrullajeId != null &&
+                      patrullajeId > 0 &&
+                      extra is PatrullajeListadoData
+                  ? PatrullajeDetallePage(patrullaje: extra)
+                  : const Scaffold(
+                      body: SafeArea(
+                        child: Center(
+                          child: Padding(
+                            padding: EdgeInsets.all(24),
+                            child: Text(
+                              'No se encontró información válida del patrullaje.',
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+            );
+          },
+        ),
+      ],
     ),
 
     // =====================================================

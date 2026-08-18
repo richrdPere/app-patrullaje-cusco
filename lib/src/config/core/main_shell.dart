@@ -38,7 +38,6 @@ class _MainShellState extends State<MainShell> {
 
     return Scaffold(
       body: widget.child,
-
       bottomNavigationBar: BlocBuilder<AlertaBloc, AlertaState>(
         buildWhen: (previous, current) {
           return previous.alertasNoLeidas != current.alertasNoLeidas;

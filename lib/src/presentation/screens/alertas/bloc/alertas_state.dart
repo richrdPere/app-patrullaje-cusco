@@ -43,7 +43,6 @@ class AlertaState extends Equatable {
   // ==========================================================
   // LISTADO
   // ==========================================================
-
   final AlertaListStatus listStatus;
   final List<AlertaDestinatarioModel> alertas;
   final int alertasNoLeidas;
@@ -51,14 +50,12 @@ class AlertaState extends Equatable {
   // ==========================================================
   // RESUMEN
   // ==========================================================
-
   final AlertaResumenStatus resumenStatus;
   final AlertaResumenModel? resumen;
 
   // ==========================================================
   // ACCIONES
   // ==========================================================
-
   final AlertaActionStatus actionStatus;
   final AlertaActionType actionType;
   final String? actionMessage;
@@ -66,19 +63,16 @@ class AlertaState extends Equatable {
   // ==========================================================
   // ALERTA SELECCIONADA
   // ==========================================================
-
   final AlertaDestinatarioModel? alertaSelected;
 
   // ==========================================================
   // ÚLTIMA ALERTA REMOTA
   // ==========================================================
-
   final AlertaDestinatarioModel? ultimaAlertaRecibida;
 
   // ==========================================================
   // PAGINACIÓN
   // ==========================================================
-
   final int page;
   final int limit;
   final int total;
@@ -89,7 +83,6 @@ class AlertaState extends Equatable {
   // ==========================================================
   // FILTROS
   // ==========================================================
-
   final String? filtroEstado;
   final String? filtroTipo;
   final String? filtroPrioridad;
@@ -98,7 +91,6 @@ class AlertaState extends Equatable {
   // ==========================================================
   // ERROR
   // ==========================================================
-
   final String? errorMessage;
 
   const AlertaState({
@@ -128,7 +120,6 @@ class AlertaState extends Equatable {
   // ==========================================================
   // HELPERS
   // ==========================================================
-
   bool get tieneAlertas => alertas.isNotEmpty;
 
   bool get isLoading {
@@ -167,7 +158,6 @@ class AlertaState extends Equatable {
   // ==========================================================
   // COPY WITH
   // ==========================================================
-
   AlertaState copyWith({
     AlertaListStatus? listStatus,
     List<AlertaDestinatarioModel>? alertas,

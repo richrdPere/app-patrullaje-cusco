@@ -21,7 +21,15 @@ class PatrullajeHeader extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.blue,
+        // color: Colors.blue,
+        gradient: LinearGradient(
+          begin: Alignment.topRight,
+          end: Alignment.bottomLeft,
+          colors: [
+            Color.fromARGB(255, 12, 38, 145),
+            Color.fromARGB(255, 34, 156, 249),
+          ],
+        ),
         borderRadius: BorderRadius.circular(18),
       ),
       child: Column(
@@ -62,7 +70,6 @@ class PatrullajeHeader extends StatelessWidget {
           // ),
 
           // const SizedBox(height: 10),
-
           _InfoRow(
             icon: Icons.schedule_outlined,
             title: 'Horario',

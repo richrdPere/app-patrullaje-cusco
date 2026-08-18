@@ -3,6 +3,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 import 'package:sis_patrullaje_cusco/blocProviders.dart';
 import 'package:sis_patrullaje_cusco/injection.dart';
@@ -31,19 +32,15 @@ import 'package:sis_patrullaje_cusco/src/config/theme/app_theme.dart';
 ///
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  /*
-   * El handler puede ejecutarse en un isolate separado,
-   * por eso Firebase debe inicializarse nuevamente aquí.
-   */
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  debugPrint('========================================');
-  debugPrint('FCM - MENSAJE EN SEGUNDO PLANO');
-  debugPrint('Message ID: ${message.messageId}');
-  debugPrint('Título: ${message.notification?.title}');
-  debugPrint('Mensaje: ${message.notification?.body}');
-  debugPrint('Data: ${message.data}');
-  debugPrint('========================================');
+  // debugPrint('========================================');
+  // debugPrint('FCM - MENSAJE EN SEGUNDO PLANO');
+  // debugPrint('Message ID: ${message.messageId}');
+  // debugPrint('Título: ${message.notification?.title}');
+  // debugPrint('Mensaje: ${message.notification?.body}');
+  // debugPrint('Data: ${message.data}');
+  // debugPrint('========================================');
 }
 
 /// ================================================================
@@ -51,30 +48,13 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 /// ================================================================
 
 Future<void> main() async {
-  /*
-   * Obligatorio antes de ejecutar código asíncrono
-   * o usar plugins antes de runApp().
-   */
   WidgetsFlutterBinding.ensureInitialized();
+  await initializeDateFormatting('es_PE', null);
 
-  /*
-   * Inicializa Firebase utilizando la configuración
-   * generada por FlutterFire CLI.
-   */
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  /*
-   * Registra el handler de notificaciones recibidas
-   * cuando la aplicación está en segundo plano.
-   */
   FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
 
-  /*
-   * Inicializa tus dependencias con injectable/get_it.
-   *
-   * Se ejecuta después de Firebase por si posteriormente
-   * algún servicio inyectado depende de Firebase.
-   */
   await configureDependencies();
 
   runApp(const MyApp());

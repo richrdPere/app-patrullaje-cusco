@@ -1,5 +1,8 @@
 import 'dart:async';
 import 'package:sis_patrullaje_cusco/src/data/datasources/remote/services/patrullaje_service.dart';
+import 'package:sis_patrullaje_cusco/src/data/models/common/api_response.dart';
+import 'package:sis_patrullaje_cusco/src/data/models/patrullaje/patrullaje_sereno_paginated.dart';
+import 'package:sis_patrullaje_cusco/src/data/models/patrullaje/patrullaje_sereno_query_params.dart';
 import 'package:sis_patrullaje_cusco/src/domain/utils/Resource.dart';
 
 // Repo
@@ -23,6 +26,10 @@ class PatrullajeRepositoryImpl implements PatrullajeRepository {
   );
 
   // API REST
+
+  // *********************************************************
+  // 1. GET PATRULLAJE ACTIVO
+  // *********************************************************
   @override
   Future<Resource<PatrullajeData?>> getPatrullajeActivo() async {
     final token = await authRepository.getToken();
@@ -36,6 +43,25 @@ class PatrullajeRepositoryImpl implements PatrullajeRepository {
     return await remote.getPatrullajeActivo(token: token);
   }
 
+  // *********************************************************
+  // 2. INICIAR PATRULLAJE
+  // *********************************************************
+  @override
+  Future<Resource<bool>> startPatrullaje(int patrullajeId) async {
+    final token = await authRepository.getToken();
+    if (token == null) {
+      return ErrorData(message: "No existe una sesión iniciada.");
+    }
+
+    return await remote.startPatrullaje(
+      patrullajeId: patrullajeId,
+      token: token,
+    );
+  }
+
+  // *********************************************************
+  // 3. FINALIZAR PATRULLAJE
+  // *********************************************************
   @override
   Future<Resource<PatrullajeData>> endPatrullaje({
     required int patrullajeId,
@@ -50,26 +76,16 @@ class PatrullajeRepositoryImpl implements PatrullajeRepository {
       );
     }
 
-    return remote.endPatrullaje(
+    return await remote.endPatrullaje(
       patrullajeId: patrullajeId,
       token: token,
       observacionFinal: observacionFinal,
     );
   }
 
-  @override
-  Future<Resource<bool>> startPatrullaje(int patrullajeId) async {
-    final token = await authRepository.getToken();
-    if (token == null) {
-      return ErrorData(message: "No existe una sesión iniciada.");
-    }
-
-    return await remote.startPatrullaje(
-      patrullajeId: patrullajeId,
-      token: token,
-    );
-  }
-
+  // *********************************************************
+  // 4. ENVIAR UBICACIÓN
+  // *********************************************************
   @override
   Future<Resource<bool>> sendLocation(LocationEntity location) async {
     final token = await authRepository.getToken();
@@ -77,7 +93,23 @@ class PatrullajeRepositoryImpl implements PatrullajeRepository {
       return ErrorData(message: "No existe una sesión iniciada.");
     }
 
-    return remote.sendLocation(location: location, token: token);
+    return await remote.sendLocation(location: location, token: token);
+  }
+
+  // *********************************************************
+  // 5. OBTENER MIS PATRULLAJES PAGINADOS
+  // *********************************************************
+  @override
+  Future<Resource<ApiResponse<PatrullajeSerenoPaginated>>>
+  getMisPatrullajesPaginados({
+    required PatrullajeSerenoQueryParams params,
+  }) async {
+    final token = await authRepository.getToken();
+    if (token == null) {
+      return ErrorData(message: "No existe una sesión iniciada.");
+    }
+
+    return await remote.getMisPatrullajesPaginados(token: token, params: params);
   }
 
   // Socket

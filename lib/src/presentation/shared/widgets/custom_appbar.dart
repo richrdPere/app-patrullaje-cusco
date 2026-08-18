@@ -14,7 +14,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       backgroundColor: Colors.white,
       title: Row(
         children: [
-          Icon(Icons.movie_outlined, color: colors.primary),
+          Icon(Icons.local_police_outlined, color: colors.primary),
           const SizedBox(width: 5),
           Text('Sis Patrullaje', style: titleStyle),
         ],

@@ -30,8 +30,8 @@ import 'package:sis_patrullaje_cusco/src/presentation/screens/mapa/blocs/mapa/ma
 import 'package:sis_patrullaje_cusco/src/presentation/screens/mapa/blocs/mapa/mapa_event.dart';
 
 // Widgets
-import 'package:sis_patrullaje_cusco/src/presentation/screens/home/view/home_content.dart';
-import 'package:sis_patrullaje_cusco/src/presentation/screens/home/view/patrullaje_resumen_dialog.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/home/view/home/home_content.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/home/view/home/patrullaje_resumen_dialog.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});

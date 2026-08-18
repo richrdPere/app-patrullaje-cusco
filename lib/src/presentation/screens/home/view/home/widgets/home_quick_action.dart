@@ -16,13 +16,13 @@ class HomeQuickAction extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final foregroundColor = enabled
-        ? Theme.of(context).colorScheme.primary
-        : Colors.grey.shade400;
+    // final foregroundColor = enabled
+    //     ? Theme.of(context).colorScheme.primary
+    //     : Colors.grey.shade400;
 
-    final backgroundColor = enabled
-        ? Theme.of(context).colorScheme.primaryContainer
-        : Colors.grey.shade200;
+    // final backgroundColor = enabled
+    //     ? Theme.of(context).colorScheme.primaryContainer
+    //     : Colors.grey.shade200;
 
     return InkWell(
       borderRadius: BorderRadius.circular(16),
@@ -37,10 +37,18 @@ class HomeQuickAction extends StatelessWidget {
               width: 54,
               height: 54,
               decoration: BoxDecoration(
-                color: backgroundColor,
+                //color: backgroundColor,
+                gradient: LinearGradient(
+                  begin: Alignment.topRight,
+                  end: Alignment.bottomLeft,
+                  colors: [
+                    Color.fromARGB(255, 12, 38, 145),
+                    Color.fromARGB(255, 34, 156, 249),
+                  ],
+                ),
                 shape: BoxShape.circle,
               ),
-              child: Icon(icon, color: foregroundColor),
+              child: Icon(icon, color: Colors.white),
             ),
             const SizedBox(height: 7),
             Text(

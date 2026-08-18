@@ -281,6 +281,7 @@ abstract class AppModule {
     endPatrullaje: EndPatrullajeUseCase(patrullajeRepository),
     startPatrullaje: StartPatrullajeUseCase(patrullajeRepository),
     sendLocation: SendLocationUseCase(patrullajeRepository),
+    getMisPatrullajesPaginados: GetMisPatrullajesPaginadosUC(patrullajeRepository),
     listenNewPatrullaje: ListenNewPatrullajeUseCase(patrullajeRepository),
     listenPatrullajeActualizado: ListenPatrullajeActualizadoUseCase(
       patrullajeRepository,

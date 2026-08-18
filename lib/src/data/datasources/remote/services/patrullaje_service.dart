@@ -10,10 +10,16 @@ import 'package:sis_patrullaje_cusco/src/config/constants/environment.dart'
 // Mapper
 import 'package:sis_patrullaje_cusco/src/data/mapper/location_mapper.dart';
 
+// Helpers
+import 'package:sis_patrullaje_cusco/src/data/datasources/remote/services/helpers/http_Service_helper.dart';
+import 'package:sis_patrullaje_cusco/src/data/models/common/api_response.dart';
+import 'package:sis_patrullaje_cusco/src/data/models/patrullaje/patrullaje_sereno_paginated.dart';
+import 'package:sis_patrullaje_cusco/src/data/models/patrullaje/patrullaje_sereno_query_params.dart';
+import 'package:sis_patrullaje_cusco/src/domain/utils/Resource.dart';
+
 // Models
 import 'package:sis_patrullaje_cusco/src/data/models/patrullaje/patrullaje_data.dart';
 import 'package:sis_patrullaje_cusco/src/domain/entities/location_entity.dart';
-import 'package:sis_patrullaje_cusco/src/domain/utils/Resource.dart';
 
 class PatrullajeService {
   // APIS
@@ -23,6 +29,8 @@ class PatrullajeService {
   String get API_START_PATRULLAJE => '$API_BASE/patrullaje';
   String get API_END_PATRULLAJE => '$API_BASE/patrullaje';
   String get API_LOCATION => '$API_BASE/patrullaje/location';
+  String get API_GET_MIS_PATRULLAJES_PAGINADO =>
+      '$API_BASE/patrullaje/mis-patrullajes';
 
   Map<String, String> _getHeaders(String token) {
     return {
@@ -51,9 +59,9 @@ class PatrullajeService {
     return statusCode >= 200 && statusCode < 300;
   }
 
-  // =====================================================
+  // *********************************************************
   // 1. GET PATRULLAJE ACTIVO
-  // =====================================================
+  // *********************************************************
   Future<Resource<PatrullajeData?>> getPatrullajeActivo({
     required String token,
   }) async {
@@ -91,9 +99,9 @@ class PatrullajeService {
     }
   }
 
-  // =====================================================
+  // *********************************************************
   // 2. INICIAR PATRULLAJE
-  // =====================================================
+  // *********************************************************
   Future<Resource<bool>> startPatrullaje({
     required int patrullajeId,
     required String token,
@@ -124,9 +132,9 @@ class PatrullajeService {
     }
   }
 
-  // =====================================================
+  // *********************************************************
   // 3. FINALIZAR PATRULLAJE
-  // =====================================================
+  // *********************************************************
   Future<Resource<PatrullajeData>> endPatrullaje({
     required int patrullajeId,
     required String token,
@@ -172,9 +180,9 @@ class PatrullajeService {
     }
   }
 
-  // =====================================================
+  // *********************************************************
   // 4. ENVIAR UBICACIÓN
-  // =====================================================
+  // *********************************************************
   Future<Resource<bool>> sendLocation({
     required LocationEntity location,
     required String token,
@@ -199,6 +207,51 @@ class PatrullajeService {
     } catch (error) {
       return ErrorData<bool>(
         message: 'Error al enviar ubicación.',
+        error: error.toString(),
+      );
+    }
+  }
+
+  // *********************************************************
+  // 5. OBTENER MIS PATRULLAJES PAGINADOS
+  // *********************************************************
+  Future<Resource<ApiResponse<PatrullajeSerenoPaginated>>>
+  getMisPatrullajesPaginados({
+    required String token,
+    required PatrullajeSerenoQueryParams params,
+  }) async {
+    try {
+      // 1.- URL + query params
+      final uri = Uri.parse(
+        API_GET_MIS_PATRULLAJES_PAGINADO,
+      ).replace(queryParameters: params.toQueryParameters());
+
+      // 2.- Petición HTTP
+      final response = await http
+          .get(uri, headers: HttpServiceHelper.getHeaders(token: token))
+          .timeout(const Duration(seconds: 30));
+
+      final body = HttpServiceHelper.decodeResponse(response);
+
+      // 3.- Return JSON
+      if (HttpServiceHelper.isSuccess(response.statusCode)) {
+        final apiResponse = ApiResponse<PatrullajeSerenoPaginated>.fromJson(
+          body,
+          (rawData) => PatrullajeSerenoPaginated.fromJson(
+            Map<String, dynamic>.from(rawData as Map),
+          ),
+        );
+
+        return Success<ApiResponse<PatrullajeSerenoPaginated>>(apiResponse);
+      }
+
+      // 4.- Return Error
+      return HttpServiceHelper.buildError<
+        ApiResponse<PatrullajeSerenoPaginated>
+      >(body, response.statusCode);
+    } catch (error) {
+      return ErrorData<ApiResponse<PatrullajeSerenoPaginated>>(
+        message: 'Ocurrió un error al obtener tus patrullajes.',
         error: error.toString(),
       );
     }

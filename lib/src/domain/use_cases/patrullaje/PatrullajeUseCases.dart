@@ -5,6 +5,8 @@ class PatrullajeUseCases {
   EndPatrullajeUseCase endPatrullaje;
   StartPatrullajeUseCase startPatrullaje;
   SendLocationUseCase sendLocation;
+
+  GetMisPatrullajesPaginadosUC getMisPatrullajesPaginados;
   ListenNewPatrullajeUseCase listenNewPatrullaje;
   ListenPatrullajeActualizadoUseCase listenPatrullajeActualizado;
 
@@ -19,6 +21,7 @@ class PatrullajeUseCases {
     required this.endPatrullaje,
     required this.startPatrullaje,
     required this.sendLocation,
+    required this.getMisPatrullajesPaginados,
     required this.listenNewPatrullaje,
     required this.listenPatrullajeActualizado,
     required this.listenPatrullajeEnd,

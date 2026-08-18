@@ -59,9 +59,9 @@ dependencies {
     )
 
     // Firebase BoM.
-    implementation(
-        platform("com.google.firebase:firebase-bom:34.16.0"),
-    )
+    // implementation(
+    //     platform("com.google.firebase:firebase-bom:34.16.0"),
+    // )
 
     /*
      * No es obligatorio declarar firebase-messaging manualmente
