@@ -1,15 +1,15 @@
+import 'package:sis_patrullaje_cusco/src/data/models/models.dart';
 import 'package:sis_patrullaje_cusco/src/domain/repositories/incidente_repository.dart';
+import 'package:sis_patrullaje_cusco/src/domain/utils/Resource.dart';
 
 class GetMisIncidenciasUseCase {
   final IncidenteRepository incidenteRepository;
 
   GetMisIncidenciasUseCase(this.incidenteRepository);
 
-  run({int page = 1, int limit = 10, String incluirArchivos = 'false'}) {
-    return incidenteRepository.getMisIncidencias(
-      page: page,
-      limit: limit,
-      incluirArchivos: incluirArchivos,
-    );
+  Future<Resource<ApiResponse<MisIncidenciasPaginated>>> run({
+    required MisIncidenciasQueryParams params,
+  }) {
+    return incidenteRepository.getMisIncidencias(params: params);
   }
 }

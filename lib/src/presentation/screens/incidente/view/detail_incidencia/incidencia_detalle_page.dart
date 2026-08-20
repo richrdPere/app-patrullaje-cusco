@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
-import 'package:sis_patrullaje_cusco/src/domain/models/incidencia_model.dart';
 import 'package:sis_patrullaje_cusco/src/domain/utils/Resource.dart';
 
+// Modelos
+import 'package:sis_patrullaje_cusco/src/data/models/models.dart';
+
+// BloC's
 import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/blocs/incidencia/incidente_bloc.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/blocs/incidencia/incidente_event.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/blocs/incidencia/incidente_state.dart';
@@ -94,7 +96,7 @@ class _IncidenciaDetallePageState extends State<IncidenciaDetallePage> {
           listener: (context, state) {
             final response = state.detalleResponse;
 
-            if (response is ErrorData<IncidenteModel>) {
+            if (response is ErrorData<ApiResponse<IncidenciaDetalleData>>) {
               ScaffoldMessenger.of(context)
                 ..hideCurrentSnackBar()
                 ..showSnackBar(

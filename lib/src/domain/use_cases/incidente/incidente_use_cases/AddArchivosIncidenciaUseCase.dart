@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:sis_patrullaje_cusco/src/data/models/models.dart';
 import 'package:sis_patrullaje_cusco/src/domain/repositories/incidente_repository.dart';
 import 'package:sis_patrullaje_cusco/src/domain/utils/Resource.dart';
 
@@ -8,7 +9,7 @@ class AddArchivosIncidenciaUseCase {
 
   AddArchivosIncidenciaUseCase(this.incidenteRepository);
 
-  Future<Resource<bool>> run({
+  Future<Resource<ApiResponse<AgregarArchivosIncidenciaData>>> run({
     required int incidenciaId,
     required List<File> archivos,
   }) {

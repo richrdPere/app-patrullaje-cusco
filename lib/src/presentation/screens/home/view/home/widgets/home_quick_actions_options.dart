@@ -38,11 +38,11 @@ const List<HomeQuickActionOption> homeQuickActionOptions = [
     label: 'Patrullajes',
   ),
 
-  HomeQuickActionOption(
-    type: HomeQuickActionType.mapa,
-    icon: Icons.map_outlined,
-    label: 'Ver mapa',
-  ),
+  // HomeQuickActionOption(
+  //   type: HomeQuickActionType.mapa,
+  //   icon: Icons.map_outlined,
+  //   label: 'Ver mapa',
+  // ),
 
   // HomeQuickActionOption(
   //   type: HomeQuickActionType.alertas,
@@ -69,11 +69,12 @@ const List<HomeQuickActionOption> homeQuickActionOptions = [
     label: 'Incidencias',
   ),
 
-  HomeQuickActionOption(
-    type: HomeQuickActionType.ocurrencias,
-    icon: Icons.edit_document,
-    label: 'Ocurrencias',
-  ),
+  // HomeQuickActionOption(
+  //   type: HomeQuickActionType.ocurrencias,
+  //   icon: Icons.edit_document,
+  //   label: 'Ocurrencias',
+  // ),
+  
   HomeQuickActionOption(
     type: HomeQuickActionType.clasificadores,
     icon: Icons.list_alt_rounded,

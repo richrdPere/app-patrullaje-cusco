@@ -1,9 +1,11 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:path/path.dart' as path;
 
-import 'package:sis_patrullaje_cusco/src/data/models/incidencia/register_incidencia_req.dart';
+import 'package:sis_patrullaje_cusco/src/data/models/models.dart';
 import 'package:sis_patrullaje_cusco/src/data/models/patrullaje/patrullaje_data.dart';
-import 'package:sis_patrullaje_cusco/src/domain/models/incidencia_model.dart';
 import 'package:sis_patrullaje_cusco/src/domain/utils/Resource.dart';
 
 import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/home/home_bloc.dart';
@@ -11,8 +13,8 @@ import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/home/ho
 import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/blocs/incidencia/incidente_bloc.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/blocs/incidencia/incidente_event.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/blocs/incidencia/incidente_state.dart';
-
 import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/enums/incidente_tab_enum.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/view/create_incidente_dialog/widgets/incidente_form_section_card.dart';
 
 class IncidenteFormScreen extends StatefulWidget {
   const IncidenteFormScreen({super.key});
@@ -57,7 +59,8 @@ class _IncidenteFormScreenState extends State<IncidenteFormScreen> {
 
     return BlocConsumer<IncidenteBloc, IncidenteState>(
       listenWhen: (previous, current) {
-        return previous.createResponse != current.createResponse;
+        return previous.createResponse != current.createResponse ||
+            previous.mediaError != current.mediaError;
       },
       listener: _onIncidenteStateChanged,
       builder: (context, state) {
@@ -68,61 +71,46 @@ class _IncidenteFormScreenState extends State<IncidenteFormScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // CARD
                 _buildPatrullajeCard(patrullaje),
 
                 const SizedBox(height: 20),
 
-                // SELECCION DE INCIDENTE
-                _buildSectionTitle(
+                IncidentFormSectionCard(
                   icon: Icons.category_outlined,
                   title: 'Tipo de incidente',
                   subtitle:
                       'Selecciona la categoría que mejor describa el hecho.',
+                  child: _buildTipoIncidenteSelector(
+                    disabled: state.isCreating,
+                  ),
                 ),
 
-                const SizedBox(height: 12),
+                const SizedBox(height: 18),
 
-                _buildTipoIncidenteSelector(disabled: state.isCreating),
-
-                const SizedBox(height: 24),
-
-                // DESCRIPCION DE INCIDENTE
-                _buildSectionTitle(
+                IncidentFormSectionCard(
                   icon: Icons.description_outlined,
                   title: 'Descripción',
                   subtitle: 'Describe de manera clara lo sucedido.',
+                  child: _buildDescripcionField(disabled: state.isCreating),
                 ),
 
-                const SizedBox(height: 12),
+                const SizedBox(height: 18),
 
-                _buildDescripcionField(disabled: state.isCreating),
-
-                const SizedBox(height: 24),
-
-                // UBICACION
-                _buildSectionTitle(
+                IncidentFormSectionCard(
                   icon: Icons.location_on_outlined,
                   title: 'Ubicación',
                   subtitle: 'La ubicación se obtiene automáticamente.',
+                  child: _buildUbicacionCard(state),
                 ),
 
-                const SizedBox(height: 12),
+                const SizedBox(height: 18),
 
-                _buildUbicacionCard(state),
-
-                const SizedBox(height: 24),
-
-                // EVIDENCIA
-                _buildSectionTitle(
+                IncidentFormSectionCard(
                   icon: Icons.perm_media_outlined,
                   title: 'Evidencias',
-                  subtitle: 'Adjunta fotografías o videos relacionados.',
+                  subtitle: 'Adjunta imágenes, videos o grabaciones de audio.',
+                  child: _buildEvidenciasCard(context, state),
                 ),
-
-                const SizedBox(height: 12),
-
-                _buildEvidenciasCard(context, state),
 
                 const SizedBox(height: 28),
 
@@ -143,38 +131,40 @@ class _IncidenteFormScreenState extends State<IncidenteFormScreen> {
   // LISTENER
   // ======================================================
   void _onIncidenteStateChanged(BuildContext context, IncidenteState state) {
-    final response = state.createResponse;
+    if (state.mediaError != null && state.mediaError!.trim().isNotEmpty) {
+      _showMessage(context, state.mediaError!, isError: true);
 
-    if (response is Success<IncidenteModel>) {
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(
-          const SnackBar(
-            content: Text('Incidencia registrada correctamente.'),
-            backgroundColor: Colors.green,
-          ),
-        );
-
-      _limpiarFormularioLocal();
-
-      context.read<IncidenteBloc>().add(const LimpiarAccionIncidenteEvent());
-
-      // context.read<IncidenteBloc>().add(
-      //   const CambiarTabIncidenteEvent(IncidenteTabEnum.historial),
-      // );
+      context.read<IncidenteBloc>().add(const LimpiarErrorIncidenteEvent());
 
       return;
     }
 
-    if (response is ErrorData<IncidenteModel>) {
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(
-          SnackBar(
-            content: Text(response.message),
-            backgroundColor: Colors.red,
-          ),
-        );
+    final response = state.createResponse;
+
+    if (response is Success<ApiResponse<RegisterIncidenciaData>>) {
+      final registerData = response.data.data;
+
+      final incidenciaId = registerData?.incidencia.id;
+
+      _showMessage(
+        context,
+        incidenciaId != null
+            ? 'Incidencia N.° $incidenciaId registrada correctamente.'
+            : 'Incidencia registrada correctamente.',
+        isSuccess: true,
+      );
+
+      _limpiarFormularioLocal();
+
+      context.read<IncidenteBloc>().add(const LimpiarArchivosLocalesEvent());
+
+      context.read<IncidenteBloc>().add(const LimpiarAccionIncidenteEvent());
+
+      return;
+    }
+
+    if (response is ErrorData<ApiResponse<RegisterIncidenciaData>>) {
+      _showMessage(context, response.message, isError: true);
 
       context.read<IncidenteBloc>().add(const LimpiarAccionIncidenteEvent());
     }
@@ -186,6 +176,128 @@ class _IncidenteFormScreenState extends State<IncidenteFormScreen> {
     setState(() {
       _tipoSeleccionado = null;
     });
+  }
+
+  // ======================================================
+  // EVIDENCIAS CARD
+  // ======================================================
+
+  Widget _buildArchivoLocalItem({
+    required BuildContext context,
+    required IncidenteState state,
+    required File archivo,
+    required int index,
+  }) {
+    final extension = path
+        .extension(archivo.path)
+        .replaceFirst('.', '')
+        .toLowerCase();
+
+    final nombre = path.basename(archivo.path);
+
+    final esImagen = {'jpg', 'jpeg', 'png', 'heic', 'heif'}.contains(extension);
+
+    final esVideo = {'mp4', 'mov'}.contains(extension);
+
+    final esAudio = {'m4a', 'aac', 'mp3', 'wav'}.contains(extension);
+
+    final color = esImagen
+        ? Colors.green
+        : esVideo
+        ? Colors.deepPurple
+        : esAudio
+        ? Colors.orange.shade800
+        : Colors.blueGrey;
+
+    final icon = esImagen
+        ? Icons.image_outlined
+        : esVideo
+        ? Icons.videocam_outlined
+        : esAudio
+        ? Icons.audio_file_outlined
+        : Icons.insert_drive_file_outlined;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.07),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: color.withValues(alpha: 0.20)),
+        ),
+        child: Row(
+          children: [
+            if (esImagen && {'jpg', 'jpeg', 'png'}.contains(extension))
+              ClipRRect(
+                borderRadius: BorderRadius.circular(9),
+                child: Image.file(
+                  archivo,
+                  width: 46,
+                  height: 46,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return _FileIcon(icon: icon, color: color);
+                  },
+                ),
+              )
+            else
+              _FileIcon(icon: icon, color: color),
+
+            const SizedBox(width: 10),
+
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    nombre,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+
+                  const SizedBox(height: 3),
+
+                  Text(
+                    _getArchivoTypeLabel(extension),
+                    style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
+                  ),
+                ],
+              ),
+            ),
+
+            IconButton(
+              tooltip: 'Eliminar evidencia',
+              onPressed: state.isCreating
+                  ? null
+                  : () {
+                      context.read<IncidenteBloc>().add(
+                        EliminarArchivoLocalEvent(index),
+                      );
+                    },
+              icon: const Icon(Icons.close_rounded),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _getArchivoTypeLabel(String extension) {
+    if ({'jpg', 'jpeg', 'png', 'heic', 'heif'}.contains(extension)) {
+      return 'Imagen · ${extension.toUpperCase()}';
+    }
+
+    if ({'mp4', 'mov'}.contains(extension)) {
+      return 'Video · ${extension.toUpperCase()}';
+    }
+
+    if ({'m4a', 'aac', 'mp3', 'wav'}.contains(extension)) {
+      return 'Audio · ${extension.toUpperCase()}';
+    }
+
+    return extension.isEmpty ? 'Archivo' : extension.toUpperCase();
   }
 
   // ======================================================
@@ -258,46 +370,6 @@ class _IncidenteFormScreenState extends State<IncidenteFormScreen> {
     final id = patrullaje.id;
 
     return 'Patrullaje N.° $id';
-  }
-
-  // ======================================================
-  // TÍTULO DE SECCIÓN
-  // ======================================================
-  Widget _buildSectionTitle({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-  }) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(icon, size: 22, color: const Color.fromARGB(255, 12, 38, 145)),
-
-        const SizedBox(width: 10),
-
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-
-              const SizedBox(height: 2),
-
-              Text(
-                subtitle,
-                style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
   }
 
   // ======================================================
@@ -484,84 +556,234 @@ class _IncidenteFormScreenState extends State<IncidenteFormScreen> {
   // ======================================================
   // EVIDENCIAS
   // ======================================================
-
   Widget _buildEvidenciasCard(BuildContext context, IncidenteState state) {
     final cantidad = state.archivosLocales.length;
+
     final completo = cantidad >= maxArchivos;
 
-    return InkWell(
-      borderRadius: BorderRadius.circular(16),
-      onTap: state.isCreating
-          ? null
-          : () {
-              context.read<IncidenteBloc>().add(
-                const CambiarTabIncidenteEvent(IncidenteTabEnum.evidencia),
-              );
-            },
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(16),
-        decoration: _cardDecoration(),
-        child: Row(
-          children: [
-            CircleAvatar(
-              backgroundColor: const Color.fromARGB(
-                255,
-                12,
-                38,
-                145,
-              ).withValues(alpha: 0.10),
-              child: const Icon(
-                Icons.add_photo_alternate_outlined,
-                color: Color.fromARGB(255, 12, 38, 145),
+    final disabled = state.isCreating || state.loadingMedia;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: _cardDecoration(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: const Color.fromARGB(
+                    255,
+                    12,
+                    38,
+                    145,
+                  ).withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(13),
+                ),
+                child: const Icon(
+                  Icons.collections_outlined,
+                  color: Color.fromARGB(255, 12, 38, 145),
+                ),
               ),
-            ),
 
-            const SizedBox(width: 12),
+              const SizedBox(width: 12),
 
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    cantidad == 0
-                        ? 'Agregar evidencias'
-                        : '$cantidad evidencia${cantidad == 1 ? '' : 's'} seleccionada${cantidad == 1 ? '' : 's'}',
-                    style: const TextStyle(fontWeight: FontWeight.w700),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      cantidad == 0
+                          ? 'Seleccionar evidencias'
+                          : '$cantidad evidencia${cantidad == 1 ? '' : 's'} seleccionada${cantidad == 1 ? '' : 's'}',
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
+
+                    const SizedBox(height: 3),
+
+                    Text(
+                      completo
+                          ? 'Se alcanzó el máximo permitido.'
+                          : 'Puedes adjuntar hasta $maxArchivos archivos.',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: completo
+                            ? Colors.orange.shade800
+                            : Colors.grey.shade700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 5,
+                ),
+                decoration: BoxDecoration(
+                  color: completo
+                      ? Colors.orange.withValues(alpha: 0.12)
+                      : const Color.fromARGB(
+                          255,
+                          12,
+                          38,
+                          145,
+                        ).withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(99),
+                ),
+                child: Text(
+                  '$cantidad/$maxArchivos',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    color: completo
+                        ? Colors.orange.shade800
+                        : const Color.fromARGB(255, 12, 38, 145),
                   ),
+                ),
+              ),
+            ],
+          ),
 
-                  const SizedBox(height: 4),
+          const SizedBox(height: 14),
 
-                  Text(
-                    completo
-                        ? 'Se alcanzó el máximo permitido.'
-                        : 'Fotografías o videos. Máximo $maxArchivos archivos.',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: completo
-                          ? Colors.orange.shade800
-                          : Colors.grey.shade700,
+          const Divider(height: 1),
+
+          const SizedBox(height: 14),
+
+          // ===============================================
+          // SELECTORES
+          // ===============================================
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _EvidenceActionButton(
+                icon: Icons.camera_alt_outlined,
+                label: 'Cámara',
+                color: Colors.blue,
+                enabled: !disabled && !completo,
+                onPressed: () {
+                  context.read<IncidenteBloc>().add(const TomarFotoEvent());
+                },
+              ),
+
+              _EvidenceActionButton(
+                icon: Icons.photo_library_outlined,
+                label: 'Imagen',
+                color: Colors.green,
+                enabled: !disabled && !completo,
+                onPressed: () {
+                  context.read<IncidenteBloc>().add(
+                    const SeleccionarImagenEvent(),
+                  );
+                },
+              ),
+
+              _EvidenceActionButton(
+                icon: Icons.video_library_outlined,
+                label: 'Video',
+                color: Colors.deepPurple,
+                enabled: !disabled && !completo,
+                onPressed: () {
+                  context.read<IncidenteBloc>().add(
+                    const SeleccionarVideoEvent(),
+                  );
+                },
+              ),
+
+              _EvidenceActionButton(
+                icon: state.recordingAudio
+                    ? Icons.stop_circle_outlined
+                    : Icons.mic_none_rounded,
+                label: state.recordingAudio ? 'Detener' : 'Audio',
+                color: state.recordingAudio
+                    ? Colors.red
+                    : Colors.orange.shade800,
+                enabled: state.recordingAudio || (!disabled && !completo),
+                onPressed: () {
+                  if (state.recordingAudio) {
+                    context.read<IncidenteBloc>().add(
+                      const DetenerGrabacionAudioEvent(),
+                    );
+                  } else {
+                    context.read<IncidenteBloc>().add(
+                      const IniciarGrabacionAudioEvent(),
+                    );
+                  }
+                },
+              ),
+            ],
+          ),
+
+          if (state.recordingAudio) ...[
+            const SizedBox(height: 12),
+
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: Colors.red.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.red.withValues(alpha: 0.25)),
+              ),
+              child: const Row(
+                children: [
+                  _RecordingIndicator(),
+                  SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'Grabando audio...',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: Colors.red,
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
+          ],
+
+          if (state.loadingMedia) ...[
+            const SizedBox(height: 12),
+
+            const LinearProgressIndicator(),
+
+            const SizedBox(height: 6),
+
+            const Text(
+              'Procesando evidencia...',
+              style: TextStyle(fontSize: 12),
+            ),
+          ],
+
+          if (state.archivosLocales.isNotEmpty) ...[
+            const SizedBox(height: 16),
 
             Text(
-              '$cantidad/$maxArchivos',
-              style: TextStyle(
-                fontWeight: FontWeight.w700,
-                color: completo
-                    ? Colors.orange
-                    : const Color.fromARGB(255, 12, 38, 145),
-              ),
+              'Archivos seleccionados',
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
             ),
 
-            const SizedBox(width: 6),
+            const SizedBox(height: 10),
 
-            const Icon(Icons.chevron_right, color: Colors.black45),
+            ...state.archivosLocales.asMap().entries.map(
+              (entry) => _buildArchivoLocalItem(
+                context: context,
+                state: state,
+                archivo: entry.value,
+                index: entry.key,
+              ),
+            ),
           ],
-        ),
+        ],
       ),
     );
   }
@@ -569,7 +791,6 @@ class _IncidenteFormScreenState extends State<IncidenteFormScreen> {
   // ======================================================
   // BOTÓN REGISTRAR
   // ======================================================
-
   Widget _buildSubmitButton({
     required BuildContext context,
     required IncidenteState state,
@@ -618,7 +839,6 @@ class _IncidenteFormScreenState extends State<IncidenteFormScreen> {
   // ======================================================
   // ENVIAR INCIDENCIA
   // ======================================================
-
   void _submitIncidente({
     required BuildContext context,
     required IncidenteState state,
@@ -677,16 +897,32 @@ class _IncidenteFormScreenState extends State<IncidenteFormScreen> {
     context.read<IncidenteBloc>().add(CrearIncidenteEvent(request));
   }
 
-  void _showMessage(BuildContext context, String message) {
+  void _showMessage(
+    BuildContext context,
+    String message, {
+    bool isError = false,
+    bool isSuccess = false,
+  }) {
+    final colors = Theme.of(context).colorScheme;
+
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(message)));
+      ..showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: isError
+              ? colors.error
+              : isSuccess
+              ? Colors.green.shade700
+              : colors.inverseSurface,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
   }
 
   // ======================================================
   // HELPERS VISUALES
   // ======================================================
-
   BoxDecoration _cardDecoration() {
     return BoxDecoration(
       color: Colors.grey.shade50,
@@ -737,5 +973,105 @@ class _IncidenteFormScreenState extends State<IncidenteFormScreen> {
       case TipoIncidente.otro:
         return Icons.more_horiz;
     }
+  }
+}
+
+class _EvidenceActionButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final bool enabled;
+  final VoidCallback onPressed;
+
+  const _EvidenceActionButton({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.enabled,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return OutlinedButton.icon(
+      onPressed: enabled ? onPressed : null,
+      icon: Icon(icon, size: 19),
+      label: Text(label),
+      style: OutlinedButton.styleFrom(
+        foregroundColor: color,
+        side: BorderSide(
+          color: enabled
+              ? color.withValues(alpha: 0.45)
+              : Theme.of(context).disabledColor.withValues(alpha: 0.25),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
+  }
+}
+
+class _FileIcon extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+
+  const _FileIcon({required this.icon, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 46,
+      height: 46,
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(9),
+      ),
+      child: Icon(icon, color: color),
+    );
+  }
+}
+
+class _RecordingIndicator extends StatefulWidget {
+  const _RecordingIndicator();
+
+  @override
+  State<_RecordingIndicator> createState() => _RecordingIndicatorState();
+}
+
+class _RecordingIndicatorState extends State<_RecordingIndicator>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 750),
+      lowerBound: 0.35,
+      upperBound: 1,
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _controller,
+      child: Container(
+        width: 11,
+        height: 11,
+        decoration: const BoxDecoration(
+          color: Colors.red,
+          shape: BoxShape.circle,
+        ),
+      ),
+    );
   }
 }

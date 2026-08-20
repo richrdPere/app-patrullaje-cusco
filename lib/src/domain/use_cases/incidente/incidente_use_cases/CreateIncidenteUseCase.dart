@@ -1,11 +1,13 @@
-import 'package:sis_patrullaje_cusco/src/data/models/incidencia/register_incidencia_req.dart';
+import 'package:sis_patrullaje_cusco/src/data/models/models.dart';
 import 'package:sis_patrullaje_cusco/src/domain/repositories/incidente_repository.dart';
+import 'package:sis_patrullaje_cusco/src/domain/utils/Resource.dart';
 
 class CreateIncidenteUseCase {
   final IncidenteRepository incidenteRepository;
 
   CreateIncidenteUseCase(this.incidenteRepository);
 
-  run(RegisterIncidenciaRequest params) =>
-      incidenteRepository.newIncidencia(params);
+  Future<Resource<ApiResponse<RegisterIncidenciaData>>> run({
+    required RegisterIncidenciaRequest incidente,
+  }) => incidenteRepository.newIncidencia(incidente: incidente);
 }

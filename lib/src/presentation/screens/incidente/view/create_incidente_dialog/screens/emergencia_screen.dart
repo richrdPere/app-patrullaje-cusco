@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:sis_patrullaje_cusco/src/data/models/incidencia/register_incidencia_req.dart';
+import 'package:sis_patrullaje_cusco/src/data/models/models.dart';
 import 'package:sis_patrullaje_cusco/src/data/models/patrullaje/patrullaje_data.dart';
 
 import 'package:sis_patrullaje_cusco/src/domain/models/incidencia_model.dart';
@@ -139,7 +140,7 @@ class _EmergenciaScreenState extends State<EmergenciaScreen>
       return;
     }
 
-    if (response is ErrorData<IncidenteModel>) {
+    if (response is ErrorData<ApiResponse<RegisterIncidenciaData>>) {
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
         ..showSnackBar(

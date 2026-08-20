@@ -1,4 +1,4 @@
-import 'package:sis_patrullaje_cusco/src/domain/models/incidencia_model.dart';
+import 'package:sis_patrullaje_cusco/src/data/models/models.dart';
 import 'package:sis_patrullaje_cusco/src/domain/repositories/incidente_repository.dart';
 import 'package:sis_patrullaje_cusco/src/domain/utils/Resource.dart';
 
@@ -7,15 +7,9 @@ class GetIncidenciasCercanasUseCase {
 
   GetIncidenciasCercanasUseCase(this.incidenteRepository);
 
-  Future<Resource<List<IncidenteModel>>> run({
-    required double latitud,
-    required double longitud,
-    double radio = 3,
+  Future<Resource<ApiResponse<IncidenciasCercanasData>>> run({
+    required IncidenciasCercanasQueryParams params,
   }) {
-    return incidenteRepository.getIncidenciasCercanas(
-      latitud: latitud,
-      longitud: longitud,
-      radio: radio,
-    );
+    return incidenteRepository.getIncidenciasCercanas(params: params);
   }
 }

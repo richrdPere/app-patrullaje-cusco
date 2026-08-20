@@ -34,13 +34,7 @@ import 'package:sis_patrullaje_cusco/src/config/theme/app_theme.dart';
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  // debugPrint('========================================');
-  // debugPrint('FCM - MENSAJE EN SEGUNDO PLANO');
-  // debugPrint('Message ID: ${message.messageId}');
-  // debugPrint('Título: ${message.notification?.title}');
-  // debugPrint('Mensaje: ${message.notification?.body}');
-  // debugPrint('Data: ${message.data}');
-  // debugPrint('========================================');
+  
 }
 
 /// ================================================================

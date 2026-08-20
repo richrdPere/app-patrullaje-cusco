@@ -91,9 +91,13 @@ class IncidenciasSyncOperation implements SyncOperation {
 
         final request = _crearRequest(incidencia);
 
-        final resource = await incidenteRepository.newIncidencia(request);
+        final resource = await incidenteRepository.newIncidencia(
+          incidente: request,
+        );
 
-        final incidenciaRemota = _obtenerIncidenciaRemota(resource);
+        final incidenciaRemota = _obtenerIncidenciaRemota(
+          resource as Resource<IncidenteModel>,
+        );
 
         final idServidor = incidenciaRemota.id;
 

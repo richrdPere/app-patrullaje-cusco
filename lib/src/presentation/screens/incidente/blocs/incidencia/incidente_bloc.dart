@@ -86,13 +86,13 @@ class IncidenteBloc extends Bloc<IncidenteEvent, IncidenteState> {
       );
     });
 
-    on<ObtenerIncidenciasContextoEvent>((event, emit) {
-      return _incidenteHandlers.onObtenerIncidenciasContexto(
-        event,
-        emit,
-        state,
-      );
-    });
+    // on<ObtenerIncidenciasContextoEvent>((event, emit) {
+    //   return _incidenteHandlers.onObtenerIncidenciasContexto(
+    //     event,
+    //     emit,
+    //     state,
+    //   );
+    // });
 
     // ======================================================
     // ARCHIVOS REMOTOS

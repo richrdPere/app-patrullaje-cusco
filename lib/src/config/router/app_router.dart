@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sis_patrullaje_cusco/src/config/core/main_shell.dart';
 import 'package:sis_patrullaje_cusco/src/config/core/session/session_bloc.dart';
+
 import 'package:sis_patrullaje_cusco/src/data/models/patrullaje/patrullaje_listado_data.dart';
 import 'package:sis_patrullaje_cusco/src/domain/entities/incident_data_entity.dart';
 import 'package:sis_patrullaje_cusco/src/domain/models/usuarios.dart';
@@ -214,43 +215,6 @@ final GoRouter appRouter = GoRouter(
       },
     ),
 
-    // INCIDENCIAS DEL PATRULLAJE Y ZONA
-    GoRoute(
-      path: '/incidencias-contexto/:patrullajeId/:zonaId',
-      name: 'incidencias_contexto',
-      builder: (context, state) {
-        final patrullajeId = int.tryParse(
-          state.pathParameters['patrullajeId'] ?? '',
-        );
-
-        final zonaId = int.tryParse(state.pathParameters['zonaId'] ?? '');
-
-        if (patrullajeId == null ||
-            patrullajeId <= 0 ||
-            zonaId == null ||
-            zonaId <= 0) {
-          return const Scaffold(
-            body: SafeArea(
-              child: Center(
-                child: Padding(
-                  padding: EdgeInsets.all(24),
-                  child: Text(
-                    'No se encontró un patrullaje o una zona válidos.',
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ),
-            ),
-          );
-        }
-
-        return IncidenciasContextoPage(
-          patrullajeId: patrullajeId,
-          zonaId: zonaId,
-        );
-      },
-    ),
-
     // =====================================================
     // MIS PATRULLAJES
     // =====================================================
@@ -297,34 +261,42 @@ final GoRouter appRouter = GoRouter(
     ),
 
     // =====================================================
-    // DETALLE DE INCIDENCIA
+    // MIS INCIDENTES
     // =====================================================
     GoRoute(
-      path: '/incidencias/:incidenciaId',
-      name: 'incidencia_detalle',
-      builder: (context, state) {
-        final incidenciaId = int.tryParse(
-          state.pathParameters['incidenciaId'] ?? '',
-        );
+      path: '/mis-incidencias',
+      name: 'mis_incidencias',
+      builder: (_, __) => const MisIncidenciasPage(),
+      routes: [
+        GoRoute(
+          path: ':incidenciaId',
+          name: 'incidencia_detalle',
+          pageBuilder: (context, state) {
+            final incidenciaId = int.tryParse(
+              state.pathParameters['incidenciaId'] ?? '',
+            );
 
-        if (incidenciaId == null || incidenciaId <= 0) {
-          return const Scaffold(
-            body: SafeArea(
-              child: Center(
-                child: Padding(
-                  padding: EdgeInsets.all(24),
-                  child: Text(
-                    'No se encontró una incidencia válida.',
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ),
-            ),
-          );
-        }
-
-        return IncidenciaDetallePage(incidenciaId: incidenciaId);
-      },
+            return MaterialPage<void>(
+              fullscreenDialog: true,
+              child: incidenciaId != null && incidenciaId > 0
+                  ? IncidenciaDetallePage(incidenciaId: incidenciaId)
+                  : const Scaffold(
+                      body: SafeArea(
+                        child: Center(
+                          child: Padding(
+                            padding: EdgeInsets.all(24),
+                            child: Text(
+                              'No se encontró información válida de la incidencia.',
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+            );
+          },
+        ),
+      ],
     ),
 
     // CHAT

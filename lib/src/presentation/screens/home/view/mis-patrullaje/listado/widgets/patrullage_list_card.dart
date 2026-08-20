@@ -101,18 +101,18 @@ class PatrullajeListCard extends StatelessWidget {
                         '${_formatTime(patrullaje.horaFin)}',
                   ),
 
-                  if (patrullaje.unidad != null)
-                    _InfoChip(
-                      icon: Icons.directions_car_outlined,
-                      label:
-                          patrullaje.unidad?.placa ?? patrullaje.unidad!.codigo,
-                    ),
+                  // if (patrullaje.unidad != null)
+                  //   _InfoChip(
+                  //     icon: Icons.directions_car_outlined,
+                  //     label:
+                  //         patrullaje.unidad?.placa ?? patrullaje.unidad!.codigo,
+                  //   ),
 
-                  if (resumen != null)
-                    _InfoChip(
-                      icon: Icons.route_outlined,
-                      label: _formatDistance(resumen.distanciaTotalMetros),
-                    ),
+                  // if (resumen != null)
+                  //   _InfoChip(
+                  //     icon: Icons.route_outlined,
+                  //     label: _formatDistance(resumen.distanciaTotalMetros),
+                  //   ),
 
                   if (resumen != null)
                     _InfoChip(
@@ -122,30 +122,30 @@ class PatrullajeListCard extends StatelessWidget {
                 ],
               ),
 
-              const SizedBox(height: 14),
+              // const SizedBox(height: 14),
 
-              Row(
-                children: [
-                  Icon(Icons.history_rounded, size: 18, color: colors.primary),
+              // Row(
+              //   children: [
+              //     Icon(Icons.history_rounded, size: 18, color: colors.primary),
 
-                  const SizedBox(width: 6),
+              //     const SizedBox(width: 6),
 
-                  Text(
-                    'Ver historial',
-                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                      color: colors.primary,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+              //     Text(
+              //       'Ver historial',
+              //       style: Theme.of(context).textTheme.labelLarge?.copyWith(
+              //         color: colors.primary,
+              //         fontWeight: FontWeight.w600,
+              //       ),
+              //     ),
 
-                  const Spacer(),
+              //     const Spacer(),
 
-                  Icon(
-                    Icons.chevron_right_rounded,
-                    color: colors.onSurfaceVariant,
-                  ),
-                ],
-              ),
+              //     Icon(
+              //       Icons.chevron_right_rounded,
+              //       color: colors.onSurfaceVariant,
+              //     ),
+              //   ],
+              // ),
             ],
           ),
         ),
@@ -178,13 +178,13 @@ class PatrullajeListCard extends StatelessWidget {
     return value;
   }
 
-  String _formatDistance(double meters) {
-    if (meters < 1000) {
-      return '${meters.round()} m';
-    }
+  // String _formatDistance(double meters) {
+  //   if (meters < 1000) {
+  //     return '${meters.round()} m';
+  //   }
 
-    return '${(meters / 1000).toStringAsFixed(1)} km';
-  }
+  //   return '${(meters / 1000).toStringAsFixed(1)} km';
+  // }
 }
 
 class _StatusBadge extends StatelessWidget {

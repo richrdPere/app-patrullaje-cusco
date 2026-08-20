@@ -51,7 +51,7 @@ class _MisPatrullajesPageState extends State<MisPatrullajesPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Mis patrullajes',
+          'Patrullajes',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.w700,
             fontSize: 26,

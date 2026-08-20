@@ -1,7 +1,9 @@
 import 'dart:io';
 
 import 'package:equatable/equatable.dart';
+import 'package:sis_patrullaje_cusco/src/data/models/incidencia/mis_incidencias_query_params.dart';
 import 'package:sis_patrullaje_cusco/src/data/models/incidencia/register_incidencia_req.dart';
+import 'package:sis_patrullaje_cusco/src/data/models/models.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/enums/incidente_tab_enum.dart';
 
 abstract class IncidenteEvent extends Equatable {
@@ -59,20 +61,16 @@ class ReporteRapidoEvent extends IncidenteEvent {
 
 /// Obtiene las incidencias registradas por el usuario autenticado.
 class ObtenerMisIncidenciasEvent extends IncidenteEvent {
-  final int page;
-  final int limit;
-  final String incluirArchivos;
+  final MisIncidenciasQueryParams params;
   final bool refresh;
 
   const ObtenerMisIncidenciasEvent({
-    this.page = 1,
-    this.limit = 10,
-    this.incluirArchivos = 'false',
+    required this.params,
     this.refresh = false,
   });
 
   @override
-  List<Object?> get props => [page, limit, incluirArchivos, refresh];
+  List<Object?> get props => [params, refresh];
 }
 
 /// Solicita la siguiente página del listado de incidencias.
@@ -97,20 +95,16 @@ class LimpiarIncidenciaSeleccionadaEvent extends IncidenteEvent {
 
 /// Obtiene incidencias cercanas a una ubicación.
 class ObtenerIncidentesCercanosEvent extends IncidenteEvent {
-  final double latitud;
-  final double longitud;
-  final double radio;
-  final int limit;
+  final IncidenciasCercanasQueryParams params;
+  final bool refresh;
 
   const ObtenerIncidentesCercanosEvent({
-    required this.latitud,
-    required this.longitud,
-    this.radio = 500,
-    this.limit = 20,
+    required this.params,
+    this.refresh = false,
   });
 
   @override
-  List<Object?> get props => [latitud, longitud, radio, limit];
+  List<Object?> get props => [params, refresh];
 }
 
 /// Limpia el listado de incidencias cercanas.
@@ -122,10 +116,14 @@ class LimpiarIncidentesCercanosEvent extends IncidenteEvent {
 class ObtenerIncidenciasContextoEvent extends IncidenteEvent {
   final int patrullajeId;
   final int zonaId;
+  final IncidenciasPatrullajeQueryParams patrullajeParams;
+  final IncidenciasZonaQueryParams zonaParams;
 
   const ObtenerIncidenciasContextoEvent({
     required this.patrullajeId,
     required this.zonaId,
+    required this.patrullajeParams,
+    required this.zonaParams,
   });
 
   @override
@@ -135,6 +133,67 @@ class ObtenerIncidenciasContextoEvent extends IncidenteEvent {
 /// Limpia las incidencias asociadas al patrullaje y zona activos.
 class LimpiarIncidenciasContextoEvent extends IncidenteEvent {
   const LimpiarIncidenciasContextoEvent();
+}
+
+// ======================================================
+// INCIDENCIAS POR PATRULLAJE
+// ======================================================
+/// Obtiene las incidencias relacionadas con un patrullaje.
+class ObtenerIncidenciasPatrullajeEvent extends IncidenteEvent {
+  final int patrullajeId;
+  final IncidenciasPatrullajeQueryParams params;
+  final bool refresh;
+
+  const ObtenerIncidenciasPatrullajeEvent({
+    required this.patrullajeId,
+    required this.params,
+    this.refresh = false,
+  });
+
+  @override
+  List<Object?> get props => [patrullajeId, params, refresh];
+}
+
+/// Solicita la siguiente página de incidencias
+/// del patrullaje actualmente seleccionado.
+class CargarMasIncidenciasPatrullajeEvent extends IncidenteEvent {
+  const CargarMasIncidenciasPatrullajeEvent();
+}
+
+/// Limpia las incidencias del patrullaje.
+class LimpiarIncidenciasPatrullajeEvent extends IncidenteEvent {
+  const LimpiarIncidenciasPatrullajeEvent();
+}
+
+// ======================================================
+// INCIDENCIAS POR ZONA
+// ======================================================
+
+/// Obtiene las incidencias relacionadas con una zona.
+class ObtenerIncidenciasZonaEvent extends IncidenteEvent {
+  final int zonaId;
+  final IncidenciasZonaQueryParams params;
+  final bool refresh;
+
+  const ObtenerIncidenciasZonaEvent({
+    required this.zonaId,
+    required this.params,
+    this.refresh = false,
+  });
+
+  @override
+  List<Object?> get props => [zonaId, params, refresh];
+}
+
+/// Solicita la siguiente página de incidencias
+/// de la zona actualmente seleccionada.
+class CargarMasIncidenciasZonaEvent extends IncidenteEvent {
+  const CargarMasIncidenciasZonaEvent();
+}
+
+/// Limpia las incidencias de la zona.
+class LimpiarIncidenciasZonaEvent extends IncidenteEvent {
+  const LimpiarIncidenciasZonaEvent();
 }
 
 // ======================================================

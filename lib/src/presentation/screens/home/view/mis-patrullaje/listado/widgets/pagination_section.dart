@@ -71,38 +71,54 @@ class LoadingState extends StatelessWidget {
 }
 
 class EmptyState extends StatelessWidget {
-  const EmptyState({super.key});
+  final VoidCallback onClear;
+  final String? message;
+
+  const EmptyState({super.key, required this.onClear, this.message});
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
     return SizedBox(
-      height: 280,
+      height: 300,
       child: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.route_outlined,
-              size: 58,
-              color: Theme.of(context).colorScheme.outline,
-            ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.route_outlined, size: 58, color: colors.outline),
 
-            const SizedBox(height: 14),
+              const SizedBox(height: 14),
 
-            Text(
-              'No se encontraron patrullajes',
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
-            ),
+              Text(
+                'No se encontraron patrullajes',
+                textAlign: TextAlign.center,
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+              ),
 
-            const SizedBox(height: 6),
+              const SizedBox(height: 6),
 
-            const Text(
-              'Prueba modificando los filtros de búsqueda.',
-              textAlign: TextAlign.center,
-            ),
-          ],
+              Text(
+                message ?? 'Prueba modificando los filtros de búsqueda.',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: colors.onSurfaceVariant,
+                ),
+              ),
+
+              const SizedBox(height: 18),
+
+              OutlinedButton.icon(
+                onPressed: onClear,
+                icon: const Icon(Icons.filter_alt_off_outlined),
+                label: const Text('Limpiar filtros'),
+              ),
+            ],
+          ),
         ),
       ),
     );

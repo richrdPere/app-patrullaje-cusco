@@ -55,6 +55,12 @@ class PatrullajeSerenoQueryParams {
   final int? zonaId;
   final int? unidadId;
 
+  /// Fecha exacta del patrullaje.
+  ///
+  /// Cuando [dia] tiene valor, no se envían [fechaDesde]
+  /// ni [fechaHasta].
+  final DateTime? dia;
+
   final DateTime? fechaDesde;
   final DateTime? fechaHasta;
 
@@ -70,6 +76,7 @@ class PatrullajeSerenoQueryParams {
     this.estadoPersonal,
     this.zonaId,
     this.unidadId,
+    this.dia,
     this.fechaDesde,
     this.fechaHasta,
     this.search,
@@ -101,12 +108,19 @@ class PatrullajeSerenoQueryParams {
       query['unidad_id'] = unidadId.toString();
     }
 
-    if (fechaDesde != null) {
-      query['fecha_desde'] = _formatDate(fechaDesde!);
-    }
+    // ==========================================================
+    // FILTRO POR DÍA O RANGO DE FECHAS
+    // ==========================================================
+    if (dia != null) {
+      query['dia'] = _formatDate(dia!);
+    } else {
+      if (fechaDesde != null) {
+        query['fecha_desde'] = _formatDate(fechaDesde!);
+      }
 
-    if (fechaHasta != null) {
-      query['fecha_hasta'] = _formatDate(fechaHasta!);
+      if (fechaHasta != null) {
+        query['fecha_hasta'] = _formatDate(fechaHasta!);
+      }
     }
 
     final normalizedSearch = search?.trim();
@@ -125,15 +139,18 @@ class PatrullajeSerenoQueryParams {
     PatrullajePersonalEstadoFilter? estadoPersonal,
     int? zonaId,
     int? unidadId,
+    DateTime? dia,
     DateTime? fechaDesde,
     DateTime? fechaHasta,
     String? search,
     PatrullajeOrderBy? orderBy,
     OrderDirection? orderDirection,
+
     bool clearEstado = false,
     bool clearEstadoPersonal = false,
     bool clearZonaId = false,
     bool clearUnidadId = false,
+    bool clearDia = false,
     bool clearFechaDesde = false,
     bool clearFechaHasta = false,
     bool clearSearch = false,
@@ -147,6 +164,7 @@ class PatrullajeSerenoQueryParams {
           : estadoPersonal ?? this.estadoPersonal,
       zonaId: clearZonaId ? null : zonaId ?? this.zonaId,
       unidadId: clearUnidadId ? null : unidadId ?? this.unidadId,
+      dia: clearDia ? null : dia ?? this.dia,
       fechaDesde: clearFechaDesde ? null : fechaDesde ?? this.fechaDesde,
       fechaHasta: clearFechaHasta ? null : fechaHasta ?? this.fechaHasta,
       search: clearSearch ? null : search ?? this.search,
@@ -157,7 +175,9 @@ class PatrullajeSerenoQueryParams {
 
   static String _formatDate(DateTime date) {
     final year = date.year.toString().padLeft(4, '0');
+
     final month = date.month.toString().padLeft(2, '0');
+
     final day = date.day.toString().padLeft(2, '0');
 
     return '$year-$month-$day';

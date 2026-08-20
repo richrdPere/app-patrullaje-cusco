@@ -6,7 +6,7 @@ class RemoveArchivoIncidenciaUseCase {
 
   RemoveArchivoIncidenciaUseCase(this.incidenteRepository);
 
-  Future<Resource<bool>> run({
+  Future<Resource<void>> run({
     required int incidenciaId,
     required int archivoId,
   }) {

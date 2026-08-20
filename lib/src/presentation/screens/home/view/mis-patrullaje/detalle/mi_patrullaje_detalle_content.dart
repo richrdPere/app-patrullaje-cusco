@@ -7,7 +7,6 @@ import 'package:go_router/go_router.dart';
 import 'package:sis_patrullaje_cusco/src/data/models/patrullaje/patrullaje_listado_data.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/historial_patrullaje/view/listado/historial_patrullaje_page.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/home/view/mis-patrullaje/detalle/widgets/patrullaje_information_section.dart';
-import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/view/list_incidentes/incidencias_contexto_page.dart';
 
 // Widgets
 // import 'package:sis_patrullaje_cusco/src/presentation/screens/home/view/mis-patrullaje/detalle/widgets/operational_summary_card.dart';
@@ -123,11 +122,11 @@ class _PatrullajeDetalleContentState extends State<PatrullajeDetalleContent> {
                   ),
 
                   // 3. Incidencias
-                  IncidenciasContextoPage(
-                    patrullajeId: patrullaje.id,
-                    zonaId: patrullaje.zonaId,
-                    // embedded: true,
-                  ),
+                  // IncidenciasContextoPage(
+                  //   patrullajeId: patrullaje.id,
+                  //   zonaId: patrullaje.zonaId,
+                  //   // embedded: true,
+                  // ),
                 ],
               ),
             ),

@@ -25,7 +25,7 @@ export 'package:sis_patrullaje_cusco/src/presentation/screens/home/view/mis-patr
 
 // INCIDENTES
 export 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/view/detail_incidencia/incidencia_detalle_page.dart';
-export 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/view/list_incidentes/incidencias_contexto_page.dart';
+export 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/view/mis-incidencias/mis_incidencias_page.dart';
 
 // MAPA
 export 'package:sis_patrullaje_cusco/src/presentation/screens/mapa/view/mapa_incident/mapa_incident_page.dart';

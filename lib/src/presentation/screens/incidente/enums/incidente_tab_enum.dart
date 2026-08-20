@@ -1,6 +1,6 @@
 enum IncidenteTabEnum { 
   incidente, 
-  evidencia, 
+  // evidencia, 
   emergencia, 
   // historial, 
   observacion,

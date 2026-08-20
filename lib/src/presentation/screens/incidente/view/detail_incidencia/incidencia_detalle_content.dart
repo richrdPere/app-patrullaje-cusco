@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
-import 'package:sis_patrullaje_cusco/src/domain/models/incidencia_model.dart';
 import 'package:sis_patrullaje_cusco/src/domain/utils/Resource.dart';
 
+// Modelos
+import 'package:sis_patrullaje_cusco/src/data/models/models.dart';
+
+// Bloc's
 import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/blocs/incidencia/incidente_bloc.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/blocs/incidencia/incidente_state.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/view/detail_incidencia/widgets/imagen_preview_dialog.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/view/detail_incidencia/widgets/video_preview_dialog.dart';
 
 class IncidenciaDetalleContent extends StatelessWidget {
   final int incidenciaId;
@@ -27,11 +31,13 @@ class IncidenciaDetalleContent extends StatelessWidget {
         final response = state.detalleResponse;
         final incidencia = state.incidenciaSeleccionada;
 
-        if (response is Loading<IncidenteModel> && incidencia == null) {
+        if (response is Loading<ApiResponse<IncidenciaDetalleData>> &&
+            incidencia == null) {
           return const _DetalleLoading();
         }
 
-        if (response is ErrorData<IncidenteModel> && incidencia == null) {
+        if (response is ErrorData<ApiResponse<IncidenciaDetalleData>> &&
+            incidencia == null) {
           return _DetalleError(message: response.message, onRetry: onRefresh);
         }
 
@@ -41,7 +47,7 @@ class IncidenciaDetalleContent extends StatelessWidget {
 
         return _IncidenciaDetalleView(
           incidencia: incidencia,
-          isRefreshing: response is Loading<IncidenteModel>,
+          isRefreshing: response is Loading<ApiResponse<IncidenciaDetalleData>>,
           onRefresh: onRefresh,
         );
       },
@@ -50,7 +56,7 @@ class IncidenciaDetalleContent extends StatelessWidget {
 }
 
 class _IncidenciaDetalleView extends StatelessWidget {
-  final IncidenteModel incidencia;
+  final IncidenciaDetalleData incidencia;
   final bool isRefreshing;
   final VoidCallback onRefresh;
 
@@ -102,7 +108,7 @@ class _IncidenciaDetalleView extends StatelessWidget {
 }
 
 class _DetalleHeader extends StatelessWidget {
-  final IncidenteModel incidencia;
+  final IncidenciaDetalleData incidencia;
 
   const _DetalleHeader({required this.incidencia});
 
@@ -112,7 +118,7 @@ class _DetalleHeader extends StatelessWidget {
     final estado = incidencia.estado;
 
     final tipoConfig = _getTipoConfig(tipo);
-    final estadoConfig = _getEstadoConfig(estado!);
+    final estadoConfig = _getEstadoConfig(estado);
 
     return Container(
       width: double.infinity,
@@ -157,7 +163,7 @@ class _DetalleHeader extends StatelessWidget {
                     ),
                     const SizedBox(height: 5),
                     Text(
-                      'Incidencia N.° ${incidencia.id ?? '-'}',
+                      'Incidencia N.° ${incidencia.id}',
                       style: TextStyle(
                         fontSize: 13,
                         color: Colors.grey.shade600,
@@ -193,7 +199,7 @@ class _DetalleHeader extends StatelessWidget {
 }
 
 class _InformacionSection extends StatelessWidget {
-  final IncidenteModel incidencia;
+  final IncidenciaDetalleData incidencia;
 
   const _InformacionSection({required this.incidencia});
 
@@ -209,7 +215,7 @@ class _InformacionSection extends StatelessWidget {
             value: _formatTipo(incidencia.tipo.toUpperCase()),
           ),
           const Divider(height: 24),
-          _DetailRow(label: 'Estado', value: _formatEstado(incidencia.estado!)),
+          _DetailRow(label: 'Estado', value: _formatEstado(incidencia.estado)),
           const Divider(height: 24),
           _DetailRow(label: 'Origen', value: _formatValue(incidencia.origen)),
           const Divider(height: 24),
@@ -226,7 +232,7 @@ class _InformacionSection extends StatelessWidget {
 }
 
 class _UbicacionSection extends StatelessWidget {
-  final IncidenteModel incidencia;
+  final IncidenciaDetalleData incidencia;
 
   const _UbicacionSection({required this.incidencia});
 
@@ -272,13 +278,13 @@ class _UbicacionSection extends StatelessWidget {
 }
 
 class _EvidenciasSection extends StatelessWidget {
-  final IncidenteModel incidencia;
+  final IncidenciaDetalleData incidencia;
 
   const _EvidenciasSection({required this.incidencia});
 
   @override
   Widget build(BuildContext context) {
-    final archivos = incidencia.archivos ?? [];
+    final archivos = incidencia.archivos;
 
     return _SectionContainer(
       title: 'Evidencias',
@@ -313,7 +319,18 @@ class _EvidenciasSection extends StatelessWidget {
               itemBuilder: (context, index) {
                 final archivo = archivos[index];
 
-                return _ArchivoPreview(url: archivo.path, tipo: archivo.path);
+                return SizedBox(
+                  width: 120,
+                  height: 100,
+                  child: _ArchivoPreview(
+                    url: archivo.urlArchivo,
+                    tipo: archivo.tipoArchivo,
+                  ),
+                );
+                // return _ArchivoPreview(
+                //   url: archivo.urlArchivo,
+                //   tipo: archivo.tipoArchivo,
+                // );
               },
             ),
     );
@@ -328,49 +345,139 @@ class _ArchivoPreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tipoNormalizado = tipo.toUpperCase();
+    final tipoNormalizado = tipo.trim().toUpperCase();
+    final puedeAbrirse =
+        tipoNormalizado == 'IMAGEN' || tipoNormalizado == 'VIDEO';
 
-    if (tipoNormalizado == 'IMAGEN') {
-      return ClipRRect(
-        borderRadius: BorderRadius.circular(12),
-        child: Image.network(
-          url,
-          fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) {
-            return _buildPlaceholder(Icons.broken_image_outlined);
-          },
-          loadingBuilder: (context, child, progress) {
-            if (progress == null) return child;
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(12),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: puedeAbrirse
+            ? () => _openPreview(context, tipoNormalizado)
+            : null,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            _buildContent(context, tipoNormalizado),
 
-            return const Center(
-              child: CircularProgressIndicator(strokeWidth: 2),
-            );
-          },
+            if (puedeAbrirse)
+              Positioned(
+                right: 7,
+                bottom: 7,
+                child: Container(
+                  width: 30,
+                  height: 30,
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.65),
+                    shape: BoxShape.circle,
+                  ),
+                  alignment: Alignment.center,
+                  child: Icon(
+                    tipoNormalizado == 'VIDEO'
+                        ? Icons.play_arrow_rounded
+                        : Icons.fullscreen_rounded,
+                    color: Colors.white,
+                    size: 21,
+                  ),
+                ),
+              ),
+          ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildContent(BuildContext context, String tipoNormalizado) {
+    if (tipoNormalizado == 'IMAGEN') {
+      return Image.network(
+        url,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) {
+          return _buildPlaceholder(context, Icons.broken_image_outlined);
+        },
+        loadingBuilder: (context, child, progress) {
+          if (progress == null) {
+            return child;
+          }
+
+          return _buildLoading(context, progress);
+        },
       );
     }
 
-    final icon = tipoNormalizado == 'VIDEO'
-        ? Icons.play_circle_outline
-        : Icons.picture_as_pdf_outlined;
+    if (tipoNormalizado == 'VIDEO') {
+      return _buildPlaceholder(context, Icons.videocam_outlined);
+    }
 
-    return _buildPlaceholder(icon);
+    if (tipoNormalizado == 'PDF') {
+      return _buildPlaceholder(context, Icons.picture_as_pdf_outlined);
+    }
+
+    if (tipoNormalizado == 'AUDIO') {
+      return _buildPlaceholder(context, Icons.audiotrack_rounded);
+    }
+
+    return _buildPlaceholder(context, Icons.insert_drive_file_outlined);
   }
 
-  Widget _buildPlaceholder(IconData icon) {
+  Widget _buildLoading(BuildContext context, ImageChunkEvent progress) {
+    final expectedBytes = progress.expectedTotalBytes;
+
+    final value = expectedBytes == null
+        ? null
+        : progress.cumulativeBytesLoaded / expectedBytes;
+
+    return Container(
+      color: Theme.of(context).colorScheme.surfaceContainerLow,
+      alignment: Alignment.center,
+      child: CircularProgressIndicator(value: value, strokeWidth: 2),
+    );
+  }
+
+  Widget _buildPlaceholder(BuildContext context, IconData icon) {
+    final colors = Theme.of(context).colorScheme;
+
     return Container(
       decoration: BoxDecoration(
-        color: Colors.grey.shade100,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
+        color: colors.surfaceContainerLow,
+        border: Border.all(color: colors.outlineVariant),
       ),
-      child: Icon(icon, size: 34, color: Colors.grey.shade600),
+      alignment: Alignment.center,
+      child: Icon(icon, size: 34, color: colors.onSurfaceVariant),
     );
+  }
+
+  Future<void> _openPreview(
+    BuildContext context,
+    String tipoNormalizado,
+  ) async {
+    FocusManager.instance.primaryFocus?.unfocus();
+
+    if (tipoNormalizado == 'IMAGEN') {
+      await showDialog<void>(
+        context: context,
+        barrierColor: Colors.black.withValues(alpha: 0.88),
+        builder: (_) => ImagePreviewDialog(url: url),
+      );
+
+      return;
+    }
+
+    if (tipoNormalizado == 'VIDEO') {
+      await showDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        barrierColor: Colors.black.withValues(alpha: 0.88),
+        builder: (_) => VideoPreviewDialog(url: url),
+      );
+    }
   }
 }
 
 class _InformacionRegistroSection extends StatelessWidget {
-  final IncidenteModel incidencia;
+  final IncidenciaDetalleData incidencia;
 
   const _InformacionRegistroSection({required this.incidencia});
 
@@ -383,9 +490,7 @@ class _InformacionRegistroSection extends StatelessWidget {
         children: [
           _DetailRow(
             label: 'Fecha y hora',
-            value: incidencia.fechaHora == null
-                ? 'No disponible'
-                : _formatDateTime(incidencia.fechaHora!),
+            value: _formatDateTime(incidencia.fechaHora),
           ),
           const Divider(height: 24),
           // _DetailRow(

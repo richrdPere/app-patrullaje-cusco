@@ -187,7 +187,7 @@ class EvidenciasSyncOperation implements SyncOperation {
       archivos: [archivo],
     );
 
-    final agregado = _obtenerResultadoCarga(resource);
+    final agregado = _obtenerResultadoCarga(resource as Resource<bool>);
 
     if (!agregado) {
       throw StateError('El servidor no confirmó la carga de la evidencia.');

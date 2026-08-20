@@ -114,8 +114,7 @@ class HomeQuickActions extends StatelessWidget {
         break;
 
       case HomeQuickActionType.incidenciasContexto:
-        // _openIncidenciasContexto(context);
-        _showPendingOption(context, 'Incidencias');
+        context.pushNamed('mis_incidencias');
         break;
 
       case HomeQuickActionType.clasificadores:
@@ -193,10 +192,10 @@ class HomeQuickActions extends StatelessWidget {
   // ==========================================================
   // ABRIR INCIDENCIAS DEL CONTEXTO
   // ==========================================================
-  // void _openIncidenciasContexto(BuildContext context) {
+  // void _openMisIncidencias(BuildContext context) {
   //   final currentPatrullajeId = patrullajeId;
 
-  //   final currentZonaId = zonaId;
+  //   // final currentZonaId = zonaId;
 
   //   if (!patrullajeActivo) {
   //     _showMessage(
@@ -216,17 +215,17 @@ class HomeQuickActions extends StatelessWidget {
   //     return;
   //   }
 
-  //   if (currentZonaId == null || currentZonaId <= 0) {
-  //     _showMessage(context, 'El patrullaje actual no tiene una zona asignada.');
+  //   // if (currentZonaId == null || currentZonaId <= 0) {
+  //   //   _showMessage(context, 'El patrullaje actual no tiene una zona asignada.');
 
-  //     return;
-  //   }
+  //   //   return;
+  //   // }
 
   //   context.pushNamed(
-  //     'incidencias_contexto',
+  //     'mis_incidencias',
   //     pathParameters: {
   //       'patrullajeId': currentPatrullajeId.toString(),
-  //       'zonaId': currentZonaId.toString(),
+  //       // 'zonaId': currentZonaId.toString(),
   //     },
   //   );
   // }

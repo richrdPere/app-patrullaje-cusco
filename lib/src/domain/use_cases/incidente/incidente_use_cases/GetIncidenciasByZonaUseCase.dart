@@ -1,4 +1,4 @@
-import 'package:sis_patrullaje_cusco/src/domain/models/incidencia_model.dart';
+import 'package:sis_patrullaje_cusco/src/data/models/models.dart';
 import 'package:sis_patrullaje_cusco/src/domain/repositories/index_repository.dart';
 import 'package:sis_patrullaje_cusco/src/domain/utils/Resource.dart';
 
@@ -7,7 +7,10 @@ class GetIncidenciasByZonaUseCase {
 
   const GetIncidenciasByZonaUseCase(this.repository);
 
-  Future<Resource<List<IncidenteModel>>> run({required int zonaId}) {
-    return repository.getIncidenciasByZona(zonaId: zonaId);
+  Future<Resource<ApiResponse<IncidenciasZonaPaginated>>> run({
+    required int zonaId,
+    required IncidenciasZonaQueryParams params,
+  }) {
+    return repository.getIncidenciasByZona(zonaId: zonaId, params: params);
   }
 }
