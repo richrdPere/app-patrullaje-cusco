@@ -118,7 +118,7 @@ class HomeQuickActions extends StatelessWidget {
         break;
 
       case HomeQuickActionType.clasificadores:
-        context.pushNamed('clasificadores');
+        context.pushNamed('clasificadores_menu');
         break;
 
       case HomeQuickActionType.ocurrencias:

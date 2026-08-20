@@ -11,14 +11,17 @@ import 'package:sis_patrullaje_cusco/src/presentation/screens/clasificadores/blo
 import 'package:sis_patrullaje_cusco/src/presentation/screens/clasificadores/bloc/clasificadores_state.dart';
 
 // Content
-import 'package:sis_patrullaje_cusco/src/presentation/screens/clasificadores/view/clasificadores_content.dart';
-import 'package:sis_patrullaje_cusco/src/presentation/screens/clasificadores/view/widgets/clasificadoDetailSheet.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/clasificadores/view/listado/clasificadores_content.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/clasificadores/view/listado/widgets/clasificadoDetailSheet.dart';
 
 // Resource
 import 'package:sis_patrullaje_cusco/src/domain/utils/Resource.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/clasificadores/view/menu/widgets/categoria_generica_option.dart';
 
 class ClasificadoresPage extends StatefulWidget {
-  const ClasificadoresPage({super.key});
+  final CategoriaGenericaOption categoria;
+
+  const ClasificadoresPage({super.key, required this.categoria});
 
   @override
   State<ClasificadoresPage> createState() => _ClasificadoresPageState();
@@ -122,7 +125,6 @@ class _ClasificadoresPageState extends State<ClasificadoresPage> {
   // ========================================================
   // BUILD
   // ========================================================
-
   @override
   Widget build(BuildContext context) {
     return BlocListener<ClasificadoresBloc, ClasificadoresState>(
@@ -149,15 +151,35 @@ class _ClasificadoresPageState extends State<ClasificadoresPage> {
         canPop: true,
         child: Scaffold(
           appBar: AppBar(
-            automaticallyImplyLeading: false,
             leading: IconButton(
               tooltip: 'Cerrar',
               onPressed: _close,
-              icon: const Icon(Icons.close_rounded),
+              icon: const Icon(Icons.close),
             ),
-            title: const Text('Clasificador de ocurrencias'),
+            title: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  widget.categoria.nombre,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                Text(
+                  'Categoría ${widget.categoria.codigo}',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
           ),
-          body: const SafeArea(child: ClasificadoresContent()),
+          body: SafeArea(
+            top: false,
+            child: ClasificadoresContent(
+              key: ValueKey(widget.categoria.id),
+              categoriaGenericaId: widget.categoria.id,
+            ),
+          ),
         ),
       ),
     );

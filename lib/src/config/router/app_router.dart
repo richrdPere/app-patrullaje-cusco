@@ -3,10 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sis_patrullaje_cusco/src/config/core/main_shell.dart';
 import 'package:sis_patrullaje_cusco/src/config/core/session/session_bloc.dart';
+import 'package:sis_patrullaje_cusco/src/data/models/clasificadores/clasificador_codigo_data.dart';
 
 import 'package:sis_patrullaje_cusco/src/data/models/patrullaje/patrullaje_listado_data.dart';
 import 'package:sis_patrullaje_cusco/src/domain/entities/incident_data_entity.dart';
 import 'package:sis_patrullaje_cusco/src/domain/models/usuarios.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/clasificadores/view/menu/clasificadores_menu_page.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/clasificadores/view/menu/widgets/categoria_generica_option.dart';
 
 // Screens
 import 'package:sis_patrullaje_cusco/src/presentation/screens/screens.dart';
@@ -326,15 +329,55 @@ final GoRouter appRouter = GoRouter(
     // =====================================================
     GoRoute(
       path: '/clasificadores',
-      name: 'clasificadores',
+      name: 'clasificadores_menu',
+      builder: (_, __) => const ClasificadoresMenuPage(),
 
-      pageBuilder: (context, state) {
-        return MaterialPage<void>(
-          key: state.pageKey,
-          fullscreenDialog: true,
-          child: const ClasificadoresPage(),
-        );
-      },
+      routes: [
+        GoRoute(
+          path: 'categoria/:categoriaGenericaId',
+          name: 'clasificador_codigos',
+          pageBuilder: (context, state) {
+            final categoriaId = int.tryParse(
+              state.pathParameters['categoriaGenericaId'] ?? '',
+            );
+
+            final extra = state.extra;
+
+            CategoriaGenericaOption? categoria;
+
+            if (extra is CategoriaGenericaOption && extra.id == categoriaId) {
+              categoria = extra;
+            } else if (categoriaId != null) {
+              for (final item in categoriasGenericasClasificador) {
+                if (item.id == categoriaId) {
+                  categoria = item;
+                  break;
+                }
+              }
+            }
+
+            return MaterialPage<ClasificadorCodigoData>(
+              key: state.pageKey,
+              fullscreenDialog: true,
+              child: categoria != null
+                  ? ClasificadoresPage(categoria: categoria)
+                  : const Scaffold(
+                      body: SafeArea(
+                        child: Center(
+                          child: Padding(
+                            padding: EdgeInsets.all(24),
+                            child: Text(
+                              'No se encontró información válida del clasificador.',
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+            );
+          },
+        ),
+      ],
     ),
   ],
 );

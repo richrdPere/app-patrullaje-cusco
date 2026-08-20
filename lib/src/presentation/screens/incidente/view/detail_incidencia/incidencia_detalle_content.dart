@@ -8,8 +8,8 @@ import 'package:sis_patrullaje_cusco/src/data/models/models.dart';
 // Bloc's
 import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/blocs/incidencia/incidente_bloc.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/blocs/incidencia/incidente_state.dart';
-import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/view/detail_incidencia/widgets/imagen_preview_dialog.dart';
-import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/view/detail_incidencia/widgets/video_preview_dialog.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/view/detail_incidencia/widgets/full_screen_imagen_viewer.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/view/detail_incidencia/widgets/full_screen_video_viewer.dart';
 
 class IncidenciaDetalleContent extends StatelessWidget {
   final int incidenciaId;
@@ -285,6 +285,7 @@ class _EvidenciasSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final archivos = incidencia.archivos;
+    final colors = Theme.of(context).colorScheme;
 
     return _SectionContainer(
       title: 'Evidencias',
@@ -296,133 +297,183 @@ class _EvidenciasSection extends StatelessWidget {
                 children: [
                   Icon(
                     Icons.image_not_supported_outlined,
-                    color: Colors.grey.shade500,
+                    color: colors.outline,
                   ),
                   const SizedBox(width: 10),
-                  Text(
-                    'No existen evidencias registradas.',
-                    style: TextStyle(color: Colors.grey.shade600),
+                  Expanded(
+                    child: Text(
+                      'No existen evidencias registradas.',
+                      style: TextStyle(color: colors.onSurfaceVariant),
+                    ),
                   ),
                 ],
               ),
             )
-          : GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: archivos.length,
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-                crossAxisSpacing: 10,
-                mainAxisSpacing: 10,
-                childAspectRatio: 1,
-              ),
-              itemBuilder: (context, index) {
-                final archivo = archivos[index];
+          : LayoutBuilder(
+              builder: (context, constraints) {
+                final crossAxisCount = _getCrossAxisCount(constraints.maxWidth);
 
-                return SizedBox(
-                  width: 120,
-                  height: 100,
-                  child: _ArchivoPreview(
-                    url: archivo.urlArchivo,
-                    tipo: archivo.tipoArchivo,
+                return GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: archivos.length,
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: crossAxisCount,
+                    crossAxisSpacing: 10,
+                    mainAxisSpacing: 10,
+                    childAspectRatio: 1,
                   ),
+                  itemBuilder: (context, index) {
+                    final archivo = archivos[index];
+
+                    return _ArchivoPreview(
+                      url: archivo.urlArchivo,
+                      tipo: archivo.tipoArchivo,
+                      heroTag: 'evidencia-${archivo.id}',
+                    );
+                  },
                 );
-                // return _ArchivoPreview(
-                //   url: archivo.urlArchivo,
-                //   tipo: archivo.tipoArchivo,
-                // );
               },
             ),
     );
+  }
+
+  int _getCrossAxisCount(double width) {
+    if (width >= 900) {
+      return 5;
+    }
+
+    if (width >= 600) {
+      return 4;
+    }
+
+    if (width < 340) {
+      return 3;
+    }
+
+    return 3;
   }
 }
 
 class _ArchivoPreview extends StatelessWidget {
   final String url;
   final String tipo;
+  final String heroTag;
 
-  const _ArchivoPreview({required this.url, required this.tipo});
+  const _ArchivoPreview({
+    required this.url,
+    required this.tipo,
+    required this.heroTag,
+  });
+
+  bool get _isImage => tipo.trim().toUpperCase() == 'IMAGEN';
+
+  bool get _isVideo => tipo.trim().toUpperCase() == 'VIDEO';
 
   @override
   Widget build(BuildContext context) {
-    final tipoNormalizado = tipo.trim().toUpperCase();
-    final puedeAbrirse =
-        tipoNormalizado == 'IMAGEN' || tipoNormalizado == 'VIDEO';
+    final colors = Theme.of(context).colorScheme;
 
     return Material(
-      color: Colors.transparent,
-      borderRadius: BorderRadius.circular(12),
+      color: colors.surfaceContainerLow,
+      borderRadius: BorderRadius.circular(14),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: puedeAbrirse
-            ? () => _openPreview(context, tipoNormalizado)
-            : null,
+        onTap: _isImage || _isVideo ? () => _openFullscreen(context) : null,
         child: Stack(
           fit: StackFit.expand,
           children: [
-            _buildContent(context, tipoNormalizado),
+            if (_isImage)
+              Hero(
+                tag: heroTag,
+                child: Image.network(
+                  url,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) {
+                    return _buildPlaceholder(
+                      context,
+                      Icons.broken_image_outlined,
+                    );
+                  },
+                  loadingBuilder: (context, child, progress) {
+                    if (progress == null) {
+                      return child;
+                    }
 
-            if (puedeAbrirse)
-              Positioned(
-                right: 7,
-                bottom: 7,
+                    return _buildImageLoading(context, progress);
+                  },
+                ),
+              )
+            else if (_isVideo)
+              _buildPlaceholder(context, Icons.videocam_outlined)
+            else
+              _buildPlaceholder(context, _getFileIcon()),
+
+            // Sombreado inferior para mejorar visibilidad del botón.
+            if (_isImage || _isVideo)
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.center,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.transparent,
+                          Colors.black.withValues(alpha: 0.40),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+            if (_isImage || _isVideo)
+              Center(
                 child: Container(
-                  width: 30,
-                  height: 30,
+                  width: 42,
+                  height: 42,
                   decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.65),
+                    color: Colors.black.withValues(alpha: 0.62),
                     shape: BoxShape.circle,
                   ),
                   alignment: Alignment.center,
                   child: Icon(
-                    tipoNormalizado == 'VIDEO'
+                    _isVideo
                         ? Icons.play_arrow_rounded
                         : Icons.fullscreen_rounded,
                     color: Colors.white,
-                    size: 21,
+                    size: 27,
                   ),
                 ),
               ),
+
+            Positioned(
+              left: 7,
+              bottom: 7,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.65),
+                  borderRadius: BorderRadius.circular(7),
+                ),
+                child: Text(
+                  tipo.trim().toUpperCase(),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 9,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildContent(BuildContext context, String tipoNormalizado) {
-    if (tipoNormalizado == 'IMAGEN') {
-      return Image.network(
-        url,
-        fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) {
-          return _buildPlaceholder(context, Icons.broken_image_outlined);
-        },
-        loadingBuilder: (context, child, progress) {
-          if (progress == null) {
-            return child;
-          }
-
-          return _buildLoading(context, progress);
-        },
-      );
-    }
-
-    if (tipoNormalizado == 'VIDEO') {
-      return _buildPlaceholder(context, Icons.videocam_outlined);
-    }
-
-    if (tipoNormalizado == 'PDF') {
-      return _buildPlaceholder(context, Icons.picture_as_pdf_outlined);
-    }
-
-    if (tipoNormalizado == 'AUDIO') {
-      return _buildPlaceholder(context, Icons.audiotrack_rounded);
-    }
-
-    return _buildPlaceholder(context, Icons.insert_drive_file_outlined);
-  }
-
-  Widget _buildLoading(BuildContext context, ImageChunkEvent progress) {
+  Widget _buildImageLoading(BuildContext context, ImageChunkEvent progress) {
     final expectedBytes = progress.expectedTotalBytes;
 
     final value = expectedBytes == null
@@ -443,36 +494,39 @@ class _ArchivoPreview extends StatelessWidget {
       decoration: BoxDecoration(
         color: colors.surfaceContainerLow,
         border: Border.all(color: colors.outlineVariant),
+        borderRadius: BorderRadius.circular(14),
       ),
       alignment: Alignment.center,
-      child: Icon(icon, size: 34, color: colors.onSurfaceVariant),
+      child: Icon(icon, size: 38, color: colors.onSurfaceVariant),
     );
   }
 
-  Future<void> _openPreview(
-    BuildContext context,
-    String tipoNormalizado,
-  ) async {
-    FocusManager.instance.primaryFocus?.unfocus();
+  IconData _getFileIcon() {
+    switch (tipo.trim().toUpperCase()) {
+      case 'PDF':
+        return Icons.picture_as_pdf_outlined;
 
-    if (tipoNormalizado == 'IMAGEN') {
-      await showDialog<void>(
-        context: context,
-        barrierColor: Colors.black.withValues(alpha: 0.88),
-        builder: (_) => ImagePreviewDialog(url: url),
-      );
+      case 'AUDIO':
+        return Icons.audiotrack_rounded;
 
-      return;
+      default:
+        return Icons.insert_drive_file_outlined;
     }
+  }
 
-    if (tipoNormalizado == 'VIDEO') {
-      await showDialog<void>(
-        context: context,
-        barrierDismissible: false,
-        barrierColor: Colors.black.withValues(alpha: 0.88),
-        builder: (_) => VideoPreviewDialog(url: url),
-      );
-    }
+  Future<void> _openFullscreen(BuildContext context) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        fullscreenDialog: true,
+        builder: (_) {
+          if (_isImage) {
+            return FullscreenImageViewer(url: url, heroTag: heroTag);
+          }
+
+          return FullscreenVideoViewer(url: url);
+        },
+      ),
+    );
   }
 }
 
@@ -545,39 +599,58 @@ class _SectionContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white,
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
+    return Card(
+      elevation: 2,
+      margin: EdgeInsets.zero,
+      color: colors.surface,
+      // surfaceTintColor: Colors.transparent,
+      // shadowColor: colors.shadow.withValues(alpha: 0.18),
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.grey.shade200),
+        side: BorderSide(color: colors.outlineVariant.withValues(alpha: 0.65)),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(
-                icon,
-                size: 21,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-              const SizedBox(width: 9),
-              Expanded(
-                child: Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
+      clipBehavior: Clip.antiAlias,
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 38,
+                  height: 38,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: colors.primaryContainer,
+                    borderRadius: BorderRadius.circular(11),
+                  ),
+                  child: Icon(icon, size: 21, color: colors.onPrimaryContainer),
+                ),
+
+                const SizedBox(width: 11),
+
+                Expanded(
+                  child: Text(
+                    title,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: colors.onSurface,
+                    ),
                   ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 18),
-          child,
-        ],
+              ],
+            ),
+
+            const SizedBox(height: 18),
+
+            child,
+          ],
+        ),
       ),
     );
   }

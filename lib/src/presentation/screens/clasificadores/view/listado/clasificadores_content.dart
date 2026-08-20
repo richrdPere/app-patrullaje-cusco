@@ -16,12 +16,14 @@ import 'package:sis_patrullaje_cusco/src/presentation/screens/clasificadores/blo
 
 // Resource
 import 'package:sis_patrullaje_cusco/src/domain/utils/Resource.dart';
-import 'package:sis_patrullaje_cusco/src/presentation/screens/clasificadores/view/widgets/ClasificadorCard.dart';
-import 'package:sis_patrullaje_cusco/src/presentation/screens/clasificadores/view/widgets/PaginationSection.dart';
-import 'package:sis_patrullaje_cusco/src/presentation/screens/clasificadores/view/widgets/SearchSection.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/clasificadores/view/listado/widgets/ClasificadorCard.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/clasificadores/view/listado/widgets/PaginationSection.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/clasificadores/view/listado/widgets/SearchSection.dart';
 
 class ClasificadoresContent extends StatefulWidget {
-  const ClasificadoresContent({super.key});
+  final int categoriaGenericaId;
+
+  const ClasificadoresContent({super.key, required this.categoriaGenericaId});
 
   @override
   State<ClasificadoresContent> createState() => _ClasificadoresContentState();
@@ -32,16 +34,20 @@ class _ClasificadoresContentState extends State<ClasificadoresContent> {
 
   Timer? _searchDebounce;
 
-  ClasificadorQueryParams _params = const ClasificadorQueryParams(
-    page: 1,
-    limit: 20,
-    estado: true,
-    incluirReglas: true,
-  );
+  late ClasificadorQueryParams _params;
 
   @override
   void initState() {
     super.initState();
+
+    // Params
+    _params = ClasificadorQueryParams(
+      page: 1,
+      limit: 20,
+      estado: true,
+      categoriaGenericaId: widget.categoriaGenericaId,
+      incluirReglas: true,
+    );
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;

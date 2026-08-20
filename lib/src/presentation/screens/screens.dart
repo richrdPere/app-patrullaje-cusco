@@ -13,7 +13,7 @@ export 'package:sis_patrullaje_cusco/src/presentation/screens/auth/register/view
 
 // CHAT
 export 'package:sis_patrullaje_cusco/src/presentation/screens/chat/chat_page.dart';
-export 'package:sis_patrullaje_cusco/src/presentation/screens/clasificadores/view/clasificadores_page.dart';
+export 'package:sis_patrullaje_cusco/src/presentation/screens/clasificadores/view/listado/clasificadores_page.dart';
 
 // HISTORIAL
 export 'package:sis_patrullaje_cusco/src/presentation/screens/historial_patrullaje/view/listado/historial_patrullaje_page.dart';

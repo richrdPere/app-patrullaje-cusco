@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sis_patrullaje_cusco/src/data/models/clasificadores/clasificador_codigo_data.dart';
-import 'package:sis_patrullaje_cusco/src/presentation/screens/clasificadores/view/widgets/RequirementChip.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/clasificadores/view/listado/widgets/RequirementChip.dart';
 
 class ClasificadorCard extends StatelessWidget {
   final ClasificadorCodigoData clasificador;
