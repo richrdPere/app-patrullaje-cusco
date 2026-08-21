@@ -7,10 +7,10 @@ import 'package:sis_patrullaje_cusco/src/presentation/screens/historial_patrulla
 import 'package:sis_patrullaje_cusco/src/presentation/screens/historial_patrullaje/bloc/historial_patrullaje_state.dart';
 
 // Widgets
-import 'package:sis_patrullaje_cusco/src/presentation/screens/historial_patrullaje/view/listado/widgets/historial_empty_state.dart';
-import 'package:sis_patrullaje_cusco/src/presentation/screens/historial_patrullaje/view/listado/widgets/historial_error_state.dart';
-import 'package:sis_patrullaje_cusco/src/presentation/screens/historial_patrullaje/view/listado/widgets/historial_loading.dart';
-import 'package:sis_patrullaje_cusco/src/presentation/screens/historial_patrullaje/view/listado/widgets/historial_patrullaje_list.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/historial_patrullaje/view/listado%20-%20historial%20patrullaje/widgets/historial_empty_state.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/historial_patrullaje/view/listado%20-%20historial%20patrullaje/widgets/historial_error_state.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/historial_patrullaje/view/listado%20-%20historial%20patrullaje/widgets/historial_loading.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/historial_patrullaje/view/listado%20-%20historial%20patrullaje/widgets/historial_patrullaje_list.dart';
 
 class HistorialPatrullajeContent extends StatelessWidget {
   final int patrullajeId;

@@ -1,7 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:sis_patrullaje_cusco/src/data/models/historial_patrullaje/historial_patrullaje_model.dart';
-
+import 'package:sis_patrullaje_cusco/src/data/models/models.dart';
 import 'package:sis_patrullaje_cusco/src/domain/use_cases/historial_patrullaje/HistorialPatrullajeUseCases.dart';
 import 'package:sis_patrullaje_cusco/src/domain/utils/Resource.dart';
 
@@ -14,18 +13,28 @@ class HistorialPatrullajeBloc
 
   HistorialPatrullajeBloc(this.historialUseCases)
     : super(const HistorialPatrullajeState()) {
+    // Consultas
     on<LoadHistorialPatrullajeEvent>(_onLoadHistorial);
     on<LoadHistorialDetalleEvent>(_onLoadDetalle);
-    on<RegisterHistorialEvent>(_onRegisterHistorial);
+    on<LoadContextoZonaEvent>(_onLoadContextoZona);
+    on<LoadSiguienteTurnoEvent>(_onLoadSiguienteTurno);
+
+    // Acciones
+    on<CreateHistorialEvent>(_onCreateHistorial);
+    on<CreateObservacionConArchivosEvent>(_onCreateObservacionConArchivos);
     on<UpdateHistorialEvent>(_onUpdateHistorial);
     on<ArchiveHistorialEvent>(_onArchiveHistorial);
+
+    // Limpieza
     on<ClearHistorialSelectedEvent>(_onClearSelected);
+    on<ClearContextoZonaEvent>(_onClearContextoZona);
+    on<ClearSiguienteTurnoEvent>(_onClearSiguienteTurno);
     on<ClearHistorialActionEvent>(_onClearAction);
   }
 
-  // ======================================================
+  // ========================================================
   // 1. OBTENER HISTORIAL POR PATRULLAJE
-  // ======================================================
+  // ========================================================
   Future<void> _onLoadHistorial(
     LoadHistorialPatrullajeEvent event,
     Emitter<HistorialPatrullajeState> emit,
@@ -39,25 +48,30 @@ class HistorialPatrullajeBloc
     );
 
     final response = await historialUseCases.getHistorialByPatrullaje.run(
-      event.patrullajeId,
+      patrullajeId: event.patrullajeId,
     );
 
-    if (response is Success<List<HistorialPatrullajeModel>>) {
-      final historial = response.data;
+    if (response is Success<ApiResponse<List<HistorialPatrullajeData>>>) {
+      final apiResponse = response.data;
+
+      final historial = apiResponse.data ?? <HistorialPatrullajeData>[];
 
       emit(
         state.copyWith(
           listStatus: historial.isEmpty
               ? HistorialListStatus.empty
               : HistorialListStatus.success,
+
           historial: historial,
+
           clearError: true,
         ),
       );
+
       return;
     }
 
-    if (response is ErrorData<List<HistorialPatrullajeModel>>) {
+    if (response is ErrorData<ApiResponse<List<HistorialPatrullajeData>>>) {
       emit(
         state.copyWith(
           listStatus: HistorialListStatus.error,
@@ -65,12 +79,21 @@ class HistorialPatrullajeBloc
           errorDetail: response.error,
         ),
       );
+      return;
     }
+
+    emit(
+      state.copyWith(
+        listStatus: HistorialListStatus.error,
+
+        errorMessage: 'No se pudo interpretar la respuesta del historial.',
+      ),
+    );
   }
 
-  // ======================================================
+  // ========================================================
   // 2. OBTENER DETALLE
-  // ======================================================
+  // ========================================================
   Future<void> _onLoadDetalle(
     LoadHistorialDetalleEvent event,
     Emitter<HistorialPatrullajeState> emit,
@@ -84,14 +107,27 @@ class HistorialPatrullajeBloc
     );
 
     final response = await historialUseCases.getHistorialById.run(
-      event.historialId,
+      historialId: event.historialId,
     );
 
-    if (response is Success<HistorialPatrullajeModel>) {
+    if (response is Success<ApiResponse<HistorialDetalleData>>) {
+      final detalle = response.data.data;
+
+      if (detalle == null) {
+        emit(
+          state.copyWith(
+            detailStatus: HistorialDetailStatus.error,
+            errorMessage: 'El servidor no devolvió el detalle del historial.',
+          ),
+        );
+
+        return;
+      }
+
       emit(
         state.copyWith(
           detailStatus: HistorialDetailStatus.success,
-          historialSelected: response.data,
+          historialSelected: detalle,
           clearError: true,
         ),
       );
@@ -99,7 +135,7 @@ class HistorialPatrullajeBloc
       return;
     }
 
-    if (response is ErrorData<HistorialPatrullajeModel>) {
+    if (response is ErrorData<ApiResponse<HistorialDetalleData>>) {
       emit(
         state.copyWith(
           detailStatus: HistorialDetailStatus.error,
@@ -107,14 +143,23 @@ class HistorialPatrullajeBloc
           errorDetail: response.error,
         ),
       );
+
+      return;
     }
+
+    emit(
+      state.copyWith(
+        detailStatus: HistorialDetailStatus.error,
+        errorMessage: 'No se pudo interpretar el detalle del historial.',
+      ),
+    );
   }
 
-  // ======================================================
-  // 3. REGISTRAR HISTORIAL
-  // ======================================================
-  Future<void> _onRegisterHistorial(
-    RegisterHistorialEvent event,
+  // ========================================================
+  // 3. CREAR HISTORIAL
+  // ========================================================
+  Future<void> _onCreateHistorial(
+    CreateHistorialEvent event,
     Emitter<HistorialPatrullajeState> emit,
   ) async {
     if (state.actionStatus == HistorialActionStatus.loading) {
@@ -124,37 +169,55 @@ class HistorialPatrullajeBloc
     emit(
       state.copyWith(
         actionStatus: HistorialActionStatus.loading,
+        clearActionData: true,
         clearActionMessage: true,
         clearError: true,
       ),
     );
 
-    final response = await historialUseCases.createHistorial.run(event.request);
+    final response = await historialUseCases.createHistorial.run(
+      request: event.request,
+    );
 
-    if (response is Success<HistorialPatrullajeModel>) {
-      final historialCreado = response.data;
+    if (response is Success<ApiResponse<HistorialData>>) {
+      final historialCreado = response.data.data;
 
-      final historialActualizado = [
-        historialCreado,
-        ...state.historial.where((item) => item.id != historialCreado.id),
-      ];
+      if (historialCreado == null) {
+        emit(
+          state.copyWith(
+            actionStatus: HistorialActionStatus.error,
+            errorMessage: 'El servidor no devolvió el historial creado.',
+          ),
+        );
+
+        return;
+      }
 
       emit(
         state.copyWith(
           actionStatus: HistorialActionStatus.success,
+          actionData: historialCreado,
           actionMessage: 'Historial registrado correctamente.',
-          listStatus: HistorialListStatus.success,
-          historial: historialActualizado,
-          historialSelected: historialCreado,
-          detailStatus: HistorialDetailStatus.success,
           clearError: true,
+        ),
+      );
+
+      /*
+       * HistorialData y HistorialPatrullajeData son modelos
+       * diferentes. Se vuelve a cargar el listado oficial.
+       */
+      add(
+        LoadHistorialPatrullajeEvent(
+          patrullajeId: event.request.patrullajeId,
+
+          refresh: true,
         ),
       );
 
       return;
     }
 
-    if (response is ErrorData<HistorialPatrullajeModel>) {
+    if (response is ErrorData<ApiResponse<HistorialData>>) {
       emit(
         state.copyWith(
           actionStatus: HistorialActionStatus.error,
@@ -162,12 +225,247 @@ class HistorialPatrullajeBloc
           errorDetail: response.error,
         ),
       );
+
+      return;
     }
+
+    emit(
+      state.copyWith(
+        actionStatus: HistorialActionStatus.error,
+        errorMessage: 'No se pudo interpretar la respuesta de creación.',
+      ),
+    );
   }
 
-  // ======================================================
-  // 4. ACTUALIZAR HISTORIAL
-  // ======================================================
+  // ========================================================
+  // 4. CREAR OBSERVACIÓN CON ARCHIVOS
+  // ========================================================
+  Future<void> _onCreateObservacionConArchivos(
+    CreateObservacionConArchivosEvent event,
+    Emitter<HistorialPatrullajeState> emit,
+  ) async {
+    if (state.actionStatus == HistorialActionStatus.loading) {
+      return;
+    }
+
+    emit(
+      state.copyWith(
+        actionStatus: HistorialActionStatus.loading,
+        clearActionData: true,
+        clearActionMessage: true,
+        clearError: true,
+      ),
+    );
+
+    final response = await historialUseCases.createObservacionConArchivos.run(
+      request: event.request,
+      archivos: event.archivos,
+    );
+
+    if (response is Success<ApiResponse<HistorialData>>) {
+      final observacion = response.data.data;
+
+      if (observacion == null) {
+        emit(
+          state.copyWith(
+            actionStatus: HistorialActionStatus.error,
+            errorMessage: 'El servidor no devolvió la observación creada.',
+          ),
+        );
+
+        return;
+      }
+
+      emit(
+        state.copyWith(
+          actionStatus: HistorialActionStatus.success,
+          actionData: observacion,
+          actionMessage: 'La observación fue registrada correctamente.',
+          clearError: true,
+        ),
+      );
+
+      add(
+        LoadHistorialPatrullajeEvent(
+          patrullajeId: event.request.patrullajeId,
+          refresh: true,
+        ),
+      );
+
+      return;
+    }
+
+    if (response is ErrorData<ApiResponse<HistorialData>>) {
+      emit(
+        state.copyWith(
+          actionStatus: HistorialActionStatus.error,
+          errorMessage: response.message,
+          errorDetail: response.error,
+        ),
+      );
+
+      return;
+    }
+
+    emit(
+      state.copyWith(
+        actionStatus: HistorialActionStatus.error,
+        errorMessage: 'No se pudo interpretar la respuesta de la observación.',
+      ),
+    );
+  }
+
+  // ========================================================
+  // 5. OBTENER CONTEXTO DE ZONA
+  // ========================================================
+  Future<void> _onLoadContextoZona(
+    LoadContextoZonaEvent event,
+    Emitter<HistorialPatrullajeState> emit,
+  ) async {
+    if (state.contextoZonaStatus == HistorialContextoZonaStatus.loading &&
+        !event.refresh) {
+      return;
+    }
+
+    emit(
+      state.copyWith(
+        contextoZonaStatus: HistorialContextoZonaStatus.loading,
+        clearError: true,
+      ),
+    );
+
+    final response = await historialUseCases.getContextoZona.run(
+      zonaId: event.zonaId,
+      params: event.params,
+    );
+
+    if (response is Success<ApiResponse<ContextoZonaData>>) {
+      final contexto = response.data.data;
+
+      if (contexto == null) {
+        emit(
+          state.copyWith(
+            contextoZonaStatus: HistorialContextoZonaStatus.error,
+            errorMessage: 'El servidor no devolvió el contexto de la zona.',
+          ),
+        );
+
+        return;
+      }
+
+      emit(
+        state.copyWith(
+          contextoZonaStatus: contexto.historial.isEmpty
+              ? HistorialContextoZonaStatus.empty
+              : HistorialContextoZonaStatus.success,
+          contextoZona: contexto,
+          clearError: true,
+        ),
+      );
+
+      return;
+    }
+
+    if (response is ErrorData<ApiResponse<ContextoZonaData>>) {
+      emit(
+        state.copyWith(
+          contextoZonaStatus: HistorialContextoZonaStatus.error,
+          errorMessage: response.message,
+          errorDetail: response.error,
+        ),
+      );
+
+      return;
+    }
+
+    emit(
+      state.copyWith(
+        contextoZonaStatus: HistorialContextoZonaStatus.error,
+        errorMessage: 'No se pudo interpretar el contexto de la zona.',
+      ),
+    );
+  }
+
+  // ========================================================
+  // 6. OBTENER INFORMACIÓN DEL TURNO ANTERIOR
+  // ========================================================
+  Future<void> _onLoadSiguienteTurno(
+    LoadSiguienteTurnoEvent event,
+    Emitter<HistorialPatrullajeState> emit,
+  ) async {
+    if (state.siguienteTurnoStatus == HistorialSiguienteTurnoStatus.loading &&
+        !event.refresh) {
+      return;
+    }
+
+    emit(
+      state.copyWith(
+        siguienteTurnoStatus: HistorialSiguienteTurnoStatus.loading,
+        clearError: true,
+      ),
+    );
+
+    final response = await historialUseCases.getParaSiguienteTurno.run(
+      params: event.params,
+    );
+
+    if (response is Success<ApiResponse<SiguienteTurnoData>>) {
+      final siguienteTurno = response.data.data;
+
+      if (siguienteTurno == null) {
+        emit(
+          state.copyWith(
+            siguienteTurnoStatus: HistorialSiguienteTurnoStatus.error,
+            errorMessage:
+                'El servidor no devolvió la información del turno anterior.',
+          ),
+        );
+
+        return;
+      }
+
+      emit(
+        state.copyWith(
+          siguienteTurnoStatus: siguienteTurno.tieneContextoAnterior
+              ? HistorialSiguienteTurnoStatus.success
+              : HistorialSiguienteTurnoStatus.empty,
+
+          siguienteTurno: siguienteTurno,
+
+          clearError: true,
+        ),
+      );
+
+      return;
+    }
+
+    if (response is ErrorData<ApiResponse<SiguienteTurnoData>>) {
+      emit(
+        state.copyWith(
+          siguienteTurnoStatus: HistorialSiguienteTurnoStatus.error,
+
+          errorMessage: response.message,
+
+          errorDetail: response.error,
+        ),
+      );
+
+      return;
+    }
+
+    emit(
+      state.copyWith(
+        siguienteTurnoStatus: HistorialSiguienteTurnoStatus.error,
+
+        errorMessage:
+            'No se pudo interpretar la información del turno anterior.',
+      ),
+    );
+  }
+
+  // ========================================================
+  // 7. ACTUALIZAR HISTORIAL
+  // ========================================================
   Future<void> _onUpdateHistorial(
     UpdateHistorialEvent event,
     Emitter<HistorialPatrullajeState> emit,
@@ -179,55 +477,92 @@ class HistorialPatrullajeBloc
     emit(
       state.copyWith(
         actionStatus: HistorialActionStatus.loading,
+
+        clearActionData: true,
+
         clearActionMessage: true,
+
         clearError: true,
       ),
     );
 
     final response = await historialUseCases.updateHistorial.run(
-      idHistorial: event.historialId,
-      historial: event.request,
+      historialId: event.historialId,
+
+      request: event.request,
     );
 
-    if (response is Success<HistorialPatrullajeModel>) {
-      final historialActualizado = response.data;
+    if (response is Success<ApiResponse<HistorialData>>) {
+      final historialActualizado = response.data.data;
 
-      final nuevaLista = state.historial.map((item) {
-        if (item.id == historialActualizado.id) {
-          return historialActualizado;
-        }
+      if (historialActualizado == null) {
+        emit(
+          state.copyWith(
+            actionStatus: HistorialActionStatus.error,
 
-        return item;
-      }).toList();
+            errorMessage: 'El servidor no devolvió el historial actualizado.',
+          ),
+        );
+
+        return;
+      }
+
+      final estabaSeleccionado =
+          state.historialSelected?.id == event.historialId;
 
       emit(
         state.copyWith(
           actionStatus: HistorialActionStatus.success,
+
+          actionData: historialActualizado,
+
           actionMessage: 'Historial actualizado correctamente.',
-          historial: nuevaLista,
-          historialSelected: historialActualizado,
-          detailStatus: HistorialDetailStatus.success,
+
           clearError: true,
+        ),
+      );
+
+      add(
+        LoadHistorialPatrullajeEvent(
+          patrullajeId: event.request.patrullajeId,
+
+          refresh: true,
+        ),
+      );
+
+      if (estabaSeleccionado) {
+        add(LoadHistorialDetalleEvent(historialId: event.historialId));
+      }
+
+      return;
+    }
+
+    if (response is ErrorData<ApiResponse<HistorialData>>) {
+      emit(
+        state.copyWith(
+          actionStatus: HistorialActionStatus.error,
+
+          errorMessage: response.message,
+
+          errorDetail: response.error,
         ),
       );
 
       return;
     }
 
-    if (response is ErrorData<HistorialPatrullajeModel>) {
-      emit(
-        state.copyWith(
-          actionStatus: HistorialActionStatus.error,
-          errorMessage: response.message,
-          errorDetail: response.error,
-        ),
-      );
-    }
+    emit(
+      state.copyWith(
+        actionStatus: HistorialActionStatus.error,
+
+        errorMessage: 'No se pudo interpretar la respuesta de actualización.',
+      ),
+    );
   }
 
-  // ======================================================
-  // 5. ARCHIVAR HISTORIAL
-  // ======================================================
+  // ========================================================
+  // 8. ARCHIVAR HISTORIAL
+  // ========================================================
   Future<void> _onArchiveHistorial(
     ArchiveHistorialEvent event,
     Emitter<HistorialPatrullajeState> emit,
@@ -239,23 +574,28 @@ class HistorialPatrullajeBloc
     emit(
       state.copyWith(
         actionStatus: HistorialActionStatus.loading,
+
+        clearActionData: true,
+
         clearActionMessage: true,
+
         clearError: true,
       ),
     );
 
     final response = await historialUseCases.archivedHistorial.run(
-      event.historialId,
+      historialId: event.historialId,
     );
 
-    if (response is Success<bool>) {
-      final archivado = response.data;
+    if (response is Success<ApiResponse<HistorialData>>) {
+      final historialArchivado = response.data.data;
 
-      if (!archivado) {
+      if (historialArchivado == null) {
         emit(
           state.copyWith(
             actionStatus: HistorialActionStatus.error,
-            errorMessage: 'No se pudo archivar el historial.',
+
+            errorMessage: 'El servidor no devolvió el historial archivado.',
           ),
         );
 
@@ -272,6 +612,7 @@ class HistorialPatrullajeBloc
       emit(
         state.copyWith(
           actionStatus: HistorialActionStatus.success,
+          actionData: historialArchivado,
           actionMessage: 'Historial archivado correctamente.',
           historial: nuevaLista,
           listStatus: nuevaLista.isEmpty
@@ -288,7 +629,7 @@ class HistorialPatrullajeBloc
       return;
     }
 
-    if (response is ErrorData<bool>) {
+    if (response is ErrorData<ApiResponse<HistorialData>>) {
       emit(
         state.copyWith(
           actionStatus: HistorialActionStatus.error,
@@ -296,12 +637,21 @@ class HistorialPatrullajeBloc
           errorDetail: response.error,
         ),
       );
+
+      return;
     }
+
+    emit(
+      state.copyWith(
+        actionStatus: HistorialActionStatus.error,
+        errorMessage: 'No se pudo interpretar la respuesta del archivado.',
+      ),
+    );
   }
 
-  // ======================================================
-  // 6. LIMPIAR SELECCIONADO
-  // ======================================================
+  // ========================================================
+  // 9. LIMPIAR HISTORIAL SELECCIONADO
+  // ========================================================
   void _onClearSelected(
     ClearHistorialSelectedEvent event,
     Emitter<HistorialPatrullajeState> emit,
@@ -315,9 +665,41 @@ class HistorialPatrullajeBloc
     );
   }
 
-  // ======================================================
-  // 7. LIMPIAR ESTADO DE ACCIÓN
-  // ======================================================
+  // ========================================================
+  // 10. LIMPIAR CONTEXTO DE ZONA
+  // ========================================================
+  void _onClearContextoZona(
+    ClearContextoZonaEvent event,
+    Emitter<HistorialPatrullajeState> emit,
+  ) {
+    emit(
+      state.copyWith(
+        contextoZonaStatus: HistorialContextoZonaStatus.initial,
+        clearContextoZona: true,
+        clearError: true,
+      ),
+    );
+  }
+
+  // ========================================================
+  // 11. LIMPIAR SIGUIENTE TURNO
+  // ========================================================
+  void _onClearSiguienteTurno(
+    ClearSiguienteTurnoEvent event,
+    Emitter<HistorialPatrullajeState> emit,
+  ) {
+    emit(
+      state.copyWith(
+        siguienteTurnoStatus: HistorialSiguienteTurnoStatus.initial,
+        clearSiguienteTurno: true,
+        clearError: true,
+      ),
+    );
+  }
+
+  // ========================================================
+  // 12. LIMPIAR ESTADO DE ACCIÓN
+  // ========================================================
   void _onClearAction(
     ClearHistorialActionEvent event,
     Emitter<HistorialPatrullajeState> emit,
@@ -325,6 +707,7 @@ class HistorialPatrullajeBloc
     emit(
       state.copyWith(
         actionStatus: HistorialActionStatus.initial,
+        clearActionData: true,
         clearActionMessage: true,
         clearError: true,
       ),

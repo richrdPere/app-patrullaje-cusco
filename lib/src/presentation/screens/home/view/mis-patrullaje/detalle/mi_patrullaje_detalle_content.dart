@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 
 // Modelo
 import 'package:sis_patrullaje_cusco/src/data/models/patrullaje/patrullaje_listado_data.dart';
-import 'package:sis_patrullaje_cusco/src/presentation/screens/historial_patrullaje/view/listado/historial_patrullaje_page.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/historial_patrullaje/view/listado%20-%20historial%20patrullaje/historial_patrullaje_page.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/home/view/mis-patrullaje/detalle/widgets/patrullaje_information_section.dart';
 
 // Widgets

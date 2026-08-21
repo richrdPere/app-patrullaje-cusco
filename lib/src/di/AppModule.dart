@@ -281,7 +281,9 @@ abstract class AppModule {
     endPatrullaje: EndPatrullajeUseCase(patrullajeRepository),
     startPatrullaje: StartPatrullajeUseCase(patrullajeRepository),
     sendLocation: SendLocationUseCase(patrullajeRepository),
-    getMisPatrullajesPaginados: GetMisPatrullajesPaginadosUC(patrullajeRepository),
+    getMisPatrullajesPaginados: GetMisPatrullajesPaginadosUC(
+      patrullajeRepository,
+    ),
     listenNewPatrullaje: ListenNewPatrullajeUseCase(patrullajeRepository),
     listenPatrullajeActualizado: ListenPatrullajeActualizadoUseCase(
       patrullajeRepository,
@@ -324,16 +326,23 @@ abstract class AppModule {
 
   // - Historial Patrullaje
   @injectable
-  HistorialPatrullajeUseCases
-  get historialPatrullajeUseCases => HistorialPatrullajeUseCases(
-    archivedHistorial: ArchivarHistorialUseCase(historialPatrullajeRepository),
-    getHistorialById: GetHistorialByIdUseCase(historialPatrullajeRepository),
-    getHistorialByPatrullaje: GetHistorialByPatrullajeUseCase(
-      historialPatrullajeRepository,
-    ),
-    updateHistorial: UpdateHistorialUseCase(historialPatrullajeRepository),
-    createHistorial: RegisterHistorialUseCase(historialPatrullajeRepository),
-  );
+  HistorialPatrullajeUseCases get historialPatrullajeUseCases =>
+      HistorialPatrullajeUseCases(
+        archivedHistorial: ArchivarHistorialUC(historialPatrullajeRepository),
+        getHistorialById: GetHistorialByIdUC(historialPatrullajeRepository),
+        getHistorialByPatrullaje: GetHistorialByPatrullajeUC(
+          historialPatrullajeRepository,
+        ),
+        updateHistorial: UpdateHistorialUC(historialPatrullajeRepository),
+        createHistorial: CreateHistorialUC(historialPatrullajeRepository),
+        createObservacionConArchivos: CreateObservacionConArchivosUC(
+          historialPatrullajeRepository,
+        ),
+        getContextoZona: GetContextoZonaUC(historialPatrullajeRepository),
+        getParaSiguienteTurno: GetParaSiguienteTurnoUC(
+          historialPatrullajeRepository,
+        ),
+      );
 
   // - Users
   @injectable
