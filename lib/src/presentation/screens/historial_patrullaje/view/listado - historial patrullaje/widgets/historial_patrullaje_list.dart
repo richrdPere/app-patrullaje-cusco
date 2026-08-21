@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:sis_patrullaje_cusco/src/data/models/models.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/historial_patrullaje/view/listado%20-%20historial%20patrullaje/widgets/historial_patrullaje_card.dart';
@@ -28,7 +29,15 @@ class HistorialPatrullajeList extends StatelessWidget {
 
         final item = historial[index - 1];
 
-        return HistorialPatrullajeCard(historial: item);
+        return HistorialPatrullajeCard(
+          historial: item,
+          onTap: () {
+            context.pushNamed(
+              'historial_detalle',
+              pathParameters: {'historialId': item.id.toString()},
+            );
+          },
+        );
       },
     );
   }

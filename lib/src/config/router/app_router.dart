@@ -11,6 +11,7 @@ import 'package:sis_patrullaje_cusco/src/domain/models/usuarios.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/clasificadores/view/menu/clasificadores_menu_page.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/clasificadores/view/menu/widgets/categoria_generica_option.dart';
 
+
 // Screens
 import 'package:sis_patrullaje_cusco/src/presentation/screens/screens.dart';
 
@@ -199,7 +200,9 @@ final GoRouter appRouter = GoRouter(
       ],
     ),
 
-    // HISTORIAL
+    // =====================================================
+    // HISTORIAL POR PATRULLAJE
+    // =====================================================
     GoRoute(
       name: 'historial_patrullaje',
       path: '/historial-patrullaje/:patrullajeId',
@@ -210,11 +213,84 @@ final GoRouter appRouter = GoRouter(
 
         if (patrullajeId == null || patrullajeId <= 0) {
           return const Scaffold(
-            body: Center(child: Text('No se encontró un patrullaje válido.')),
+            body: SafeArea(
+              child: Center(
+                child: Padding(
+                  padding: EdgeInsets.all(24),
+                  child: Text(
+                    'No se encontró un patrullaje válido.',
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+            ),
           );
         }
 
         return HistorialPatrullajePage(patrullajeId: patrullajeId);
+      },
+    ),
+
+    // =====================================================
+    // DETALLE DE HISTORIAL DE PATRULLAJE
+    // =====================================================
+    GoRoute(
+      name: 'historial_detalle',
+      path: '/historial-detalle/:historialId',
+      pageBuilder: (context, state) {
+        final historialId = int.tryParse(
+          state.pathParameters['historialId'] ?? '',
+        );
+
+        return MaterialPage<void>(
+          key: state.pageKey,
+          fullscreenDialog: true,
+          child: historialId != null && historialId > 0
+              ? HistorialDetallePage(historialId: historialId)
+              : const Scaffold(
+                  body: SafeArea(
+                    child: Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(24),
+                        child: Text(
+                          'No se encontró un registro de historial válido.',
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+        );
+      },
+    ),
+    // =====================================================
+    // CONTEXTO OPERATIVO DE ZONA
+    // =====================================================
+    GoRoute(
+      name: 'contexto_zona',
+      path: '/contexto-zona/:zonaId',
+      pageBuilder: (context, state) {
+        final zonaId = int.tryParse(state.pathParameters['zonaId'] ?? '');
+
+        return MaterialPage<void>(
+          key: state.pageKey,
+          fullscreenDialog: true,
+          child: zonaId != null && zonaId > 0
+              ? ContextoZonaPage(zonaId: zonaId)
+              : const Scaffold(
+                  body: SafeArea(
+                    child: Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(24),
+                        child: Text(
+                          'No se encontró una zona válida.',
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+        );
       },
     ),
 
@@ -261,6 +337,21 @@ final GoRouter appRouter = GoRouter(
           },
         ),
       ],
+    ),
+
+    // =====================================================
+    // INFORMACIÓN DEL TURNO ANTERIOR
+    // =====================================================
+    GoRoute(
+      name: 'siguiente_turno',
+      path: '/siguiente-turno',
+      pageBuilder: (context, state) {
+        return MaterialPage<void>(
+          key: state.pageKey,
+          fullscreenDialog: true,
+          child: const SiguienteTurnoPage(),
+        );
+      },
     ),
 
     // =====================================================
@@ -317,7 +408,6 @@ final GoRouter appRouter = GoRouter(
           name: 'profile_update',
           builder: (context, state) {
             final user = state.extra as Usuario;
-
             return ProfileUpdatePage(user: user);
           },
         ),

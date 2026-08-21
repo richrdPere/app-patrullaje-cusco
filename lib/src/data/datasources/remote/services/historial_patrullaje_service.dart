@@ -21,8 +21,7 @@ class HistorialPatrullajeService {
 
   String get API_CREATE_HISTORIAL => '$API_BASE/crear';
   String get API_CREATE_OBSERVACION_HISTORIAL => '$API_BASE/create-observacion';
-  String get API_HISTORIAL_SIGUIENTE_TURNO =>
-      '$API_BASE/historial/siguiente-turno';
+  String get API_HISTORIAL_SIGUIENTE_TURNO => '$API_BASE/siguiente-turno';
 
   String API_GET_HISTORIAL_PATRULLAJE(int patrullajeId) =>
       '$API_BASE/patrullaje/$patrullajeId';
@@ -30,8 +29,7 @@ class HistorialPatrullajeService {
   String API_GET_DETALLE_HISTORIAL(int historialId) =>
       '$API_BASE/detalle/$historialId';
 
-  String API_CONTEXTO_ZONA(int zonaId) =>
-      '$API_BASE/historial/contexto-zona/$zonaId';
+  String API_CONTEXTO_ZONA(int zonaId) => '$API_BASE/contexto-zona/$zonaId';
 
   String API_UPDATE_HISTORIAL(int historialId) =>
       '$API_BASE/editar/$historialId';

@@ -16,7 +16,10 @@ export 'package:sis_patrullaje_cusco/src/presentation/screens/chat/chat_page.dar
 export 'package:sis_patrullaje_cusco/src/presentation/screens/clasificadores/view/listado/clasificadores_page.dart';
 
 // HISTORIAL
+export 'package:sis_patrullaje_cusco/src/presentation/screens/historial_patrullaje/view/detalle/historial_detalle_page.dart';
+export 'package:sis_patrullaje_cusco/src/presentation/screens/historial_patrullaje/view/listado%20-%20contexto%20zona/contexto_zona_page.dart';
 export 'package:sis_patrullaje_cusco/src/presentation/screens/historial_patrullaje/view/listado%20-%20historial%20patrullaje/historial_patrullaje_page.dart';
+export 'package:sis_patrullaje_cusco/src/presentation/screens/historial_patrullaje/view/listado%20-%20siguiente%20turno/siguiente_turno_page.dart';
 
 // HOME - PATRULLAES
 export 'package:sis_patrullaje_cusco/src/presentation/screens/home/view/home/home_page.dart';

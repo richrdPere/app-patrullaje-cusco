@@ -109,6 +109,10 @@ class HomeQuickActions extends StatelessWidget {
         _openHistorial(context);
         break;
 
+      case HomeQuickActionType.siguienteTurno:
+        context.goNamed('siguiente_turno');
+        break;
+
       case HomeQuickActionType.zona:
         _openZona(context);
         break;
@@ -178,15 +182,13 @@ class HomeQuickActions extends StatelessWidget {
     }
 
     // Cuando implementes su pantalla:
-    //
-    // context.pushNamed(
-    //   'zona_detalle',
-    //   pathParameters: {
-    //     'zonaId': zonaId.toString(),
-    //   },
-    // );
 
-    _showPendingOption(context, 'Información de la zona');
+    context.pushNamed(
+      'contexto_zona',
+      pathParameters: {'zonaId': zonaId.toString()},
+    );
+
+    // _showPendingOption(context, 'Información de la zona');
   }
 
   // ==========================================================

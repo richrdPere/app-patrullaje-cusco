@@ -7,6 +7,7 @@ enum HomeQuickActionType {
   mapa,
   alertas,
   historial,
+  siguienteTurno,
   zona,
   incidenciasContexto,
   clasificadores,
@@ -38,11 +39,17 @@ const List<HomeQuickActionOption> homeQuickActionOptions = [
     label: 'Patrullajes',
   ),
 
-  // HomeQuickActionOption(
-  //   type: HomeQuickActionType.mapa,
-  //   icon: Icons.map_outlined,
-  //   label: 'Ver mapa',
-  // ),
+  HomeQuickActionOption(
+    type: HomeQuickActionType.zona,
+    icon: Icons.room_sharp,
+    label: 'Ver zona',
+  ),
+
+  HomeQuickActionOption(
+    type: HomeQuickActionType.siguienteTurno,
+    icon: Icons.supervised_user_circle,
+    label: 'Turno ant.',
+  ),
 
   // HomeQuickActionOption(
   //   type: HomeQuickActionType.alertas,
@@ -74,7 +81,6 @@ const List<HomeQuickActionOption> homeQuickActionOptions = [
   //   icon: Icons.edit_document,
   //   label: 'Ocurrencias',
   // ),
-  
   HomeQuickActionOption(
     type: HomeQuickActionType.clasificadores,
     icon: Icons.list_alt_rounded,
