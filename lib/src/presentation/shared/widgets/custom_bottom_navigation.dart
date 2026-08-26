@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:sis_patrullaje_cusco/src/presentation/screens/alertas/view/widgets/alerta_icon_badge.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/alertas/view/listado%20-%20mis%20alertas/widgets/alerta_icon_badge.dart';
 
 class CustomBottomNavigation extends StatelessWidget {
   final int currentIndex;

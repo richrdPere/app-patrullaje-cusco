@@ -1,24 +1,25 @@
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/alerta_notificacion/alerta_notificacion_uses_cases/DesactivarDispositivoUseCase.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/alerta_notificacion/alerta_notificacion_uses_cases/GetMisAlertasResumenUseCase.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/alerta_notificacion/alerta_notificacion_uses_cases/GetMisAlertasUseCase.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/alerta_notificacion/alerta_notificacion_uses_cases/MarcarAtendidaUseCase.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/alerta_notificacion/alerta_notificacion_uses_cases/MarcarLeidaUseCase.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/alerta_notificacion/alerta_notificacion_uses_cases/MarcarRecibidaUseCase.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/alerta_notificacion/alerta_notificacion_uses_cases/RegistrarDispositivoUseCase.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/alerta_notificacion/alerta_notificacion_uses_cases/ResponderAlertaUseCase.dart';
+import 'package:sis_patrullaje_cusco/src/domain/use_cases/index_uses_cases.dart';
 
 class AlertaNotificacionUsesCases {
-  DesactivarDispositivoUseCase desactivarDispositivo;
-  GetMisAlertasResumenUseCase getMisAlertasResumen;
-  GetMisAlertasUseCase getMisAlertas;
-  MarcarAtendidaUseCase marcarAtendida;
-  MarcarLeidaUseCase marcarLeida;
-  MarcarRecibidaUseCase marcarRecibida;
-  RegistrarDispositivoUseCase registrarDispositivo;
-  ResponderAlertaUseCase responderAlerta;
+  ActivarAlertaUC activarAlertaUC;
+  CancelarAlertaUC cancelarAlertaUC;
+  DesactivarDispositivoUC desactivarDispositivo;
+  GetAlertaActivaUC getAlertaActivaUC;
+  GetAlertaDetalleUC getAlertaDetalleUC;
+  GetMisAlertasResumenUC getMisAlertasResumen;
+  GetMisAlertasUC getMisAlertas;
+  MarcarAtendidaUC marcarAtendida;
+  MarcarLeidaUC marcarLeida;
+  MarcarRecibidaUC marcarRecibida;
+  RegistrarDispositivoUC registrarDispositivo;
+  ResponderAlertaUC responderAlerta;
 
   AlertaNotificacionUsesCases({
+    required this.activarAlertaUC,
+    required this.cancelarAlertaUC,
     required this.desactivarDispositivo,
+    required this.getAlertaActivaUC,
+    required this.getAlertaDetalleUC,
     required this.getMisAlertasResumen,
     required this.getMisAlertas,
     required this.marcarAtendida,

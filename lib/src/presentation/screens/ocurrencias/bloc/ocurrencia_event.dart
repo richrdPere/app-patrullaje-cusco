@@ -1,4 +1,6 @@
 import 'package:equatable/equatable.dart';
+
+// Models
 import 'package:sis_patrullaje_cusco/src/data/models/ocurrencias/ocurrencia_create_req.dart';
 import 'package:sis_patrullaje_cusco/src/data/models/ocurrencias/ocurrencia_query_params.dart';
 
@@ -9,9 +11,14 @@ abstract class OcurrenciaEvent extends Equatable {
   List<Object?> get props => [];
 }
 
+// ============================================================
+// OPERACIONES DEL BACKEND
+// ============================================================
+
 // *********************************************************
-// 1.- Crear ocurrencia
+// 1. CREAR OCURRENCIA
 // *********************************************************
+
 class CreateOcurrencia extends OcurrenciaEvent {
   final CreateOcurrenciaRequest request;
 
@@ -22,8 +29,9 @@ class CreateOcurrencia extends OcurrenciaEvent {
 }
 
 // *********************************************************
-// 2.- Obtener ocurrencias paginadas
+// 2. OBTENER OCURRENCIAS PAGINADAS
 // *********************************************************
+
 class GetOcurrenciasPaginado extends OcurrenciaEvent {
   final OcurrenciaQueryParams params;
 
@@ -34,8 +42,9 @@ class GetOcurrenciasPaginado extends OcurrenciaEvent {
 }
 
 // *********************************************************
-// 3.- Obtener ocurrencia por ID
+// 3. OBTENER OCURRENCIA POR ID
 // *********************************************************
+
 class GetOcurrenciaById extends OcurrenciaEvent {
   final int ocurrenciaId;
 
@@ -46,8 +55,9 @@ class GetOcurrenciaById extends OcurrenciaEvent {
 }
 
 // *********************************************************
-// 4.- Obtener PDF
+// 4. OBTENER PDF
 // *********************************************************
+
 class GetOcurrenciaPdf extends OcurrenciaEvent {
   final int ocurrenciaId;
 
@@ -57,37 +67,108 @@ class GetOcurrenciaPdf extends OcurrenciaEvent {
   List<Object?> get props => [ocurrenciaId];
 }
 
+// ============================================================
+// LIMPIEZA DE RESPUESTAS
+// ============================================================
+
 // *********************************************************
-// 5.- Limpiar respuesta de creación
+// 5. LIMPIAR RESPUESTA DE CREACIÓN
 // *********************************************************
+
 class ClearOcurrenciaCreateResponse extends OcurrenciaEvent {
   const ClearOcurrenciaCreateResponse();
 }
 
 // *********************************************************
-// 6.- Limpiar detalle
+// 6. LIMPIAR DETALLE
 // *********************************************************
+
 class ClearOcurrenciaDetailResponse extends OcurrenciaEvent {
   const ClearOcurrenciaDetailResponse();
 }
 
 // *********************************************************
-// 7.- Limpiar PDF
+// 7. LIMPIAR PDF
 // *********************************************************
+
 class ClearOcurrenciaPdfResponse extends OcurrenciaEvent {
   const ClearOcurrenciaPdfResponse();
 }
 
 // *********************************************************
-// 8.- Limpiar listado paginado
+// 8. LIMPIAR LISTADO PAGINADO
 // *********************************************************
+
 class ClearOcurrenciaPaginatedResponse extends OcurrenciaEvent {
   const ClearOcurrenciaPaginatedResponse();
 }
 
+// ============================================================
+// NAVEGACIÓN DEL FORMULARIO
+// ============================================================
+
 // *********************************************************
-// 9.- Restablecer BLoC
+// 9. INICIALIZAR STEPS
 // *********************************************************
+
+class InitializeOcurrenciaForm extends OcurrenciaEvent {
+  const InitializeOcurrenciaForm();
+}
+
+// *********************************************************
+// 10. IR A UN STEP
+// *********************************************************
+
+class GoToOcurrenciaFormStep extends OcurrenciaEvent {
+  final int step;
+
+  const GoToOcurrenciaFormStep({required this.step});
+
+  @override
+  List<Object?> get props => [step];
+}
+
+// *********************************************************
+// 11. SIGUIENTE STEP
+// *********************************************************
+
+class NextOcurrenciaFormStep extends OcurrenciaEvent {
+  const NextOcurrenciaFormStep();
+}
+
+// *********************************************************
+// 12. STEP ANTERIOR
+// *********************************************************
+
+class PreviousOcurrenciaFormStep extends OcurrenciaEvent {
+  const PreviousOcurrenciaFormStep();
+}
+
+// *********************************************************
+// 13. MARCAR STEP COMO COMPLETADO
+// *********************************************************
+
+class CompleteOcurrenciaFormStep extends OcurrenciaEvent {
+  final int step;
+
+  const CompleteOcurrenciaFormStep({required this.step});
+
+  @override
+  List<Object?> get props => [step];
+}
+
+// *********************************************************
+// 14. REINICIAR NAVEGACIÓN DEL FORMULARIO
+// *********************************************************
+
+class ResetOcurrenciaForm extends OcurrenciaEvent {
+  const ResetOcurrenciaForm();
+}
+
+// *********************************************************
+// 15. RESTABLECER EL BLOC
+// *********************************************************
+
 class ResetOcurrenciaState extends OcurrenciaEvent {
   const ResetOcurrenciaState();
 }

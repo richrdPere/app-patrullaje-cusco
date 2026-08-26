@@ -23,14 +23,24 @@ class OcurrenciaBloc extends Bloc<OcurrenciaEvent, OcurrenciaState> {
     on<GetOcurrenciaPdf>(_onGetOcurrenciaPdf);
 
     on<ClearOcurrenciaCreateResponse>(_onClearCreateResponse);
-
     on<ClearOcurrenciaDetailResponse>(_onClearDetailResponse);
-
     on<ClearOcurrenciaPdfResponse>(_onClearPdfResponse);
-
     on<ClearOcurrenciaPaginatedResponse>(_onClearPaginatedResponse);
 
     on<ResetOcurrenciaState>(_onResetState);
+
+    // Form step
+    on<InitializeOcurrenciaForm>(_onInitializeForm);
+
+    on<GoToOcurrenciaFormStep>(_onGoToFormStep);
+
+    on<NextOcurrenciaFormStep>(_onNextFormStep);
+
+    on<PreviousOcurrenciaFormStep>(_onPreviousFormStep);
+
+    on<CompleteOcurrenciaFormStep>(_onCompleteFormStep);
+
+    on<ResetOcurrenciaForm>(_onResetForm);
   }
 
   // *********************************************************
@@ -169,5 +179,66 @@ class OcurrenciaBloc extends Bloc<OcurrenciaEvent, OcurrenciaState> {
     Emitter<OcurrenciaState> emit,
   ) {
     emit(OcurrenciaState.initial());
+  }
+
+  // *********************************************************
+  // 10.- Form Steps
+  // *********************************************************
+  void _onInitializeForm(
+    InitializeOcurrenciaForm event,
+    Emitter<OcurrenciaState> emit,
+  ) {
+    emit(state.copyWith(currentFormStep: 0, clearCompletedFormSteps: true));
+  }
+
+  void _onGoToFormStep(
+    GoToOcurrenciaFormStep event,
+    Emitter<OcurrenciaState> emit,
+  ) {
+    if (!state.canOpenFormStep(event.step)) {
+      return;
+    }
+
+    emit(state.copyWith(currentFormStep: event.step));
+  }
+
+  void _onNextFormStep(
+    NextOcurrenciaFormStep event,
+    Emitter<OcurrenciaState> emit,
+  ) {
+    if (!state.canGoNextFormStep) {
+      return;
+    }
+
+    emit(state.copyWith(currentFormStep: state.currentFormStep + 1));
+  }
+
+  void _onPreviousFormStep(
+    PreviousOcurrenciaFormStep event,
+    Emitter<OcurrenciaState> emit,
+  ) {
+    if (!state.canGoPreviousFormStep) {
+      return;
+    }
+
+    emit(state.copyWith(currentFormStep: state.currentFormStep - 1));
+  }
+
+  void _onCompleteFormStep(
+    CompleteOcurrenciaFormStep event,
+    Emitter<OcurrenciaState> emit,
+  ) {
+    if (event.step < 0 || event.step >= state.totalFormSteps) {
+      return;
+    }
+
+    final completed = {...state.completedFormSteps, event.step}.toList()
+      ..sort();
+
+    emit(state.copyWith(completedFormSteps: List.unmodifiable(completed)));
+  }
+
+  void _onResetForm(ResetOcurrenciaForm event, Emitter<OcurrenciaState> emit) {
+    emit(state.copyWith(currentFormStep: 0, clearCompletedFormSteps: true));
   }
 }

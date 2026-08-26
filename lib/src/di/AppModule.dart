@@ -365,20 +365,24 @@ abstract class AppModule {
   @injectable
   AlertaNotificacionUsesCases get alertaNotificacionUsesCases =>
       AlertaNotificacionUsesCases(
-        desactivarDispositivo: DesactivarDispositivoUseCase(
+        desactivarDispositivo: DesactivarDispositivoUC(
           alertaNotificacionRepository,
         ),
-        getMisAlertasResumen: GetMisAlertasResumenUseCase(
+        getMisAlertasResumen: GetMisAlertasResumenUC(
           alertaNotificacionRepository,
         ),
-        getMisAlertas: GetMisAlertasUseCase(alertaNotificacionRepository),
-        marcarAtendida: MarcarAtendidaUseCase(alertaNotificacionRepository),
-        marcarLeida: MarcarLeidaUseCase(alertaNotificacionRepository),
-        marcarRecibida: MarcarRecibidaUseCase(alertaNotificacionRepository),
-        registrarDispositivo: RegistrarDispositivoUseCase(
+        getMisAlertas: GetMisAlertasUC(alertaNotificacionRepository),
+        marcarAtendida: MarcarAtendidaUC(alertaNotificacionRepository),
+        marcarLeida: MarcarLeidaUC(alertaNotificacionRepository),
+        marcarRecibida: MarcarRecibidaUC(alertaNotificacionRepository),
+        registrarDispositivo: RegistrarDispositivoUC(
           alertaNotificacionRepository,
         ),
-        responderAlerta: ResponderAlertaUseCase(alertaNotificacionRepository),
+        responderAlerta: ResponderAlertaUC(alertaNotificacionRepository),
+        activarAlertaUC: ActivarAlertaUC(alertaNotificacionRepository),
+        cancelarAlertaUC: CancelarAlertaUC(alertaNotificacionRepository),
+        getAlertaActivaUC: GetAlertaActivaUC(alertaNotificacionRepository),
+        getAlertaDetalleUC: GetAlertaDetalleUC(alertaNotificacionRepository),
       );
 
   // - Clasificadores

@@ -119,14 +119,18 @@ export 'package:sis_patrullaje_cusco/src/domain/use_cases/directions/DirectionsU
 // =======================================
 // ALERTAS - NOTIFICACIONES
 // =======================================
-export 'package:sis_patrullaje_cusco/src/domain/use_cases/alerta_notificacion/alerta_notificacion_uses_cases/DesactivarDispositivoUseCase.dart';
-export 'package:sis_patrullaje_cusco/src/domain/use_cases/alerta_notificacion/alerta_notificacion_uses_cases/GetMisAlertasResumenUseCase.dart';
-export 'package:sis_patrullaje_cusco/src/domain/use_cases/alerta_notificacion/alerta_notificacion_uses_cases/GetMisAlertasUseCase.dart';
-export 'package:sis_patrullaje_cusco/src/domain/use_cases/alerta_notificacion/alerta_notificacion_uses_cases/MarcarAtendidaUseCase.dart';
-export 'package:sis_patrullaje_cusco/src/domain/use_cases/alerta_notificacion/alerta_notificacion_uses_cases/MarcarLeidaUseCase.dart';
-export 'package:sis_patrullaje_cusco/src/domain/use_cases/alerta_notificacion/alerta_notificacion_uses_cases/MarcarRecibidaUseCase.dart';
-export 'package:sis_patrullaje_cusco/src/domain/use_cases/alerta_notificacion/alerta_notificacion_uses_cases/RegistrarDispositivoUseCase.dart';
-export 'package:sis_patrullaje_cusco/src/domain/use_cases/alerta_notificacion/alerta_notificacion_uses_cases/ResponderAlertaUseCase.dart';
+export 'package:sis_patrullaje_cusco/src/domain/use_cases/alerta_notificacion/alerta_notificacion_uses_cases/ActivarAlertaUC.dart';
+export 'package:sis_patrullaje_cusco/src/domain/use_cases/alerta_notificacion/alerta_notificacion_uses_cases/cancelarAlertaUC.dart';
+export 'package:sis_patrullaje_cusco/src/domain/use_cases/alerta_notificacion/alerta_notificacion_uses_cases/DesactivarDispositivoUC.dart';
+export 'package:sis_patrullaje_cusco/src/domain/use_cases/alerta_notificacion/alerta_notificacion_uses_cases/GetAlertaActivaUC.dart';
+export 'package:sis_patrullaje_cusco/src/domain/use_cases/alerta_notificacion/alerta_notificacion_uses_cases/GetAlertaDetalleUC.dart';
+export 'package:sis_patrullaje_cusco/src/domain/use_cases/alerta_notificacion/alerta_notificacion_uses_cases/GetMisAlertasResumenUC.dart';
+export 'package:sis_patrullaje_cusco/src/domain/use_cases/alerta_notificacion/alerta_notificacion_uses_cases/GetMisAlertasUC.dart';
+export 'package:sis_patrullaje_cusco/src/domain/use_cases/alerta_notificacion/alerta_notificacion_uses_cases/MarcarAtendidaUC.dart';
+export 'package:sis_patrullaje_cusco/src/domain/use_cases/alerta_notificacion/alerta_notificacion_uses_cases/MarcarLeidaUC.dart';
+export 'package:sis_patrullaje_cusco/src/domain/use_cases/alerta_notificacion/alerta_notificacion_uses_cases/MarcarRecibidaUC.dart';
+export 'package:sis_patrullaje_cusco/src/domain/use_cases/alerta_notificacion/alerta_notificacion_uses_cases/RegistrarDispositivoUC.dart';
+export 'package:sis_patrullaje_cusco/src/domain/use_cases/alerta_notificacion/alerta_notificacion_uses_cases/ResponderAlertaUC.dart';
 export 'package:sis_patrullaje_cusco/src/domain/use_cases/alerta_notificacion/AlertaNotificacionUsesCases.dart';
 
 // =======================================

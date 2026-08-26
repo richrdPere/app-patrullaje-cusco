@@ -101,8 +101,8 @@ class HomeQuickActions extends StatelessWidget {
         context.goNamed('mapa');
         break;
 
-      case HomeQuickActionType.alertas:
-        context.goNamed('alertas');
+      case HomeQuickActionType.alertaActiva:
+        context.goNamed('alertas_activas');
         break;
 
       case HomeQuickActionType.historial:

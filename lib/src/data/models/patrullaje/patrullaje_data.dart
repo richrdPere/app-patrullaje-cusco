@@ -49,6 +49,7 @@ class PatrullajeData {
             .toList(),
       ),
       unidad: Unidad(
+        id: _toInt(json['unidad']?['id']),
         codigo: json['unidad']?['codigo']?.toString() ?? '',
         tipo: json['unidad']?['tipo']?.toString() ?? '',
         placa: json['unidad']?['placa']?.toString() ?? '',
@@ -77,6 +78,7 @@ class PatrullajeData {
             .toList(),
       },
       'unidad': {
+        'id': unidad.id,
         'codigo': unidad.codigo,
         'tipo': unidad.tipo,
         'placa': unidad.placa,
@@ -121,7 +123,7 @@ class PatrullajeData {
         riesgo: '',
         coordenadas: const [],
       ),
-      unidad: Unidad(codigo: '', tipo: '', placa: ''),
+      unidad: Unidad(codigo: '', tipo: '', placa: '', id: 0),
     );
   }
 

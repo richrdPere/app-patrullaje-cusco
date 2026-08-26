@@ -44,10 +44,15 @@ class Coordenada {
 }
 
 class Unidad {
+  final int id;
   final String codigo;
   final String tipo;
   final String placa;
 
-  Unidad({required this.codigo, required this.tipo, required this.placa});
+  Unidad({
+    required this.codigo,
+    required this.tipo,
+    required this.placa,
+    required this.id,
+  });
 }
-

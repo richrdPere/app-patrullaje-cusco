@@ -54,7 +54,8 @@ class OcurrenciasPage extends StatelessWidget {
         body: const SafeArea(child: OcurrenciasContent()),
         floatingActionButton: FloatingActionButton.extended(
           onPressed: () {
-            context.push('/ocurrencias/crear');
+            context.pushNamed('ocurrencia_crear');
+          
           },
           icon: const Icon(Icons.add_rounded),
           label: const Text('Registrar'),

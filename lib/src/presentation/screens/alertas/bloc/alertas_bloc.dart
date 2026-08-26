@@ -1,10 +1,7 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 // Models
-import 'package:sis_patrullaje_cusco/src/data/models/alertas/alerta_destinatario_model.dart';
-import 'package:sis_patrullaje_cusco/src/data/models/alertas/alerta_paginated.dart';
-import 'package:sis_patrullaje_cusco/src/data/models/alertas/alerta_resumen_model.dart';
+import 'package:sis_patrullaje_cusco/src/data/models/models.dart';
 
 // Resource
 import 'package:sis_patrullaje_cusco/src/domain/utils/Resource.dart';
@@ -20,29 +17,46 @@ class AlertaBloc extends Bloc<AlertaEvent, AlertaState> {
   final AlertaNotificacionUsesCases alertaUsesCases;
 
   AlertaBloc(this.alertaUsesCases) : super(const AlertaState()) {
+    // Listado
     on<GetMisAlertasEvent>(_onGetMisAlertas);
     on<RefreshMisAlertasEvent>(_onRefreshMisAlertas);
     on<LoadMoreAlertasEvent>(_onLoadMoreAlertas);
     on<FiltrarAlertasEvent>(_onFiltrarAlertas);
     on<LimpiarFiltrosAlertasEvent>(_onLimpiarFiltros);
 
+    // Resumen
     on<GetMisAlertasResumenEvent>(_onGetMisAlertasResumen);
 
+    // Acciones del destinatario
     on<MarcarAlertaRecibidaEvent>(_onMarcarRecibida);
     on<MarcarAlertaLeidaEvent>(_onMarcarLeida);
     on<ResponderAlertaEvent>(_onResponderAlerta);
     on<MarcarAlertaAtendidaEvent>(_onMarcarAtendida);
 
+    // Botón de alerta
+    on<ActivarAlertaEvent>(_onActivarAlerta);
+    on<GetAlertaActivaEvent>(_onGetAlertaActiva);
+    on<CancelarAlertaEvent>(_onCancelarAlerta);
+    on<LimpiarAlertaActivaEvent>(_onLimpiarAlertaActiva);
+
+    // Detalle
+    on<GetAlertaDetalleEvent>(_onGetAlertaDetalle);
+    on<LimpiarAlertaDetalleEvent>(_onLimpiarAlertaDetalle);
+
+    // Actualizaciones locales, Socket y FCM
     on<AlertaRemotaRecibidaEvent>(_onAlertaRemotaRecibida);
     on<ActualizarAlertaLocalEvent>(_onActualizarAlertaLocal);
     on<EliminarAlertaLocalEvent>(_onEliminarAlertaLocal);
 
+    // Selección
     on<SeleccionarAlertaEvent>(_onSeleccionarAlerta);
     on<LimpiarAlertaSeleccionadaEvent>(_onLimpiarAlertaSeleccionada);
 
+    // Respuestas y reset
     on<ClearAlertaActionResponseEvent>(_onClearActionResponse);
     on<ResetAlertaEvent>(_onReset);
 
+    // Contador
     on<NuevaAlertaRecibidaEvent>(_onNuevaAlertaRecibida);
     on<MarcarAlertasComoLeidasEvent>(_onMarcarAlertasComoLeidas);
     on<EstablecerAlertasNoLeidasEvent>(_onEstablecerAlertasNoLeidas);
@@ -51,6 +65,7 @@ class AlertaBloc extends Bloc<AlertaEvent, AlertaState> {
   // ============================================================
   // 1. OBTENER MIS ALERTAS
   // ============================================================
+
   Future<void> _onGetMisAlertas(
     GetMisAlertasEvent event,
     Emitter<AlertaState> emit,
@@ -62,27 +77,40 @@ class AlertaBloc extends Bloc<AlertaEvent, AlertaState> {
         listStatus: isReset
             ? AlertaListStatus.loading
             : AlertaListStatus.loadingMore,
-        clearErrorMessage: true,
+        clearListErrorMessage: true,
       ),
     );
 
     final response = await alertaUsesCases.getMisAlertas.run(
-      page: event.page,
-      limit: event.limit,
-      estado: event.estado,
-      tipo: event.tipo,
-      prioridad: event.prioridad,
-      requiereConfirmacion: event.requiereConfirmacion,
+      params: event.params,
     );
 
-    if (response is Success<AlertaPaginated>) {
-      final data = response.data;
+    if (response is Success<ApiResponse<MisAlertasPaginated>>) {
+      final apiResponse = response.data;
+      final data = apiResponse.data;
 
-      final nuevasAlertas = data.alertas;
+      if (data == null) {
+        emit(
+          state.copyWith(
+            listStatus: state.alertas.isEmpty
+                ? AlertaListStatus.error
+                : AlertaListStatus.success,
+            listErrorMessage: apiResponse.message.isNotEmpty
+                ? apiResponse.message
+                : 'El servidor no devolvió las alertas.',
+          ),
+        );
+
+        return;
+      }
+
+      final nuevasAlertas = data.items;
 
       final alertasFinales = isReset
           ? nuevasAlertas
           : _combinarSinDuplicados(state.alertas, nuevasAlertas);
+
+      final pagination = data.pagination;
 
       emit(
         state.copyWith(
@@ -90,71 +118,85 @@ class AlertaBloc extends Bloc<AlertaEvent, AlertaState> {
               ? AlertaListStatus.empty
               : AlertaListStatus.success,
           alertas: alertasFinales,
-          page: data.page,
-          limit: data.limit,
-          total: data.total,
-          totalPages: data.totalPages,
-          hasNextPage: data.hasNextPage,
-          hasPreviousPage: data.hasPreviousPage,
+          alertasNoLeidas: data.noLeidas,
+          page: pagination.page,
+          limit: pagination.limit,
+          total: pagination.total,
+          totalPages: pagination.totalPages,
+          hasNextPage: pagination.hasNextPage,
+          hasPreviousPage: pagination.hasPreviousPage,
           filtroEstado: event.estado,
           clearFiltroEstado: event.estado == null,
           filtroTipo: event.tipo,
           clearFiltroTipo: event.tipo == null,
           filtroPrioridad: event.prioridad,
           clearFiltroPrioridad: event.prioridad == null,
-          filtroRequiereConfirmacion: event.requiereConfirmacion,
-          clearFiltroRequiereConfirmacion: event.requiereConfirmacion == null,
-          clearErrorMessage: true,
+          filtroNoLeidas: event.noLeidas,
+          clearFiltroNoLeidas: event.noLeidas == null,
+          clearListErrorMessage: true,
         ),
       );
 
       return;
     }
 
-    if (response is ErrorData<AlertaPaginated>) {
-      emit(
-        state.copyWith(
-          listStatus: state.alertas.isEmpty
-              ? AlertaListStatus.error
-              : AlertaListStatus.success,
-          errorMessage: response.message,
-        ),
-      );
-    }
+    _emitListError(emit, response);
   }
 
   // ============================================================
   // 2. REFRESCAR MIS ALERTAS
   // ============================================================
+
   Future<void> _onRefreshMisAlertas(
     RefreshMisAlertasEvent event,
     Emitter<AlertaState> emit,
   ) async {
-    final response = await alertaUsesCases.getMisAlertas.run(
+    final params = MisAlertasQueryParams(
       page: 1,
       limit: state.limit,
       estado: state.filtroEstado,
       tipo: state.filtroTipo,
       prioridad: state.filtroPrioridad,
-      requiereConfirmacion: state.filtroRequiereConfirmacion,
+      noLeidas: state.filtroNoLeidas,
     );
 
-    if (response is Success<AlertaPaginated>) {
-      final data = response.data;
+    final response = await alertaUsesCases.getMisAlertas.run(params: params);
+
+    if (response is Success<ApiResponse<MisAlertasPaginated>>) {
+      final apiResponse = response.data;
+      final data = apiResponse.data;
+
+      if (data == null) {
+        emit(
+          state.copyWith(
+            listStatus: state.alertas.isEmpty
+                ? AlertaListStatus.error
+                : AlertaListStatus.success,
+            listErrorMessage: apiResponse.message.isNotEmpty
+                ? apiResponse.message
+                : 'El servidor no devolvió las alertas.',
+          ),
+        );
+
+        return;
+      }
+
+      final pagination = data.pagination;
 
       emit(
         state.copyWith(
-          listStatus: data.alertas.isEmpty
+          listStatus: data.items.isEmpty
               ? AlertaListStatus.empty
               : AlertaListStatus.success,
-          alertas: data.alertas,
-          page: data.page,
-          limit: data.limit,
-          total: data.total,
-          totalPages: data.totalPages,
-          hasNextPage: data.hasNextPage,
-          hasPreviousPage: data.hasPreviousPage,
-          clearErrorMessage: true,
+          alertas: data.items,
+          alertasNoLeidas: data.noLeidas,
+          page: pagination.page,
+          limit: pagination.limit,
+          total: pagination.total,
+          totalPages: pagination.totalPages,
+          hasNextPage: pagination.hasNextPage,
+          hasPreviousPage: pagination.hasPreviousPage,
+          clearListErrorMessage: true,
         ),
       );
 
@@ -163,28 +205,18 @@ class AlertaBloc extends Bloc<AlertaEvent, AlertaState> {
       return;
     }
 
-    if (response is ErrorData<AlertaPaginated>) {
-      emit(
-        state.copyWith(
-          listStatus: state.alertas.isEmpty
-              ? AlertaListStatus.error
-              : AlertaListStatus.success,
-          errorMessage: response.message,
-        ),
-      );
-    }
+    _emitListError(emit, response);
   }
 
   // ============================================================
   // 3. CARGAR MÁS ALERTAS
   // ============================================================
-  Future<void> _onLoadMoreAlertas(
+
+  void _onLoadMoreAlertas(
     LoadMoreAlertasEvent event,
     Emitter<AlertaState> emit,
-  ) async {
-    if (!state.hasNextPage ||
-        state.listStatus == AlertaListStatus.loading ||
-        state.listStatus == AlertaListStatus.loadingMore) {
+  ) {
+    if (!state.puedeCargarMas) {
       return;
     }
 
@@ -195,7 +227,7 @@ class AlertaBloc extends Bloc<AlertaEvent, AlertaState> {
         estado: state.filtroEstado,
         tipo: state.filtroTipo,
         prioridad: state.filtroPrioridad,
-        requiereConfirmacion: state.filtroRequiereConfirmacion,
+        noLeidas: state.filtroNoLeidas,
         reset: false,
       ),
     );
@@ -204,10 +236,8 @@ class AlertaBloc extends Bloc<AlertaEvent, AlertaState> {
   // ============================================================
   // 4. FILTRAR ALERTAS
   // ============================================================
-  Future<void> _onFiltrarAlertas(
-    FiltrarAlertasEvent event,
-    Emitter<AlertaState> emit,
-  ) async {
+
+  void _onFiltrarAlertas(FiltrarAlertasEvent event, Emitter<AlertaState> emit) {
     emit(
       state.copyWith(
         filtroEstado: event.estado,
@@ -216,8 +246,8 @@ class AlertaBloc extends Bloc<AlertaEvent, AlertaState> {
         clearFiltroTipo: event.tipo == null,
         filtroPrioridad: event.prioridad,
         clearFiltroPrioridad: event.prioridad == null,
-        filtroRequiereConfirmacion: event.requiereConfirmacion,
-        clearFiltroRequiereConfirmacion: event.requiereConfirmacion == null,
+        filtroNoLeidas: event.noLeidas,
+        clearFiltroNoLeidas: event.noLeidas == null,
       ),
     );
 
@@ -228,7 +258,7 @@ class AlertaBloc extends Bloc<AlertaEvent, AlertaState> {
         estado: event.estado,
         tipo: event.tipo,
         prioridad: event.prioridad,
-        requiereConfirmacion: event.requiereConfirmacion,
+        noLeidas: event.noLeidas,
         reset: true,
       ),
     );
@@ -237,16 +267,17 @@ class AlertaBloc extends Bloc<AlertaEvent, AlertaState> {
   // ============================================================
   // 5. LIMPIAR FILTROS
   // ============================================================
-  Future<void> _onLimpiarFiltros(
+
+  void _onLimpiarFiltros(
     LimpiarFiltrosAlertasEvent event,
     Emitter<AlertaState> emit,
-  ) async {
+  ) {
     emit(
       state.copyWith(
         clearFiltroEstado: true,
         clearFiltroTipo: true,
         clearFiltroPrioridad: true,
-        clearFiltroRequiereConfirmacion: true,
+        clearFiltroNoLeidas: true,
       ),
     );
 
@@ -256,6 +287,7 @@ class AlertaBloc extends Bloc<AlertaEvent, AlertaState> {
   // ============================================================
   // 6. OBTENER RESUMEN
   // ============================================================
+
   Future<void> _onGetMisAlertasResumen(
     GetMisAlertasResumenEvent event,
     Emitter<AlertaState> emit,
@@ -263,74 +295,79 @@ class AlertaBloc extends Bloc<AlertaEvent, AlertaState> {
     emit(
       state.copyWith(
         resumenStatus: AlertaResumenStatus.loading,
-        clearErrorMessage: true,
+        clearResumenErrorMessage: true,
       ),
     );
 
     final response = await alertaUsesCases.getMisAlertasResumen.run();
 
-    if (response is Success<AlertaResumenModel>) {
-      final resumen = response.data;
+    if (response is Success<ApiResponse<MisAlertasResumenData>>) {
+      final apiResponse = response.data;
+      final resumen = apiResponse.data;
 
-      debugPrint('🔔 Alertas no leídas recibidas: ${resumen.noLeidas}');
+      if (resumen == null) {
+        emit(
+          state.copyWith(
+            resumenStatus: AlertaResumenStatus.error,
+            resumenErrorMessage: apiResponse.message.isNotEmpty
+                ? apiResponse.message
+                : 'El servidor no devolvió el resumen.',
+          ),
+        );
+
+        return;
+      }
 
       emit(
         state.copyWith(
           resumenStatus: AlertaResumenStatus.success,
           resumen: resumen,
-
-          // Cantidad que utiliza el badge
           alertasNoLeidas: resumen.noLeidas,
-
-          clearErrorMessage: true,
+          clearResumenErrorMessage: true,
         ),
       );
 
       return;
     }
 
-    if (response is ErrorData<AlertaResumenModel>) {
-      emit(
-        state.copyWith(
-          resumenStatus: AlertaResumenStatus.error,
-          errorMessage: response.message,
-        ),
-      );
-    }
+    _emitResumenError(emit, response);
   }
 
   // ============================================================
-  // 7. MARCAR COMO RECIBIDA
+  // 7. MARCAR ALERTA COMO RECIBIDA
   // ============================================================
+
   Future<void> _onMarcarRecibida(
     MarcarAlertaRecibidaEvent event,
     Emitter<AlertaState> emit,
   ) async {
-    emit(
-      state.copyWith(
-        actionStatus: AlertaActionStatus.loading,
-        actionType: AlertaActionType.marcarRecibida,
-        clearActionMessage: true,
-        clearErrorMessage: true,
-      ),
-    );
+    _emitActionLoading(emit, AlertaActionType.marcarRecibida);
 
     final response = await alertaUsesCases.marcarRecibida.run(
       alertaId: event.alertaId,
     );
 
-    if (response is Success<AlertaDestinatarioModel>) {
-      final actualizado = response.data;
+    if (response is Success<ApiResponse<AlertaUsuarioEstadoData>>) {
+      final apiResponse = response.data;
+      final actualizado = apiResponse.data;
 
-      emit(
-        state.copyWith(
-          actionStatus: AlertaActionStatus.success,
-          actionType: AlertaActionType.marcarRecibida,
-          actionMessage: 'Alerta marcada como recibida.',
-          alertas: _actualizarEnLista(actualizado),
-          alertaSelected: _actualizarSeleccionada(actualizado),
-          clearErrorMessage: true,
-        ),
+      if (actualizado == null) {
+        _emitActionDataMissing(
+          emit,
+          AlertaActionType.marcarRecibida,
+          apiResponse.message,
+        );
+
+        return;
+      }
+
+      _emitUsuarioActualizado(
+        emit: emit,
+        actualizado: actualizado,
+        actionType: AlertaActionType.marcarRecibida,
+        message: apiResponse.message.isNotEmpty
+            ? apiResponse.message
+            : 'Alerta marcada como recibida.',
       );
 
       add(const GetMisAlertasResumenEvent());
@@ -342,38 +379,48 @@ class AlertaBloc extends Bloc<AlertaEvent, AlertaState> {
   }
 
   // ============================================================
-  // 8. MARCAR COMO LEÍDA
+  // 8. MARCAR ALERTA COMO LEÍDA
   // ============================================================
+
   Future<void> _onMarcarLeida(
     MarcarAlertaLeidaEvent event,
     Emitter<AlertaState> emit,
   ) async {
-    emit(
-      state.copyWith(
-        actionStatus: AlertaActionStatus.loading,
-        actionType: AlertaActionType.marcarLeida,
-        clearActionMessage: true,
-        clearErrorMessage: true,
-      ),
-    );
+    _emitActionLoading(emit, AlertaActionType.marcarLeida);
 
     final response = await alertaUsesCases.marcarLeida.run(
       alertaId: event.alertaId,
     );
 
-    if (response is Success<AlertaDestinatarioModel>) {
-      final actualizado = response.data;
+    if (response is Success<ApiResponse<AlertaUsuarioEstadoData>>) {
+      final apiResponse = response.data;
+      final actualizado = apiResponse.data;
 
-      emit(
-        state.copyWith(
-          actionStatus: AlertaActionStatus.success,
-          actionType: AlertaActionType.marcarLeida,
-          actionMessage: 'Alerta marcada como leída.',
-          alertas: _actualizarEnLista(actualizado),
-          alertaSelected: _actualizarSeleccionada(actualizado),
-          clearErrorMessage: true,
-        ),
+      if (actualizado == null) {
+        _emitActionDataMissing(
+          emit,
+          AlertaActionType.marcarLeida,
+          apiResponse.message,
+        );
+
+        return;
+      }
+
+      final noLeidasActualizadas = state.alertasNoLeidas > 0
+          ? state.alertasNoLeidas - 1
+          : 0;
+
+      _emitUsuarioActualizado(
+        emit: emit,
+        actualizado: actualizado,
+        actionType: AlertaActionType.marcarLeida,
+        message: apiResponse.message.isNotEmpty
+            ? apiResponse.message
+            : 'Alerta marcada como leída.',
+        alertasNoLeidas: noLeidasActualizadas,
       );
+
+      _refreshDetalleIfNecessary(actualizado.alertaId);
 
       add(const GetMisAlertasResumenEvent());
 
@@ -386,6 +433,7 @@ class AlertaBloc extends Bloc<AlertaEvent, AlertaState> {
   // ============================================================
   // 9. RESPONDER ALERTA
   // ============================================================
+
   Future<void> _onResponderAlerta(
     ResponderAlertaEvent event,
     Emitter<AlertaState> emit,
@@ -396,14 +444,7 @@ class AlertaBloc extends Bloc<AlertaEvent, AlertaState> {
         ? AlertaActionType.aceptar
         : AlertaActionType.rechazar;
 
-    emit(
-      state.copyWith(
-        actionStatus: AlertaActionStatus.loading,
-        actionType: actionType,
-        clearActionMessage: true,
-        clearErrorMessage: true,
-      ),
-    );
+    _emitActionLoading(emit, actionType);
 
     final response = await alertaUsesCases.responderAlerta.run(
       alertaId: event.alertaId,
@@ -411,21 +452,28 @@ class AlertaBloc extends Bloc<AlertaEvent, AlertaState> {
       observacion: event.observacion,
     );
 
-    if (response is Success<AlertaDestinatarioModel>) {
-      final actualizado = response.data;
+    if (response is Success<ApiResponse<AlertaUsuarioEstadoData>>) {
+      final apiResponse = response.data;
+      final actualizado = apiResponse.data;
 
-      emit(
-        state.copyWith(
-          actionStatus: AlertaActionStatus.success,
-          actionType: actionType,
-          actionMessage: respuestaNormalizada == 'ACEPTADA'
-              ? 'Alerta aceptada correctamente.'
-              : 'Alerta rechazada correctamente.',
-          alertas: _actualizarEnLista(actualizado),
-          alertaSelected: _actualizarSeleccionada(actualizado),
-          clearErrorMessage: true,
-        ),
+      if (actualizado == null) {
+        _emitActionDataMissing(emit, actionType, apiResponse.message);
+
+        return;
+      }
+
+      _emitUsuarioActualizado(
+        emit: emit,
+        actualizado: actualizado,
+        actionType: actionType,
+        message: apiResponse.message.isNotEmpty
+            ? apiResponse.message
+            : respuestaNormalizada == 'ACEPTADA'
+            ? 'Alerta aceptada correctamente.'
+            : 'Alerta rechazada correctamente.',
       );
+
+      _refreshDetalleIfNecessary(actualizado.alertaId);
 
       add(const GetMisAlertasResumenEvent());
 
@@ -436,39 +484,44 @@ class AlertaBloc extends Bloc<AlertaEvent, AlertaState> {
   }
 
   // ============================================================
-  // 10. MARCAR COMO ATENDIDA
+  // 10. MARCAR ALERTA COMO ATENDIDA
   // ============================================================
+
   Future<void> _onMarcarAtendida(
     MarcarAlertaAtendidaEvent event,
     Emitter<AlertaState> emit,
   ) async {
-    emit(
-      state.copyWith(
-        actionStatus: AlertaActionStatus.loading,
-        actionType: AlertaActionType.marcarAtendida,
-        clearActionMessage: true,
-        clearErrorMessage: true,
-      ),
-    );
+    _emitActionLoading(emit, AlertaActionType.marcarAtendida);
 
     final response = await alertaUsesCases.marcarAtendida.run(
       alertaId: event.alertaId,
       observacion: event.observacion,
     );
 
-    if (response is Success<AlertaDestinatarioModel>) {
-      final actualizado = response.data;
+    if (response is Success<ApiResponse<AlertaUsuarioEstadoData>>) {
+      final apiResponse = response.data;
+      final actualizado = apiResponse.data;
 
-      emit(
-        state.copyWith(
-          actionStatus: AlertaActionStatus.success,
-          actionType: AlertaActionType.marcarAtendida,
-          actionMessage: 'Alerta marcada como atendida.',
-          alertas: _actualizarEnLista(actualizado),
-          alertaSelected: _actualizarSeleccionada(actualizado),
-          clearErrorMessage: true,
-        ),
+      if (actualizado == null) {
+        _emitActionDataMissing(
+          emit,
+          AlertaActionType.marcarAtendida,
+          apiResponse.message,
+        );
+
+        return;
+      }
+
+      _emitUsuarioActualizado(
+        emit: emit,
+        actualizado: actualizado,
+        actionType: AlertaActionType.marcarAtendida,
+        message: apiResponse.message.isNotEmpty
+            ? apiResponse.message
+            : 'Alerta marcada como atendida.',
       );
+
+      _refreshDetalleIfNecessary(actualizado.alertaId);
 
       add(const GetMisAlertasResumenEvent());
 
@@ -479,8 +532,248 @@ class AlertaBloc extends Bloc<AlertaEvent, AlertaState> {
   }
 
   // ============================================================
-  // 11. ALERTA REMOTA RECIBIDA
+  // 11. ACTIVAR BOTÓN DE ALERTA
   // ============================================================
+
+  Future<void> _onActivarAlerta(
+    ActivarAlertaEvent event,
+    Emitter<AlertaState> emit,
+  ) async {
+    _emitActionLoading(emit, AlertaActionType.activarAlerta);
+
+    final response = await alertaUsesCases.activarAlertaUC.run(
+      request: event.request,
+    );
+
+    if (response is Success<ApiResponse<ActivarAlertaData>>) {
+      final apiResponse = response.data;
+      final alertaActivada = apiResponse.data;
+
+      if (alertaActivada == null) {
+        _emitActionDataMissing(
+          emit,
+          AlertaActionType.activarAlerta,
+          apiResponse.message,
+        );
+
+        return;
+      }
+
+      emit(
+        state.copyWith(
+          actionStatus: AlertaActionStatus.success,
+          actionType: AlertaActionType.activarAlerta,
+          actionMessage: apiResponse.message.isNotEmpty
+              ? apiResponse.message
+              : 'La alerta fue activada correctamente.',
+          alertaActivada: alertaActivada,
+          clearAlertaCancelada: true,
+        ),
+      );
+
+      /*
+       * La respuesta de activación y la respuesta del endpoint
+       * de alerta activa tienen estructuras diferentes.
+       * Se consulta nuevamente para obtener AlertaActivaData.
+       */
+      add(const GetAlertaActivaEvent());
+      add(const GetMisAlertasResumenEvent());
+
+      return;
+    }
+
+    _emitActionError(emit, response, AlertaActionType.activarAlerta);
+  }
+
+  // ============================================================
+  // 12. OBTENER ALERTA ACTIVA
+  // ============================================================
+
+  Future<void> _onGetAlertaActiva(
+    GetAlertaActivaEvent event,
+    Emitter<AlertaState> emit,
+  ) async {
+    emit(
+      state.copyWith(
+        alertaActivaStatus: AlertaActivaStatus.loading,
+        clearAlertaActivaErrorMessage: true,
+      ),
+    );
+
+    final response = await alertaUsesCases.getAlertaActivaUC.run();
+
+    if (response is Success<ApiResponse<AlertaActivaData>>) {
+      final apiResponse = response.data;
+      final alertaActiva = apiResponse.data;
+
+      if (alertaActiva == null) {
+        emit(
+          state.copyWith(
+            alertaActivaStatus: AlertaActivaStatus.empty,
+            clearAlertaActiva: true,
+            clearAlertaActivaErrorMessage: true,
+          ),
+        );
+
+        return;
+      }
+
+      emit(
+        state.copyWith(
+          alertaActivaStatus: AlertaActivaStatus.success,
+          alertaActiva: alertaActiva,
+          clearAlertaActivaErrorMessage: true,
+        ),
+      );
+
+      return;
+    }
+
+    _emitAlertaActivaError(emit, response);
+  }
+
+  // ============================================================
+  // 13. CANCELAR ALERTA ACTIVA
+  // ============================================================
+
+  Future<void> _onCancelarAlerta(
+    CancelarAlertaEvent event,
+    Emitter<AlertaState> emit,
+  ) async {
+    _emitActionLoading(emit, AlertaActionType.cancelarAlerta);
+
+    final response = await alertaUsesCases.cancelarAlertaUC.run(
+      alertaId: event.alertaId,
+    );
+
+    if (response is Success<ApiResponse<CancelarAlertaData>>) {
+      final apiResponse = response.data;
+      final alertaCancelada = apiResponse.data;
+
+      if (alertaCancelada == null) {
+        _emitActionDataMissing(
+          emit,
+          AlertaActionType.cancelarAlerta,
+          apiResponse.message,
+        );
+
+        return;
+      }
+
+      emit(
+        state.copyWith(
+          actionStatus: AlertaActionStatus.success,
+          actionType: AlertaActionType.cancelarAlerta,
+          actionMessage: apiResponse.message.isNotEmpty
+              ? apiResponse.message
+              : 'La alerta fue cancelada correctamente.',
+          alertaCancelada: alertaCancelada,
+          clearAlertaActivada: true,
+          alertaActivaStatus: AlertaActivaStatus.empty,
+          clearAlertaActiva: true,
+          clearAlertaActivaErrorMessage: true,
+        ),
+      );
+
+      _refreshDetalleIfNecessary(alertaCancelada.id);
+
+      add(const GetMisAlertasResumenEvent());
+
+      return;
+    }
+
+    _emitActionError(emit, response, AlertaActionType.cancelarAlerta);
+  }
+
+  // ============================================================
+  // 14. LIMPIAR ALERTA ACTIVA LOCAL
+  // ============================================================
+
+  void _onLimpiarAlertaActiva(
+    LimpiarAlertaActivaEvent event,
+    Emitter<AlertaState> emit,
+  ) {
+    emit(
+      state.copyWith(
+        alertaActivaStatus: AlertaActivaStatus.initial,
+        clearAlertaActiva: true,
+        clearAlertaActivaErrorMessage: true,
+      ),
+    );
+  }
+
+  // ============================================================
+  // 15. OBTENER DETALLE DE ALERTA
+  // ============================================================
+
+  Future<void> _onGetAlertaDetalle(
+    GetAlertaDetalleEvent event,
+    Emitter<AlertaState> emit,
+  ) async {
+    emit(
+      state.copyWith(
+        detalleStatus: AlertaDetalleStatus.loading,
+        clearAlertaDetalle: true,
+        clearDetalleErrorMessage: true,
+      ),
+    );
+
+    final response = await alertaUsesCases.getAlertaDetalleUC.run(
+      alertaId: event.alertaId,
+    );
+
+    if (response is Success<ApiResponse<AlertaDetalleData>>) {
+      final apiResponse = response.data;
+      final detalle = apiResponse.data;
+
+      if (detalle == null) {
+        emit(
+          state.copyWith(
+            detalleStatus: AlertaDetalleStatus.error,
+            detalleErrorMessage: apiResponse.message.isNotEmpty
+                ? apiResponse.message
+                : 'El servidor no devolvió el detalle.',
+          ),
+        );
+
+        return;
+      }
+
+      emit(
+        state.copyWith(
+          detalleStatus: AlertaDetalleStatus.success,
+          alertaDetalle: detalle,
+          clearDetalleErrorMessage: true,
+        ),
+      );
+
+      return;
+    }
+
+    _emitDetalleError(emit, response);
+  }
+
+  // ============================================================
+  // 16. LIMPIAR DETALLE
+  // ============================================================
+
+  void _onLimpiarAlertaDetalle(
+    LimpiarAlertaDetalleEvent event,
+    Emitter<AlertaState> emit,
+  ) {
+    emit(
+      state.copyWith(
+        detalleStatus: AlertaDetalleStatus.initial,
+        clearAlertaDetalle: true,
+        clearDetalleErrorMessage: true,
+      ),
+    );
+  }
+
+  // ============================================================
+  // 17. ALERTA REMOTA RECIBIDA
+  // ============================================================
+
   void _onAlertaRemotaRecibida(
     AlertaRemotaRecibidaEvent event,
     Emitter<AlertaState> emit,
@@ -491,15 +784,20 @@ class AlertaBloc extends Bloc<AlertaEvent, AlertaState> {
       (item) => item.alertaId == alertaNueva.alertaId,
     );
 
-    final List<AlertaDestinatarioModel> actualizadas;
+    final List<MisAlertasData> actualizadas;
 
     if (index >= 0) {
-      actualizadas = List<AlertaDestinatarioModel>.from(state.alertas);
+      actualizadas = List<MisAlertasData>.from(state.alertas);
 
       actualizadas[index] = alertaNueva;
     } else {
       actualizadas = [alertaNueva, ...state.alertas];
     }
+
+    final debeIncrementar =
+        index < 0 &&
+        alertaNueva.fechaLeida == null &&
+        alertaNueva.estado != 'LEIDA';
 
     emit(
       state.copyWith(
@@ -507,40 +805,48 @@ class AlertaBloc extends Bloc<AlertaEvent, AlertaState> {
         alertas: actualizadas,
         ultimaAlertaRecibida: alertaNueva,
         total: index >= 0 ? state.total : state.total + 1,
+        alertasNoLeidas: debeIncrementar
+            ? state.alertasNoLeidas + 1
+            : state.alertasNoLeidas,
       ),
     );
 
-    add(const GetMisAlertasResumenEvent());
-
     /*
-     * Al recibirla por Socket o Firebase, se puede informar al
-     * backend que llegó al dispositivo.
-     *
-     * Evitamos repetirlo si ya tiene un estado posterior.
+     * Si todavía está pendiente, se informa al backend que
+     * la alerta llegó al dispositivo.
      */
     if (alertaNueva.estado == 'PENDIENTE') {
       add(MarcarAlertaRecibidaEvent(alertaId: alertaNueva.alertaId));
     }
+
+    add(const GetMisAlertasResumenEvent());
   }
 
   // ============================================================
-  // 12. ACTUALIZAR ALERTA LOCAL
+  // 18. ACTUALIZAR ALERTA LOCAL
   // ============================================================
+
   void _onActualizarAlertaLocal(
     ActualizarAlertaLocalEvent event,
     Emitter<AlertaState> emit,
   ) {
+    final actualizado = event.alertaUsuario;
+
     emit(
       state.copyWith(
-        alertas: _actualizarEnLista(event.alerta),
-        alertaSelected: _actualizarSeleccionada(event.alerta),
+        alertas: _actualizarEnLista(actualizado),
+        alertaSelected: _actualizarSeleccionada(actualizado),
+        ultimaActualizacionUsuario: actualizado,
       ),
     );
+
+    _refreshDetalleIfNecessary(actualizado.alertaId);
   }
 
   // ============================================================
-  // 13. ELIMINAR ALERTA LOCAL
+  // 19. ELIMINAR ALERTA LOCAL
   // ============================================================
+
   void _onEliminarAlertaLocal(
     EliminarAlertaLocalEvent event,
     Emitter<AlertaState> emit,
@@ -549,9 +855,8 @@ class AlertaBloc extends Bloc<AlertaEvent, AlertaState> {
         .where((item) => item.alertaId != event.alertaId)
         .toList();
 
-    final selected = state.alertaSelected?.alertaId == event.alertaId
-        ? null
-        : state.alertaSelected;
+    final debeLimpiarSeleccion =
+        state.alertaSelected?.alertaId == event.alertaId;
 
     emit(
       state.copyWith(
@@ -560,39 +865,60 @@ class AlertaBloc extends Bloc<AlertaEvent, AlertaState> {
             : AlertaListStatus.success,
         alertas: alertasActualizadas,
         total: state.total > 0 ? state.total - 1 : 0,
-        alertaSelected: selected,
-        clearAlertaSelected: selected == null,
+        clearAlertaSelected: debeLimpiarSeleccion,
       ),
     );
   }
 
   // ============================================================
-  // 14. SELECCIONAR ALERTA
+  // 20. SELECCIONAR ALERTA
   // ============================================================
+
   void _onSeleccionarAlerta(
     SeleccionarAlertaEvent event,
     Emitter<AlertaState> emit,
   ) {
-    emit(state.copyWith(alertaSelected: event.alerta));
+    final alerta = event.alerta;
 
-    if (!event.alerta.fueLeida) {
-      add(MarcarAlertaLeidaEvent(alertaId: event.alerta.alertaId));
+    emit(state.copyWith(alertaSelected: alerta));
+
+    /*
+     * Se obtiene el detalle completo de la alerta.
+     */
+    add(GetAlertaDetalleEvent(alertaId: alerta.alertaId));
+
+    /*
+     * Se marca como leída únicamente si todavía no lo está.
+     */
+    final fueLeida = alerta.fechaLeida != null || alerta.estado == 'LEIDA';
+
+    if (!fueLeida) {
+      add(MarcarAlertaLeidaEvent(alertaId: alerta.alertaId));
     }
   }
 
   // ============================================================
-  // 15. LIMPIAR SELECCIÓN
+  // 21. LIMPIAR ALERTA SELECCIONADA
   // ============================================================
+
   void _onLimpiarAlertaSeleccionada(
     LimpiarAlertaSeleccionadaEvent event,
     Emitter<AlertaState> emit,
   ) {
-    emit(state.copyWith(clearAlertaSelected: true));
+    emit(
+      state.copyWith(
+        clearAlertaSelected: true,
+        detalleStatus: AlertaDetalleStatus.initial,
+        clearAlertaDetalle: true,
+        clearDetalleErrorMessage: true,
+      ),
+    );
   }
 
   // ============================================================
-  // 16. LIMPIAR RESPUESTA
+  // 22. LIMPIAR RESPUESTA DE ACCIÓN
   // ============================================================
+
   void _onClearActionResponse(
     ClearAlertaActionResponseEvent event,
     Emitter<AlertaState> emit,
@@ -602,28 +928,37 @@ class AlertaBloc extends Bloc<AlertaEvent, AlertaState> {
         actionStatus: AlertaActionStatus.initial,
         actionType: AlertaActionType.none,
         clearActionMessage: true,
-        clearErrorMessage: true,
-        clearUltimaAlertaRecibida: true,
+        clearUltimaActualizacionUsuario: true,
+        clearAlertaActivada: true,
+        clearAlertaCancelada: true,
       ),
     );
   }
 
   // ============================================================
-  // 17. RESET
+  // 23. REINICIAR BLOC
   // ============================================================
+
   void _onReset(ResetAlertaEvent event, Emitter<AlertaState> emit) {
     emit(const AlertaState());
   }
 
   // ============================================================
-  // 18. CANTIDAD DE ALERTAS RECIBIDAS
+  // 24. INCREMENTAR ALERTAS NO LEÍDAS
   // ============================================================
+
   void _onNuevaAlertaRecibida(
     NuevaAlertaRecibidaEvent event,
     Emitter<AlertaState> emit,
   ) {
-    emit(state.copyWith(alertasNoLeidas: state.alertasNoLeidas + 1));
+    final cantidad = event.cantidad < 1 ? 1 : event.cantidad;
+
+    emit(state.copyWith(alertasNoLeidas: state.alertasNoLeidas + cantidad));
   }
+
+  // ============================================================
+  // 25. REINICIAR CONTADOR DE NO LEÍDAS
+  // ============================================================
 
   void _onMarcarAlertasComoLeidas(
     MarcarAlertasComoLeidasEvent event,
@@ -632,21 +967,27 @@ class AlertaBloc extends Bloc<AlertaEvent, AlertaState> {
     emit(state.copyWith(alertasNoLeidas: 0));
   }
 
+  // ============================================================
+  // 26. ESTABLECER CONTADOR DE NO LEÍDAS
+  // ============================================================
+
   void _onEstablecerAlertasNoLeidas(
     EstablecerAlertasNoLeidasEvent event,
     Emitter<AlertaState> emit,
   ) {
-    emit(state.copyWith(alertasNoLeidas: event.cantidad));
+    emit(
+      state.copyWith(alertasNoLeidas: event.cantidad < 0 ? 0 : event.cantidad),
+    );
   }
 
   // ============================================================
-  // HELPERS
+  // HELPERS DEL LISTADO
   // ============================================================
-  List<AlertaDestinatarioModel> _combinarSinDuplicados(
-    List<AlertaDestinatarioModel> actuales,
-    List<AlertaDestinatarioModel> nuevas,
+  List<MisAlertasData> _combinarSinDuplicados(
+    List<MisAlertasData> actuales,
+    List<MisAlertasData> nuevas,
   ) {
-    final mapa = <int, AlertaDestinatarioModel>{};
+    final mapa = <int, MisAlertasData>{};
 
     for (final item in actuales) {
       mapa[item.alertaId] = item;
@@ -659,32 +1000,179 @@ class AlertaBloc extends Bloc<AlertaEvent, AlertaState> {
     return mapa.values.toList();
   }
 
-  List<AlertaDestinatarioModel> _actualizarEnLista(
-    AlertaDestinatarioModel alertaActualizada,
+  List<MisAlertasData> _actualizarEnLista(
+    AlertaUsuarioEstadoData actualizacion,
   ) {
-    final index = state.alertas.indexWhere(
-      (item) => item.alertaId == alertaActualizada.alertaId,
-    );
+    return state.alertas.map((item) {
+      if (item.alertaId != actualizacion.alertaId) {
+        return item;
+      }
 
-    if (index < 0) {
-      return [alertaActualizada, ...state.alertas];
-    }
-
-    final copia = List<AlertaDestinatarioModel>.from(state.alertas);
-
-    copia[index] = alertaActualizada;
-
-    return copia;
+      return _combinarItemConEstado(item, actualizacion);
+    }).toList();
   }
 
-  AlertaDestinatarioModel? _actualizarSeleccionada(
-    AlertaDestinatarioModel alertaActualizada,
+  MisAlertasData? _actualizarSeleccionada(
+    AlertaUsuarioEstadoData actualizacion,
   ) {
-    if (state.alertaSelected?.alertaId == alertaActualizada.alertaId) {
-      return alertaActualizada;
+    final seleccionada = state.alertaSelected;
+
+    if (seleccionada == null ||
+        seleccionada.alertaId != actualizacion.alertaId) {
+      return seleccionada;
     }
 
-    return state.alertaSelected;
+    return _combinarItemConEstado(seleccionada, actualizacion);
+  }
+
+  /*
+   * MisAlertasData contiene la alerta principal y el estado
+   * del destinatario.
+   *
+   * AlertaUsuarioEstadoData solo contiene el estado actualizado.
+   * Por eso se combinan ambos JSON conservando "alerta".
+   */
+  MisAlertasData _combinarItemConEstado(
+    MisAlertasData item,
+    AlertaUsuarioEstadoData actualizacion,
+  ) {
+    final json = <String, dynamic>{
+      ...item.toJson(),
+      ...actualizacion.toJson(),
+      'alerta': item.alerta.toJson(),
+    };
+
+    return MisAlertasData.fromJson(json);
+  }
+
+  void _refreshDetalleIfNecessary(int alertaId) {
+    if (state.alertaDetalle?.id == alertaId ||
+        state.alertaSelected?.alertaId == alertaId) {
+      add(GetAlertaDetalleEvent(alertaId: alertaId));
+    }
+  }
+
+  // ============================================================
+  // HELPERS DE EMISIÓN
+  // ============================================================
+  void _emitUsuarioActualizado({
+    required Emitter<AlertaState> emit,
+    required AlertaUsuarioEstadoData actualizado,
+    required AlertaActionType actionType,
+    required String message,
+    int? alertasNoLeidas,
+  }) {
+    emit(
+      state.copyWith(
+        actionStatus: AlertaActionStatus.success,
+        actionType: actionType,
+        actionMessage: message,
+        ultimaActualizacionUsuario: actualizado,
+        alertas: _actualizarEnLista(actualizado),
+        alertaSelected: _actualizarSeleccionada(actualizado),
+        alertasNoLeidas: alertasNoLeidas ?? state.alertasNoLeidas,
+      ),
+    );
+  }
+
+  void _emitActionLoading(
+    Emitter<AlertaState> emit,
+    AlertaActionType actionType,
+  ) {
+    emit(
+      state.copyWith(
+        actionStatus: AlertaActionStatus.loading,
+        actionType: actionType,
+        clearActionMessage: true,
+        clearUltimaActualizacionUsuario: true,
+        clearAlertaActivada: true,
+        clearAlertaCancelada: true,
+      ),
+    );
+  }
+
+  void _emitActionDataMissing(
+    Emitter<AlertaState> emit,
+    AlertaActionType actionType,
+    String backendMessage,
+  ) {
+    final message = backendMessage.isNotEmpty
+        ? backendMessage
+        : 'El servidor no devolvió los datos actualizados.';
+
+    emit(
+      state.copyWith(
+        actionStatus: AlertaActionStatus.error,
+        actionType: actionType,
+        actionMessage: message,
+      ),
+    );
+  }
+
+  // ============================================================
+  // HELPERS DE ERRORES
+  // ============================================================
+  void _emitListError(Emitter<AlertaState> emit, Resource<dynamic> response) {
+    final message = response is ErrorData
+        ? response.message
+        : 'No se pudieron obtener las alertas.';
+
+    emit(
+      state.copyWith(
+        listStatus: state.alertas.isEmpty
+            ? AlertaListStatus.error
+            : AlertaListStatus.success,
+        listErrorMessage: message,
+      ),
+    );
+  }
+
+  void _emitResumenError(
+    Emitter<AlertaState> emit,
+    Resource<dynamic> response,
+  ) {
+    final message = response is ErrorData
+        ? response.message
+        : 'No se pudo obtener el resumen de alertas.';
+
+    emit(
+      state.copyWith(
+        resumenStatus: AlertaResumenStatus.error,
+        resumenErrorMessage: message,
+      ),
+    );
+  }
+
+  void _emitAlertaActivaError(
+    Emitter<AlertaState> emit,
+    Resource<dynamic> response,
+  ) {
+    final message = response is ErrorData
+        ? response.message
+        : 'No se pudo obtener la alerta activa.';
+
+    emit(
+      state.copyWith(
+        alertaActivaStatus: AlertaActivaStatus.error,
+        alertaActivaErrorMessage: message,
+      ),
+    );
+  }
+
+  void _emitDetalleError(
+    Emitter<AlertaState> emit,
+    Resource<dynamic> response,
+  ) {
+    final message = response is ErrorData
+        ? response.message
+        : 'No se pudo obtener el detalle de la alerta.';
+
+    emit(
+      state.copyWith(
+        detalleStatus: AlertaDetalleStatus.error,
+        detalleErrorMessage: message,
+      ),
+    );
   }
 
   void _emitActionError(
@@ -692,25 +1180,15 @@ class AlertaBloc extends Bloc<AlertaEvent, AlertaState> {
     Resource<dynamic> response,
     AlertaActionType actionType,
   ) {
-    if (response is ErrorData) {
-      emit(
-        state.copyWith(
-          actionStatus: AlertaActionStatus.error,
-          actionType: actionType,
-          actionMessage: response.message,
-          errorMessage: response.message,
-        ),
-      );
-
-      return;
-    }
+    final message = response is ErrorData
+        ? response.message
+        : 'No se pudo completar la operación.';
 
     emit(
       state.copyWith(
         actionStatus: AlertaActionStatus.error,
         actionType: actionType,
-        actionMessage: 'No se pudo completar la operación.',
-        errorMessage: 'No se pudo completar la operación.',
+        actionMessage: message,
       ),
     );
   }

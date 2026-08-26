@@ -13,9 +13,14 @@ import 'package:sis_patrullaje_cusco/src/presentation/screens/ocurrencias/bloc/o
 import 'package:sis_patrullaje_cusco/src/presentation/screens/ocurrencias/bloc/ocurrencia_state.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/ocurrencias/view/form/ocurrencia_form_content.dart';
 
-class OcurrenciaFormPage extends StatelessWidget {
+class OcurrenciaFormPage extends StatefulWidget {
   const OcurrenciaFormPage({super.key});
 
+  @override
+  State<OcurrenciaFormPage> createState() => _OcurrenciaFormPageState();
+}
+
+class _OcurrenciaFormPageState extends State<OcurrenciaFormPage> {
   @override
   Widget build(BuildContext context) {
     return BlocListener<OcurrenciaBloc, OcurrenciaState>(

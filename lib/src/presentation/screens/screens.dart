@@ -5,7 +5,7 @@ export 'package:sis_patrullaje_cusco/src/presentation/shared/screens/logout/view
 export 'package:sis_patrullaje_cusco/src/presentation/shared/screens/splash/view/splash_page.dart';
 
 // ALERTAS
-export 'package:sis_patrullaje_cusco/src/presentation/screens/alertas/view/alertas_page.dart';
+export 'package:sis_patrullaje_cusco/src/presentation/screens/alertas/view/listado%20-%20mis%20alertas/alertas_page.dart';
 
 // AUTH
 export 'package:sis_patrullaje_cusco/src/presentation/screens/auth/login/view/login_page.dart';

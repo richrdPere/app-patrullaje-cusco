@@ -4,13 +4,15 @@ import 'package:go_router/go_router.dart';
 import 'package:sis_patrullaje_cusco/src/config/core/main_shell.dart';
 import 'package:sis_patrullaje_cusco/src/config/core/session/session_bloc.dart';
 import 'package:sis_patrullaje_cusco/src/data/models/clasificadores/clasificador_codigo_data.dart';
+import 'package:sis_patrullaje_cusco/src/data/models/models.dart';
 
 import 'package:sis_patrullaje_cusco/src/data/models/patrullaje/patrullaje_listado_data.dart';
 import 'package:sis_patrullaje_cusco/src/domain/entities/incident_data_entity.dart';
 import 'package:sis_patrullaje_cusco/src/domain/models/usuarios.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/alertas/view/alerta%20activa/alerta_activa_page.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/alertas/view/detalle%20alerta/alerta_detalle_page.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/clasificadores/view/menu/clasificadores_menu_page.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/clasificadores/view/menu/widgets/categoria_generica_option.dart';
-
 
 // Screens
 import 'package:sis_patrullaje_cusco/src/presentation/screens/screens.dart';
@@ -56,8 +58,10 @@ String? authRedirect(BuildContext context, GoRouterState state) {
 // ===================================
 // RUTAS
 // ===================================
+final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
+
 final GoRouter appRouter = GoRouter(
-  // initialLocation: '/login',
+  navigatorKey: rootNavigatorKey,
   initialLocation: '/splash',
   debugLogDiagnostics: true,
   redirect: authRedirect,
@@ -147,6 +151,7 @@ final GoRouter appRouter = GoRouter(
             // URL: /ocurrencias/crear
             // *********************************************************
             GoRoute(
+               parentNavigatorKey: rootNavigatorKey,
               path: 'crear',
               name: 'ocurrencia_crear',
               pageBuilder: (context, state) {
@@ -228,6 +233,43 @@ final GoRouter appRouter = GoRouter(
         }
 
         return HistorialPatrullajePage(patrullajeId: patrullajeId);
+      },
+    ),
+
+    // =====================================================
+    // ALERTA ACTIVA
+    // =====================================================
+    GoRoute(
+      path: '/alertas-activas',
+      name: 'alertas_activas',
+      builder: (_, __) => const AlertaActivaPage(),
+    ),
+
+    // =====================================================
+    // ALERTAS DETALLE
+    // =====================================================
+    GoRoute(
+      path: '/alertas/:alertaId',
+      name: 'alerta_detalle',
+      builder: (context, state) {
+        final alertaId = int.tryParse(state.pathParameters['alertaId'] ?? '');
+
+        if (alertaId == null || alertaId <= 0) {
+          return const Scaffold(
+            body: Center(
+              child: Text('El identificador de la alerta no es válido.'),
+            ),
+          );
+        }
+
+        final alertaInicial = state.extra is MisAlertasData
+            ? state.extra as MisAlertasData
+            : null;
+
+        return AlertaDetallePage(
+          alertaId: alertaId,
+          alertaInicial: alertaInicial,
+        );
       },
     ),
 

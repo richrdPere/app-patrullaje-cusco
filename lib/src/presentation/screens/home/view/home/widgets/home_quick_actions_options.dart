@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 enum HomeQuickActionType {
   misPatrullajes,
   mapa,
-  alertas,
+  alertaActiva,
   historial,
   siguienteTurno,
   zona,
@@ -51,11 +51,11 @@ const List<HomeQuickActionOption> homeQuickActionOptions = [
     label: 'Turno ant.',
   ),
 
-  // HomeQuickActionOption(
-  //   type: HomeQuickActionType.alertas,
-  //   icon: Icons.warning_amber_rounded,
-  //   label: 'Alertas',
-  // ),
+  HomeQuickActionOption(
+    type: HomeQuickActionType.alertaActiva,
+    icon: Icons.warning_amber_rounded,
+    label: 'Alerta Activa',
+  ),
 
   // HomeQuickActionOption(
   //   type: HomeQuickActionType.historial,

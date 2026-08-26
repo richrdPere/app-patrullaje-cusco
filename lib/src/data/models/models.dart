@@ -4,6 +4,23 @@
 export 'package:sis_patrullaje_cusco/src/data/models/common/api_response.dart';
 
 // =======================================================
+// ALERTAS
+// =======================================================
+export 'package:sis_patrullaje_cusco/src/data/models/alertas/activar%20boton%20alerta/activar_alerta_data.dart';
+export 'package:sis_patrullaje_cusco/src/data/models/alertas/activar%20boton%20alerta/activar_alerta_req.dart';
+export 'package:sis_patrullaje_cusco/src/data/models/alertas/alerta_usuario_estado_data.dart';
+export 'package:sis_patrullaje_cusco/src/data/models/alertas/alerta%20activa/alerta_activa_data.dart';
+export 'package:sis_patrullaje_cusco/src/data/models/alertas/alerta%20detalle/alerta_detalle_data.dart';
+export 'package:sis_patrullaje_cusco/src/data/models/alertas/cancelar%20alerta/cancelar_alerta_data.dart';
+export 'package:sis_patrullaje_cusco/src/data/models/alertas/mis%20alertas/mis_alerta_paginated.dart';
+export 'package:sis_patrullaje_cusco/src/data/models/alertas/mis%20alertas/mis_alertas_query_params.dart';
+export 'package:sis_patrullaje_cusco/src/data/models/alertas/mis%20alertas%20resumen/mis_alertas_resumen_data.dart';
+export 'package:sis_patrullaje_cusco/src/data/models/alertas/mis%20alertas/mis_alertas_data.dart';
+export 'package:sis_patrullaje_cusco/src/data/models/alertas/alerta%20activa/alerta_patrullaje_data.dart';
+export 'package:sis_patrullaje_cusco/src/data/models/alertas/alerta%20activa/alerta_zona_data.dart';
+export 'package:sis_patrullaje_cusco/src/data/models/alertas/alerta_data.dart';
+
+// =======================================================
 // INCIDENCIAS
 // =======================================================
 export 'package:sis_patrullaje_cusco/src/data/models/incidencia/archivos/agregar_archivos_data.dart';

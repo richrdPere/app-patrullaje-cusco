@@ -3,18 +3,22 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:sis_patrullaje_cusco/src/data/models/incidencia/register_incidencia_req.dart';
+// Models
 import 'package:sis_patrullaje_cusco/src/data/models/models.dart';
 import 'package:sis_patrullaje_cusco/src/data/models/patrullaje/patrullaje_data.dart';
 
-import 'package:sis_patrullaje_cusco/src/domain/models/incidencia_model.dart';
-import 'package:sis_patrullaje_cusco/src/domain/utils/Resource.dart';
-
+// Home
 import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/home/home_bloc.dart';
 
+// Ubicación
 import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/blocs/incidencia/incidente_bloc.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/blocs/incidencia/incidente_event.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/blocs/incidencia/incidente_state.dart';
+
+// Alertas
+import 'package:sis_patrullaje_cusco/src/presentation/screens/alertas/bloc/alertas_bloc.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/alertas/bloc/alertas_event.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/alertas/bloc/alertas_state.dart';
 
 class EmergenciaScreen extends StatefulWidget {
   const EmergenciaScreen({super.key});
@@ -48,11 +52,15 @@ class _EmergenciaScreenState extends State<EmergenciaScreen>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
 
-      final incidenteState = context.read<IncidenteBloc>().state;
+      final incidenteBloc = context.read<IncidenteBloc>();
+
+      final incidenteState = incidenteBloc.state;
 
       if (!incidenteState.tieneUbicacion && !incidenteState.loadingLocation) {
-        context.read<IncidenteBloc>().add(const ObtenerUbicacionEvent());
+        incidenteBloc.add(const ObtenerUbicacionEvent());
       }
+
+      context.read<AlertaBloc>().add(const GetAlertaActivaEvent());
     });
   }
 
@@ -67,47 +75,63 @@ class _EmergenciaScreenState extends State<EmergenciaScreen>
   Widget build(BuildContext context) {
     final patrullaje = context.watch<HomeBloc>().state.patrullaje;
 
-    return BlocConsumer<IncidenteBloc, IncidenteState>(
+    return BlocConsumer<AlertaBloc, AlertaState>(
       listenWhen: (previous, current) {
-        return previous.createResponse != current.createResponse;
+        final esAccionActivar =
+            current.actionType == AlertaActionType.activarAlerta;
+
+        final cambioEstado = previous.actionStatus != current.actionStatus;
+
+        return esAccionActivar && cambioEstado;
       },
-      listener: _onIncidenteStateChanged,
-      builder: (context, state) {
-        return ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 36),
-          children: [
-            _buildWarningCard(),
+      listener: _onAlertaStateChanged,
+      builder: (context, alertaState) {
+        return BlocBuilder<IncidenteBloc, IncidenteState>(
+          builder: (context, ubicacionState) {
+            final enviando = alertaState.isActivandoAlerta;
 
-            const SizedBox(height: 20),
+            final tieneAlertaActiva = alertaState.tieneAlertaActiva;
 
-            _buildPatrullajeCard(patrullaje),
+            return ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 36),
+              children: [
+                _buildWarningCard(),
 
-            const SizedBox(height: 16),
+                const SizedBox(height: 20),
 
-            _buildLocationCard(state),
+                _buildPatrullajeCard(patrullaje),
 
-            const SizedBox(height: 24),
+                const SizedBox(height: 16),
 
-            _buildMotivoSection(disabled: state.isCreating || _isHolding),
+                _buildLocationCard(ubicacionState),
 
-            const SizedBox(height: 32),
+                const SizedBox(height: 24),
 
-            _buildSosSection(
-              context: context,
-              state: state,
-              patrullaje: patrullaje,
-            ),
+                _buildMotivoSection(
+                  disabled: enviando || _isHolding || tieneAlertaActiva,
+                ),
 
-            const SizedBox(height: 26),
+                const SizedBox(height: 32),
 
-            _buildInstructions(),
+                _buildSosSection(
+                  context: context,
+                  ubicacionState: ubicacionState,
+                  alertaState: alertaState,
+                  patrullaje: patrullaje,
+                ),
 
-            if (_emergenciaEnviada) ...[
-              const SizedBox(height: 20),
-              _buildSuccessCard(),
-            ],
-          ],
+                const SizedBox(height: 26),
+
+                _buildInstructions(),
+
+                if (_emergenciaEnviada || tieneAlertaActiva) ...[
+                  const SizedBox(height: 20),
+                  _buildSuccessCard(alertaState.alertaActiva),
+                ],
+              ],
+            );
+          },
         );
       },
     );
@@ -116,41 +140,61 @@ class _EmergenciaScreenState extends State<EmergenciaScreen>
   // ======================================================
   // LISTENER
   // ======================================================
-
-  void _onIncidenteStateChanged(BuildContext context, IncidenteState state) {
-    final response = state.createResponse;
-
-    if (response is Success<IncidenteModel>) {
-      setState(() {
-        _emergenciaEnviada = true;
-      });
-
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(
-          const SnackBar(
-            content: Text('La emergencia fue reportada correctamente.'),
-            backgroundColor: Colors.green,
-            duration: Duration(seconds: 4),
-          ),
-        );
-
-      context.read<IncidenteBloc>().add(const LimpiarAccionIncidenteEvent());
-
+  void _onAlertaStateChanged(BuildContext context, AlertaState state) {
+    if (state.actionStatus == AlertaActionStatus.loading) {
       return;
     }
 
-    if (response is ErrorData<ApiResponse<RegisterIncidenciaData>>) {
+    if (state.actionStatus == AlertaActionStatus.success) {
+      setState(() {
+        _emergenciaEnviada = true;
+        _isHolding = false;
+      });
+
+      _holdTimer?.cancel();
+      _progressController.reset();
+
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
         ..showSnackBar(
           SnackBar(
-            content: Text(response.message),
+            content: Text(
+              state.actionMessage ?? 'La alerta fue activada correctamente.',
+            ),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+
+      /*
+     * El BLoC ya ejecuta GetAlertaActivaEvent después
+     * de activar correctamente la alerta.
+     */
+      context.read<AlertaBloc>().add(const ClearAlertaActionResponseEvent());
+
+      return;
+    }
+
+    if (state.actionStatus == AlertaActionStatus.error) {
+      setState(() {
+        _isHolding = false;
+      });
+
+      _holdTimer?.cancel();
+      _progressController.reset();
+
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text(
+              state.actionMessage ?? 'No se pudo activar la alerta.',
+            ),
             backgroundColor: Colors.red,
           ),
         );
 
-      context.read<IncidenteBloc>().add(const LimpiarAccionIncidenteEvent());
+      context.read<AlertaBloc>().add(const ClearAlertaActionResponseEvent());
     }
   }
 
@@ -409,25 +453,43 @@ class _EmergenciaScreenState extends State<EmergenciaScreen>
 
   Widget _buildSosSection({
     required BuildContext context,
-    required IncidenteState state,
+    required IncidenteState ubicacionState,
+    required AlertaState alertaState,
     required PatrullajeData? patrullaje,
   }) {
+    final enviando = alertaState.isActivandoAlerta;
+
+    final consultandoAlertaActiva =
+        alertaState.alertaActivaStatus == AlertaActivaStatus.loading;
+
+    final tieneAlertaActiva = alertaState.tieneAlertaActiva;
+
     final enabled =
-        !state.isCreating &&
-        !state.loadingLocation &&
-        state.tieneUbicacion &&
+        !enviando &&
+        !consultandoAlertaActiva &&
+        !tieneAlertaActiva &&
+        !ubicacionState.loadingLocation &&
+        ubicacionState.tieneUbicacion &&
         patrullaje?.id != null;
 
     return Column(
       children: [
         Text(
-          state.isCreating
-              ? 'Enviando emergencia...'
+          enviando
+              ? 'Enviando alerta de emergencia...'
+              : tieneAlertaActiva
+              ? 'Ya tienes una alerta activa'
+              : consultandoAlertaActiva
+              ? 'Verificando alerta activa...'
               : 'Mantén presionado durante 2 segundos',
           style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w600,
-            color: state.isCreating ? Colors.orange : Colors.grey.shade700,
+            color: enviando
+                ? Colors.orange
+                : tieneAlertaActiva
+                ? Colors.red
+                : Colors.grey.shade700,
           ),
         ),
 
@@ -438,7 +500,7 @@ class _EmergenciaScreenState extends State<EmergenciaScreen>
               ? (_) {
                   _iniciarPresion(
                     context: context,
-                    state: state,
+                    ubicacionState: ubicacionState,
                     patrullaje: patrullaje!,
                   );
                 }
@@ -470,7 +532,6 @@ class _EmergenciaScreenState extends State<EmergenciaScreen>
                         ),
                       ),
                     ),
-
                     AnimatedContainer(
                       duration: const Duration(milliseconds: 180),
                       width: _isHolding ? 155 : 165,
@@ -488,24 +549,28 @@ class _EmergenciaScreenState extends State<EmergenciaScreen>
                               ]
                             : [],
                       ),
-                      child: state.isCreating
+                      child: enviando || consultandoAlertaActiva
                           ? const Center(
                               child: CircularProgressIndicator(
                                 color: Colors.white,
                               ),
                             )
-                          : const Column(
+                          : Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Icon(
-                                  Icons.sos_rounded,
+                                  tieneAlertaActiva
+                                      ? Icons.notifications_active_rounded
+                                      : Icons.sos_rounded,
                                   color: Colors.white,
                                   size: 62,
                                 ),
-                                SizedBox(height: 4),
+                                const SizedBox(height: 4),
                                 Text(
-                                  'EMERGENCIA',
-                                  style: TextStyle(
+                                  tieneAlertaActiva
+                                      ? 'ALERTA ACTIVA'
+                                      : 'EMERGENCIA',
+                                  style: const TextStyle(
                                     color: Colors.white,
                                     fontSize: 13,
                                     fontWeight: FontWeight.w800,
@@ -523,9 +588,13 @@ class _EmergenciaScreenState extends State<EmergenciaScreen>
 
         const SizedBox(height: 16),
 
-        if (!enabled && !state.isCreating)
+        if (!enabled && !enviando)
           Text(
-            _getDisabledMessage(state: state, patrullaje: patrullaje),
+            _getDisabledMessage(
+              ubicacionState: ubicacionState,
+              alertaState: alertaState,
+              patrullaje: patrullaje,
+            ),
             textAlign: TextAlign.center,
             style: const TextStyle(
               fontSize: 12,
@@ -539,7 +608,7 @@ class _EmergenciaScreenState extends State<EmergenciaScreen>
 
   void _iniciarPresion({
     required BuildContext context,
-    required IncidenteState state,
+    required IncidenteState ubicacionState,
     required PatrullajeData patrullaje,
   }) {
     if (_isHolding) return;
@@ -554,7 +623,9 @@ class _EmergenciaScreenState extends State<EmergenciaScreen>
     _holdTimer?.cancel();
 
     _holdTimer = Timer(_holdDuration, () {
-      if (!mounted || !_isHolding) return;
+      if (!mounted || !_isHolding) {
+        return;
+      }
 
       setState(() {
         _isHolding = false;
@@ -564,7 +635,7 @@ class _EmergenciaScreenState extends State<EmergenciaScreen>
 
       _confirmarEmergencia(
         context: context,
-        state: state,
+        ubicacionState: ubicacionState,
         patrullaje: patrullaje,
       );
     });
@@ -588,12 +659,16 @@ class _EmergenciaScreenState extends State<EmergenciaScreen>
   // ======================================================
   // CONFIRMACIÓN
   // ======================================================
-
   Future<void> _confirmarEmergencia({
     required BuildContext context,
-    required IncidenteState state,
+    required IncidenteState ubicacionState,
     required PatrullajeData patrullaje,
   }) async {
+    /*
+   * Este texto será enviado como titulo al backend.
+   */
+    final motivo = _getMotivoLabel(_motivoSeleccionado);
+
     final confirmar = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
@@ -610,7 +685,7 @@ class _EmergenciaScreenState extends State<EmergenciaScreen>
           ),
           content: Text(
             'Se enviará una solicitud de apoyo inmediato.\n\n'
-            'Motivo: ${_getMotivoLabel(_motivoSeleccionado)}',
+            'Motivo: $motivo',
             textAlign: TextAlign.center,
           ),
           actions: [
@@ -637,7 +712,11 @@ class _EmergenciaScreenState extends State<EmergenciaScreen>
       return;
     }
 
-    _enviarEmergencia(context: context, state: state, patrullaje: patrullaje);
+    _enviarEmergencia(
+      context: context,
+      ubicacionState: ubicacionState,
+      patrullaje: patrullaje,
+    );
   }
 
   // ======================================================
@@ -646,29 +725,39 @@ class _EmergenciaScreenState extends State<EmergenciaScreen>
 
   void _enviarEmergencia({
     required BuildContext context,
-    required IncidenteState state,
+    required IncidenteState ubicacionState,
     required PatrullajeData patrullaje,
   }) {
-    if (!state.tieneUbicacion) {
+    if (!ubicacionState.tieneUbicacion ||
+        ubicacionState.latitud == null ||
+        ubicacionState.longitud == null) {
       _showMessage(context, 'No se pudo obtener la ubicación.');
+
       return;
     }
 
-    final descripcion =
-        'EMERGENCIA SOS - ${_getMotivoLabel(_motivoSeleccionado)}. '
-        'El sereno solicita apoyo inmediato desde el patrullaje '
-        'N.° ${patrullaje.id}.';
+    /*
+   * El motivo seleccionado se utiliza como título.
+   *
+   * Ejemplos:
+   * - APOYO INMEDIATO
+   * - AGRESIÓN O VIOLENCIA
+   * - PERSONA ARMADA
+   * - ACCIDENTE
+   * - INCENDIO
+   * - OTRA EMERGENCIA
+   */
+    final titulo = _getMotivoLabel(_motivoSeleccionado).toUpperCase();
 
-    final request = RegisterIncidenciaRequest(
+    final request = ActivarAlertaRequest(
       patrullajeId: patrullaje.id,
-      tipo: 'OTRO',
-      descripcion: descripcion,
-      latitud: state.latitud!,
-      longitud: state.longitud!,
-      archivos: const [],
+      titulo: titulo,
+      tipo: 'PANICO',
+      latitud: ubicacionState.latitud!,
+      longitud: ubicacionState.longitud!,
     );
 
-    context.read<IncidenteBloc>().add(CrearIncidenteEvent(request));
+    context.read<AlertaBloc>().add(ActivarAlertaEvent(request: request));
   }
 
   // ======================================================
@@ -710,7 +799,9 @@ class _EmergenciaScreenState extends State<EmergenciaScreen>
     );
   }
 
-  Widget _buildSuccessCard() {
+  Widget _buildSuccessCard(AlertaActivaData? alertaActiva) {
+    final titulo = alertaActiva?.titulo.trim();
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -718,15 +809,32 @@ class _EmergenciaScreenState extends State<EmergenciaScreen>
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.green.withValues(alpha: 0.28)),
       ),
-      child: const Row(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.check_circle_outline, color: Colors.green, size: 30),
-          SizedBox(width: 12),
+          const Icon(Icons.check_circle_outline, color: Colors.green, size: 30),
+          const SizedBox(width: 12),
           Expanded(
-            child: Text(
-              'La solicitud fue registrada. Mantente atento a las '
-              'indicaciones de la central.',
-              style: TextStyle(fontWeight: FontWeight.w600),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Alerta de emergencia activa',
+                  style: TextStyle(fontWeight: FontWeight.w700),
+                ),
+                if (titulo != null && titulo.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    titulo,
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ],
+                const SizedBox(height: 4),
+                const Text(
+                  'Mantente atento a las indicaciones '
+                  'de la central de serenazgo.',
+                ),
+              ],
             ),
           ),
         ],
@@ -737,16 +845,24 @@ class _EmergenciaScreenState extends State<EmergenciaScreen>
   // ======================================================
   // HELPERS
   // ======================================================
-
   String _getDisabledMessage({
-    required IncidenteState state,
+    required IncidenteState ubicacionState,
+    required AlertaState alertaState,
     required PatrullajeData? patrullaje,
   }) {
-    if (state.loadingLocation) {
+    if (alertaState.alertaActivaStatus == AlertaActivaStatus.loading) {
+      return 'Se está verificando si existe una alerta activa.';
+    }
+
+    if (alertaState.tieneAlertaActiva) {
+      return 'Ya existe una alerta de emergencia activa.';
+    }
+
+    if (ubicacionState.loadingLocation) {
       return 'Se está obteniendo la ubicación.';
     }
 
-    if (!state.tieneUbicacion) {
+    if (!ubicacionState.tieneUbicacion) {
       return 'No se puede enviar el SOS sin una ubicación válida.';
     }
 

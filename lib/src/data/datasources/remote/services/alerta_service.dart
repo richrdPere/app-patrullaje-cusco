@@ -1,396 +1,543 @@
-import 'dart:convert';
+// ignore_for_file: non_constant_identifier_names
 
+import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 // Environment
 import 'package:sis_patrullaje_cusco/src/config/constants/environment.dart'
     as url_backend;
 
-// Models
-import 'package:sis_patrullaje_cusco/src/data/models/alertas/alerta_destinatario_model.dart';
-import 'package:sis_patrullaje_cusco/src/data/models/alertas/alerta_paginated.dart';
-import 'package:sis_patrullaje_cusco/src/data/models/alertas/alerta_resumen_model.dart';
-
 // Resource
+import 'package:sis_patrullaje_cusco/src/data/datasources/remote/services/helpers/http_service_helper.dart';
 import 'package:sis_patrullaje_cusco/src/domain/utils/Resource.dart';
 
-class AlertaService {
+// Models
+import 'package:sis_patrullaje_cusco/src/data/models/models.dart';
 
+class AlertaService {
   // ============================================================
   // ENDPOINTS
   // ============================================================
   String get API_BASE => '${url_backend.Environment.mainUrl}/alertas';
 
-  String get API_MIS_ALERTAS => '$API_BASE/mis-alertas';
+  String get API_GET_MIS_ALERTAS_PAGINADO => '$API_BASE/mis-alertas';
+  String get API_GET_MIS_ALERTAS_RESUMEN => '$API_BASE/mis-alertas/resumen';
+  String get API_ACTIVAR_ALERTA => '$API_BASE/activar';
+  String get API_GET_ALERTA_ACTIVA => '$API_BASE/activa';
 
-  String get API_MIS_ALERTAS_RESUMEN => '$API_BASE/mis-alertas/resumen';
-
-  String API_MARCAR_RECIBIDA(int alertaId) => '$API_BASE/$alertaId/recibida';
-
+  String API_MARCAR_ALERTA_RECIBIDA(int alertaId) =>
+      '$API_BASE/$alertaId/recibida';
   String API_MARCAR_LEIDA(int alertaId) => '$API_BASE/$alertaId/leida';
-
   String API_RESPONDER_ALERTA(int alertaId) => '$API_BASE/$alertaId/responder';
-
   String API_MARCAR_ATENDIDA(int alertaId) => '$API_BASE/$alertaId/atendida';
-
-  // ============================================================
-  // HEADERS
-  // ============================================================
-
-  Map<String, String> _getHeaders(String token) {
-    return {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-      'Authorization': 'Bearer $token',
-    };
+  String API_CANCELAR_ALERTA(int alertaId) =>
+      '$API_BASE/sereno/$alertaId/cancelar';
+  String API_GET_ALERTA_DETALLE(int alertaId) {
+    return '$API_BASE/detalle/$alertaId';
   }
 
-  // ============================================================
-  // HELPERS
-  // ============================================================
-  Map<String, dynamic> _decodeResponse(http.Response response) {
-    if (response.body.trim().isEmpty) {
-      return <String, dynamic>{};
-    }
-
-    try {
-      final decoded = jsonDecode(response.body);
-
-      if (decoded is Map<String, dynamic>) {
-        return decoded;
-      }
-
-      if (decoded is Map) {
-        return Map<String, dynamic>.from(decoded);
-      }
-
-      return {
-        'success': false,
-        'message': 'La respuesta del servidor no tiene un formato válido.',
-        'data': decoded,
-      };
-    } catch (_) {
-      return {
-        'success': false,
-        'message': 'Respuesta inválida del servidor.',
-        'error': response.body,
-      };
-    }
-  }
-
-  ErrorData<T> _buildError<T>(Map<String, dynamic> body, int statusCode) {
-    return ErrorData<T>(
-      message:
-          body['message']?.toString() ??
-          body['msg']?.toString() ??
-          'Ocurrió un error al procesar la solicitud.',
-      error: body['error']?.toString(),
-      statusCode: statusCode,
-    );
-  }
-
-  bool _isSuccess(int statusCode) {
-    return statusCode >= 200 && statusCode < 300;
-  }
-
-  Map<String, dynamic> _extractDataMap(Map<String, dynamic> body) {
-    final data = body['data'];
-
-    if (data is Map<String, dynamic>) {
-      return data;
-    }
-
-    if (data is Map) {
-      return Map<String, dynamic>.from(data);
-    }
-
-    return <String, dynamic>{};
-  }
-
-  Map<String, dynamic> _extractDestinatarioData(Map<String, dynamic> body) {
-    final data = _extractDataMap(body);
-
-    if (data.isEmpty) {
-      return data;
-    }
-
-    final destinatario = data['destinatario'];
-
-    if (destinatario is Map<String, dynamic>) {
-      return destinatario;
-    }
-
-    if (destinatario is Map) {
-      return Map<String, dynamic>.from(destinatario);
-    }
-
-    return data;
-  }
-
-
-  // ============================================================
+  // *********************************************************
   // 1. OBTENER MIS ALERTAS
-  // ============================================================
-  Future<Resource<AlertaPaginated>> getMisAlertas({
+  // *********************************************************
+  Future<Resource<ApiResponse<MisAlertasPaginated>>> getMisAlertas({
     required String token,
-    int page = 1,
-    int limit = 10,
-    String? estado,
-    String? tipo,
-    String? prioridad,
-    bool? requiereConfirmacion,
+    required MisAlertasQueryParams params,
   }) async {
     try {
-      final queryParameters = <String, String>{
-        'page': page.toString(),
-        'limit': limit.toString(),
-        if (estado != null && estado.trim().isNotEmpty)
-          'estado': estado.trim().toUpperCase(),
-        if (tipo != null && tipo.trim().isNotEmpty)
-          'tipo': tipo.trim().toUpperCase(),
-        if (prioridad != null && prioridad.trim().isNotEmpty)
-          'prioridad': prioridad.trim().toUpperCase(),
-        if (requiereConfirmacion != null)
-          'requiere_confirmacion': requiereConfirmacion.toString(),
-      };
-
+      // 1.- Construir URL y query parameters
       final uri = Uri.parse(
-        API_MIS_ALERTAS,
-      ).replace(queryParameters: queryParameters);
+        API_GET_MIS_ALERTAS_PAGINADO,
+      ).replace(queryParameters: params.toQueryParameters());
 
-      final response = await http.get(uri, headers: _getHeaders(token));
+      // 2.- Realizar petición HTTP
+      final response = await http
+          .get(uri, headers: HttpServiceHelper.getHeaders(token: token))
+          .timeout(const Duration(seconds: 30));
 
-      final body = _decodeResponse(response);
+      final body = HttpServiceHelper.decodeResponse(response);
 
-      if (!_isSuccess(response.statusCode)) {
-        return _buildError<AlertaPaginated>(body, response.statusCode);
+      // 3.- Respuesta correcta
+      if (HttpServiceHelper.isSuccess(response.statusCode)) {
+        final apiResponse = ApiResponse<MisAlertasPaginated>.fromJson(
+          body,
+          (rawData) => MisAlertasPaginated.fromJson(
+            Map<String, dynamic>.from(rawData as Map),
+          ),
+        );
+
+        return Success<ApiResponse<MisAlertasPaginated>>(apiResponse);
       }
 
-      /*
-       * AlertaPaginated ya soporta:
-       *
-       * data: [...]
-       * data: { data: [...], pagination: {...} }
-       * data: { alertas: [...], ... }
-       */
-      return Success<AlertaPaginated>(AlertaPaginated.fromJson(body));
+      // 4.- Respuesta de error del backend
+      return HttpServiceHelper.buildError<ApiResponse<MisAlertasPaginated>>(
+        body,
+        response.statusCode,
+      );
     } catch (error) {
-      return ErrorData<AlertaPaginated>(
-        message: 'No se pudieron obtener las alertas.',
+      return ErrorData<ApiResponse<MisAlertasPaginated>>(
+        message: 'Ocurrió un error al obtener tus alertas.',
         error: error.toString(),
       );
     }
   }
 
-  // ============================================================
-  // 2. OBTENER RESUMEN
-  // ============================================================
-  Future<Resource<AlertaResumenModel>> getMisAlertasResumen({
+  // *********************************************************
+  // 2. OBTENER RESUMEN DE MIS ALERTAS
+  // *********************************************************
+  Future<Resource<ApiResponse<MisAlertasResumenData>>> getMisAlertasResumen({
     required String token,
   }) async {
     try {
-      final response = await http.get(
-        Uri.parse(API_MIS_ALERTAS_RESUMEN),
-        headers: _getHeaders(token),
-      );
+      // 1.- Construir URL
+      final uri = Uri.parse(API_GET_MIS_ALERTAS_RESUMEN);
 
-      final body = _decodeResponse(response);
+      // 2.- Realizar petición HTTP
+      final response = await http
+          .get(uri, headers: HttpServiceHelper.getHeaders(token: token))
+          .timeout(const Duration(seconds: 30));
 
-      if (!_isSuccess(response.statusCode)) {
-        return _buildError<AlertaResumenModel>(body, response.statusCode);
+      // 3.- Decodificar respuesta
+      final body = HttpServiceHelper.decodeResponse(response);
+
+      // 4.- Respuesta correcta
+      if (HttpServiceHelper.isSuccess(response.statusCode)) {
+        final apiResponse = ApiResponse<MisAlertasResumenData>.fromJson(
+          body,
+          (rawData) => MisAlertasResumenData.fromJson(
+            Map<String, dynamic>.from(rawData as Map),
+          ),
+        );
+
+        return Success<ApiResponse<MisAlertasResumenData>>(apiResponse);
       }
 
-      return Success<AlertaResumenModel>(AlertaResumenModel.fromJson(body));
+      // 5.- Respuesta de error del backend
+      return HttpServiceHelper.buildError<ApiResponse<MisAlertasResumenData>>(
+        body,
+        response.statusCode,
+      );
     } catch (error) {
-      return ErrorData<AlertaResumenModel>(
-        message: 'No se pudo obtener el resumen de alertas.',
+      return ErrorData<ApiResponse<MisAlertasResumenData>>(
+        message: 'Ocurrió un error al obtener el resumen de tus alertas.',
         error: error.toString(),
       );
     }
   }
 
-  // ============================================================
-  // 3. MARCAR COMO RECIBIDA
-  // ============================================================
-  Future<Resource<AlertaDestinatarioModel>> marcarRecibida({
+  // *********************************************************
+  // 3. MARCAR ALERTA COMO RECIBIDA
+  // *********************************************************
+  Future<Resource<ApiResponse<AlertaUsuarioEstadoData>>> marcarAlertaRecibida({
     required String token,
     required int alertaId,
   }) async {
     try {
-      final response = await http.patch(
-        Uri.parse(API_MARCAR_RECIBIDA(alertaId)),
-        headers: _getHeaders(token),
-        body: jsonEncode({}),
-      );
+      // 1.- Construir URL
+      final uri = Uri.parse(API_MARCAR_ALERTA_RECIBIDA(alertaId));
 
-      final body = _decodeResponse(response);
+      // 2.- Realizar petición HTTP
+      final response = await http
+          .patch(uri, headers: HttpServiceHelper.getHeaders(token: token))
+          .timeout(const Duration(seconds: 30));
 
-      if (!_isSuccess(response.statusCode)) {
-        return _buildError<AlertaDestinatarioModel>(body, response.statusCode);
-      }
+      // 3.- Decodificar respuesta
+      final body = HttpServiceHelper.decodeResponse(response);
 
-      final data = _extractDestinatarioData(body);
-
-      if (data.isEmpty) {
-        return ErrorData<AlertaDestinatarioModel>(
-          message: 'El servidor no devolvió el destinatario actualizado.',
-          statusCode: response.statusCode,
+      // 4.- Respuesta correcta
+      if (HttpServiceHelper.isSuccess(response.statusCode)) {
+        final apiResponse = ApiResponse<AlertaUsuarioEstadoData>.fromJson(
+          body,
+          (rawData) => AlertaUsuarioEstadoData.fromJson(
+            Map<String, dynamic>.from(rawData as Map),
+          ),
         );
+
+        return Success<ApiResponse<AlertaUsuarioEstadoData>>(apiResponse);
       }
 
-      return Success<AlertaDestinatarioModel>(
-        AlertaDestinatarioModel.fromJson(data),
+      // 5.- Respuesta de error del backend
+      return HttpServiceHelper.buildError<ApiResponse<AlertaUsuarioEstadoData>>(
+        body,
+        response.statusCode,
       );
     } catch (error) {
-      return ErrorData<AlertaDestinatarioModel>(
-        message: 'No se pudo marcar la alerta como recibida.',
+      return ErrorData<ApiResponse<AlertaUsuarioEstadoData>>(
+        message: 'Ocurrió un error al marcar la alerta como recibida.',
         error: error.toString(),
       );
     }
   }
 
-  // ============================================================
-  // 4. MARCAR COMO LEÍDA
-  // ============================================================
-  Future<Resource<AlertaDestinatarioModel>> marcarLeida({
+  // *********************************************************
+  // 4. MARCAR ALERTA COMO LEÍDA
+  // *********************************************************
+  Future<Resource<ApiResponse<AlertaUsuarioEstadoData>>> marcarAlertaLeida({
     required String token,
     required int alertaId,
   }) async {
     try {
-      final response = await http.patch(
-        Uri.parse(API_MARCAR_LEIDA(alertaId)),
-        headers: _getHeaders(token),
-        body: jsonEncode({}),
-      );
-
-      final body = _decodeResponse(response);
-
-      if (!_isSuccess(response.statusCode)) {
-        return _buildError<AlertaDestinatarioModel>(body, response.statusCode);
-      }
-
-      final data = _extractDestinatarioData(body);
-
-      if (data.isEmpty) {
-        return ErrorData<AlertaDestinatarioModel>(
-          message: 'El servidor no devolvió el destinatario actualizado.',
-          statusCode: response.statusCode,
+      // 1.- Validar identificador
+      if (alertaId <= 0) {
+        return ErrorData<ApiResponse<AlertaUsuarioEstadoData>>(
+          message: 'El identificador de la alerta no es válido.',
         );
       }
 
-      return Success<AlertaDestinatarioModel>(
-        AlertaDestinatarioModel.fromJson(data),
+      // 2.- Construir URL
+      final uri = Uri.parse(API_MARCAR_LEIDA(alertaId));
+
+      // 3.- Realizar petición HTTP
+      final response = await http
+          .patch(
+            uri,
+            headers: HttpServiceHelper.getHeaders(token: token),
+            body: jsonEncode({}),
+          )
+          .timeout(const Duration(seconds: 30));
+
+      // 4.- Decodificar respuesta
+      final body = HttpServiceHelper.decodeResponse(response);
+
+      // 5.- Respuesta correcta
+      if (HttpServiceHelper.isSuccess(response.statusCode)) {
+        final apiResponse = ApiResponse<AlertaUsuarioEstadoData>.fromJson(
+          body,
+          (rawData) => AlertaUsuarioEstadoData.fromJson(
+            Map<String, dynamic>.from(rawData as Map),
+          ),
+        );
+
+        return Success<ApiResponse<AlertaUsuarioEstadoData>>(apiResponse);
+      }
+
+      // 6.- Respuesta de error del backend
+      return HttpServiceHelper.buildError<ApiResponse<AlertaUsuarioEstadoData>>(
+        body,
+        response.statusCode,
       );
     } catch (error) {
-      return ErrorData<AlertaDestinatarioModel>(
+      return ErrorData<ApiResponse<AlertaUsuarioEstadoData>>(
         message: 'No se pudo marcar la alerta como leída.',
         error: error.toString(),
       );
     }
   }
 
-  // ============================================================
+  // *********************************************************
   // 5. RESPONDER ALERTA
-  // ============================================================
-  Future<Resource<AlertaDestinatarioModel>> responderAlerta({
+  // *********************************************************
+  Future<Resource<ApiResponse<AlertaUsuarioEstadoData>>> responderAlerta({
     required String token,
     required int alertaId,
     required String respuesta,
     String? observacion,
   }) async {
     try {
+      // 1.- Validar identificador
+      if (alertaId <= 0) {
+        return ErrorData<ApiResponse<AlertaUsuarioEstadoData>>(
+          message: 'El identificador de la alerta no es válido.',
+        );
+      }
+
+      // 2.- Normalizar respuesta
       final respuestaNormalizada = respuesta.trim().toUpperCase();
 
+      // 3.- Validar respuesta
       if (respuestaNormalizada != 'ACEPTADA' &&
           respuestaNormalizada != 'RECHAZADA') {
-        return ErrorData<AlertaDestinatarioModel>(
+        return ErrorData<ApiResponse<AlertaUsuarioEstadoData>>(
           message: 'La respuesta debe ser ACEPTADA o RECHAZADA.',
         );
       }
 
+      // 4.- Normalizar observación
+      final observacionNormalizada = observacion?.trim();
+
+      // 5.- Construir payload
       final payload = <String, dynamic>{
-        /*
-         * Ajusta a "respuesta" o "estado" según lo que lea
-         * responderAlertaService en tu backend.
-         */
         'respuesta': respuestaNormalizada,
-        if (observacion != null && observacion.trim().isNotEmpty)
-          'observacion': observacion.trim(),
+
+        if (observacionNormalizada != null && observacionNormalizada.isNotEmpty)
+          'observacion': observacionNormalizada,
       };
 
-      final response = await http.patch(
-        Uri.parse(API_RESPONDER_ALERTA(alertaId)),
-        headers: _getHeaders(token),
-        body: jsonEncode(payload),
-      );
+      // 6.- Construir URL
+      final uri = Uri.parse(API_RESPONDER_ALERTA(alertaId));
 
-      final body = _decodeResponse(response);
+      // 7.- Realizar petición HTTP
+      final response = await http
+          .patch(
+            uri,
+            headers: HttpServiceHelper.getHeaders(token: token),
+            body: jsonEncode(payload),
+          )
+          .timeout(const Duration(seconds: 30));
 
-      if (!_isSuccess(response.statusCode)) {
-        return _buildError<AlertaDestinatarioModel>(body, response.statusCode);
-      }
+      // 8.- Decodificar respuesta
+      final body = HttpServiceHelper.decodeResponse(response);
 
-      final data = _extractDestinatarioData(body);
-
-      if (data.isEmpty) {
-        return ErrorData<AlertaDestinatarioModel>(
-          message: 'El servidor no devolvió la respuesta actualizada.',
-          statusCode: response.statusCode,
+      // 9.- Respuesta correcta
+      if (HttpServiceHelper.isSuccess(response.statusCode)) {
+        final apiResponse = ApiResponse<AlertaUsuarioEstadoData>.fromJson(
+          body,
+          (rawData) => AlertaUsuarioEstadoData.fromJson(
+            Map<String, dynamic>.from(rawData as Map),
+          ),
         );
+
+        return Success<ApiResponse<AlertaUsuarioEstadoData>>(apiResponse);
       }
 
-      return Success<AlertaDestinatarioModel>(
-        AlertaDestinatarioModel.fromJson(data),
+      // 10.- Respuesta de error del backend
+      return HttpServiceHelper.buildError<ApiResponse<AlertaUsuarioEstadoData>>(
+        body,
+        response.statusCode,
       );
     } catch (error) {
-      return ErrorData<AlertaDestinatarioModel>(
+      return ErrorData<ApiResponse<AlertaUsuarioEstadoData>>(
         message: 'No se pudo responder la alerta.',
         error: error.toString(),
       );
     }
   }
 
-  // ============================================================
-  // 6. MARCAR COMO ATENDIDA
-  // ============================================================
-  Future<Resource<AlertaDestinatarioModel>> marcarAtendida({
+  // *********************************************************
+  // 6. MARCAR ALERTA COMO ATENDIDA
+  // *********************************************************
+  Future<Resource<ApiResponse<AlertaUsuarioEstadoData>>> marcarAlertaAtendida({
     required String token,
     required int alertaId,
     String? observacion,
   }) async {
     try {
+      // 1.- Normalizar observación
+      final observacionNormalizada = observacion?.trim();
+
+      // 2.- Construir payload
       final payload = <String, dynamic>{
-        if (observacion != null && observacion.trim().isNotEmpty)
-          'observacion': observacion.trim(),
+        if (observacionNormalizada != null && observacionNormalizada.isNotEmpty)
+          'observacion': observacionNormalizada,
       };
 
-      final response = await http.patch(
-        Uri.parse(API_MARCAR_ATENDIDA(alertaId)),
-        headers: _getHeaders(token),
-        body: jsonEncode(payload),
-      );
+      // 3.- Construir URL
+      final uri = Uri.parse(API_MARCAR_ATENDIDA(alertaId));
 
-      final body = _decodeResponse(response);
+      // 4.- Realizar petición HTTP
+      final response = await http
+          .patch(
+            uri,
+            headers: HttpServiceHelper.getHeaders(token: token),
+            body: jsonEncode(payload),
+          )
+          .timeout(const Duration(seconds: 30));
 
-      if (!_isSuccess(response.statusCode)) {
-        return _buildError<AlertaDestinatarioModel>(body, response.statusCode);
-      }
+      // 5.- Decodificar respuesta
+      final body = HttpServiceHelper.decodeResponse(response);
 
-      final data = _extractDestinatarioData(body);
-
-      if (data.isEmpty) {
-        return ErrorData<AlertaDestinatarioModel>(
-          message: 'El servidor no devolvió el destinatario actualizado.',
-          statusCode: response.statusCode,
+      // 6.- Respuesta correcta
+      if (HttpServiceHelper.isSuccess(response.statusCode)) {
+        final apiResponse = ApiResponse<AlertaUsuarioEstadoData>.fromJson(
+          body,
+          (rawData) => AlertaUsuarioEstadoData.fromJson(
+            Map<String, dynamic>.from(rawData as Map),
+          ),
         );
+
+        return Success<ApiResponse<AlertaUsuarioEstadoData>>(apiResponse);
       }
 
-      return Success<AlertaDestinatarioModel>(
-        AlertaDestinatarioModel.fromJson(data),
+      // 7.- Respuesta de error del backend
+      return HttpServiceHelper.buildError<ApiResponse<AlertaUsuarioEstadoData>>(
+        body,
+        response.statusCode,
       );
     } catch (error) {
-      return ErrorData<AlertaDestinatarioModel>(
+      return ErrorData<ApiResponse<AlertaUsuarioEstadoData>>(
         message: 'No se pudo marcar la alerta como atendida.',
+        error: error.toString(),
+      );
+    }
+  }
+
+  // *********************************************************
+  // 7. ACTIVAR BOTÓN DE ALERTA
+  // *********************************************************
+  Future<Resource<ApiResponse<ActivarAlertaData>>> activarAlerta({
+    required String token,
+    required ActivarAlertaRequest request,
+  }) async {
+    try {
+      // 1.- Construir URL
+      final uri = Uri.parse(API_ACTIVAR_ALERTA);
+
+      // 2.- Realizar petición HTTP
+      final response = await http
+          .post(
+            uri,
+            headers: HttpServiceHelper.getHeaders(token: token),
+            body: jsonEncode(request.toJson()),
+          )
+          .timeout(const Duration(seconds: 30));
+
+      // 3.- Decodificar respuesta
+      final body = HttpServiceHelper.decodeResponse(response);
+
+      // 4.- Respuesta correcta
+      if (HttpServiceHelper.isSuccess(response.statusCode)) {
+        final apiResponse = ApiResponse<ActivarAlertaData>.fromJson(
+          body,
+          (rawData) => ActivarAlertaData.fromJson(
+            Map<String, dynamic>.from(rawData as Map),
+          ),
+        );
+
+        return Success<ApiResponse<ActivarAlertaData>>(apiResponse);
+      }
+
+      // 5.- Respuesta de error del backend
+      return HttpServiceHelper.buildError<ApiResponse<ActivarAlertaData>>(
+        body,
+        response.statusCode,
+      );
+    } catch (error) {
+      return ErrorData<ApiResponse<ActivarAlertaData>>(
+        message: 'No se pudo activar la alerta.',
+        error: error.toString(),
+      );
+    }
+  }
+
+  // *********************************************************
+  // 8. OBTENER ALERTA ACTIVA
+  // *********************************************************
+  Future<Resource<ApiResponse<AlertaActivaData>>> getAlertaActiva({
+    required String token,
+  }) async {
+    try {
+      // 1.- Construir URL
+      final uri = Uri.parse(API_GET_ALERTA_ACTIVA);
+
+      // 2.- Realizar petición HTTP
+      final response = await http
+          .get(uri, headers: HttpServiceHelper.getHeaders(token: token))
+          .timeout(const Duration(seconds: 30));
+
+      // 3.- Decodificar respuesta
+      final body = HttpServiceHelper.decodeResponse(response);
+
+      // 4.- Respuesta correcta
+      if (HttpServiceHelper.isSuccess(response.statusCode)) {
+        final apiResponse = ApiResponse<AlertaActivaData>.fromJson(
+          body,
+          (rawData) => AlertaActivaData.fromJson(
+            Map<String, dynamic>.from(rawData as Map),
+          ),
+        );
+
+        return Success<ApiResponse<AlertaActivaData>>(apiResponse);
+      }
+
+      // 5.- Respuesta de error del backend
+      return HttpServiceHelper.buildError<ApiResponse<AlertaActivaData>>(
+        body,
+        response.statusCode,
+      );
+    } catch (error) {
+      return ErrorData<ApiResponse<AlertaActivaData>>(
+        message: 'No se pudo obtener la alerta activa.',
+        error: error.toString(),
+      );
+    }
+  }
+
+  // *********************************************************
+  // 9. CANCELAR ALERTA ACTIVA
+  // *********************************************************
+  Future<Resource<ApiResponse<CancelarAlertaData>>> cancelarAlerta({
+    required String token,
+    required int alertaId,
+  }) async {
+    try {
+      // 1.- Construir URL
+      final uri = Uri.parse(API_CANCELAR_ALERTA(alertaId));
+
+      // 2.- Realizar petición HTTP
+      final response = await http
+          .patch(
+            uri,
+            headers: HttpServiceHelper.getHeaders(token: token),
+            body: jsonEncode({}),
+          )
+          .timeout(const Duration(seconds: 30));
+
+      // 3.- Decodificar respuesta
+      final body = HttpServiceHelper.decodeResponse(response);
+
+      // 4.- Respuesta correcta
+      if (HttpServiceHelper.isSuccess(response.statusCode)) {
+        final apiResponse = ApiResponse<CancelarAlertaData>.fromJson(
+          body,
+          (rawData) => CancelarAlertaData.fromJson(
+            Map<String, dynamic>.from(rawData as Map),
+          ),
+        );
+
+        return Success<ApiResponse<CancelarAlertaData>>(apiResponse);
+      }
+
+      // 5.- Respuesta de error del backend
+      return HttpServiceHelper.buildError<ApiResponse<CancelarAlertaData>>(
+        body,
+        response.statusCode,
+      );
+    } catch (error) {
+      return ErrorData<ApiResponse<CancelarAlertaData>>(
+        message: 'No se pudo cancelar la alerta.',
+        error: error.toString(),
+      );
+    }
+  }
+
+  // *********************************************************
+  // 10. OBTENER DETALLE DE ALERTA
+  // *********************************************************
+  Future<Resource<ApiResponse<AlertaDetalleData>>> getAlertaDetalle({
+    required String token,
+    required int alertaId,
+  }) async {
+    try {
+      // 1.- Construir URL
+      final uri = Uri.parse(API_GET_ALERTA_DETALLE(alertaId));
+
+      // 2.- Realizar petición HTTP
+      final response = await http
+          .get(uri, headers: HttpServiceHelper.getHeaders(token: token))
+          .timeout(const Duration(seconds: 30));
+
+      // 3.- Decodificar respuesta
+      final body = HttpServiceHelper.decodeResponse(response);
+
+      // 4.- Respuesta correcta
+      if (HttpServiceHelper.isSuccess(response.statusCode)) {
+        final apiResponse = ApiResponse<AlertaDetalleData>.fromJson(
+          body,
+          (rawData) => AlertaDetalleData.fromJson(
+            Map<String, dynamic>.from(rawData as Map),
+          ),
+        );
+
+        return Success<ApiResponse<AlertaDetalleData>>(apiResponse);
+      }
+
+      // 5.- Respuesta de error del backend
+      return HttpServiceHelper.buildError<ApiResponse<AlertaDetalleData>>(
+        body,
+        response.statusCode,
+      );
+    } catch (error) {
+      return ErrorData<ApiResponse<AlertaDetalleData>>(
+        message: 'No se pudo obtener el detalle de la alerta.',
         error: error.toString(),
       );
     }
