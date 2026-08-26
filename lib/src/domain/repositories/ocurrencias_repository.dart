@@ -1,10 +1,4 @@
-import 'package:sis_patrullaje_cusco/src/data/models/common/api_response.dart';
-import 'package:sis_patrullaje_cusco/src/data/models/ocurrencias/ocurrencia_create_req.dart';
-import 'package:sis_patrullaje_cusco/src/data/models/ocurrencias/ocurrencia_detalle_data.dart';
-import 'package:sis_patrullaje_cusco/src/data/models/ocurrencias/ocurrencia_paginated.dart';
-import 'package:sis_patrullaje_cusco/src/data/models/ocurrencias/ocurrencia_pdf_data.dart';
-import 'package:sis_patrullaje_cusco/src/data/models/ocurrencias/ocurrencia_query_params.dart';
-
+import 'package:sis_patrullaje_cusco/src/data/models/models.dart';
 import 'package:sis_patrullaje_cusco/src/domain/utils/Resource.dart';
 
 abstract class OcurrenciasRepository {
@@ -27,4 +21,8 @@ abstract class OcurrenciasRepository {
   Future<Resource<OcurrenciaPdfData>> getOcurrenciaPdf({
     required int ocurrenciaId,
   });
+
+  /// 5.- Obtener incidencias disponibles para una ocurrencia
+  Future<Resource<ApiResponse<IncidenciasSelectorPaginated>>>
+  getIncidenciasSelector({required IncidenciasSelectorQueryParams params});
 }

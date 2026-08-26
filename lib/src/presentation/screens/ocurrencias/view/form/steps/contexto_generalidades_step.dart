@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-import 'package:sis_patrullaje_cusco/src/data/models/patrullaje/patrullaje_data.dart';
+import 'package:sis_patrullaje_cusco/src/data/models/models.dart';
 
 // Form
 import 'package:sis_patrullaje_cusco/src/presentation/screens/ocurrencias/view/form/controller/ocurrencia_form_controller.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/ocurrencias/view/form/models/ocurrencia_incidente_select.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/ocurrencias/view/form/widgets/clasificador-selector/clasificador_ocurrencia_selector.dart';
 
 class ContextoGeneralidadesStep extends StatelessWidget {
   final GlobalKey<FormState> formKey;
@@ -14,24 +14,38 @@ class ContextoGeneralidadesStep extends StatelessWidget {
   final bool isLoadingPatrullaje;
   final VoidCallback onReloadPatrullaje;
 
-  final VoidCallback onReloadIncidentes;
-
-  final List<OcurrenciaIncidenteSeleccionado> incidentesRecientes;
+  final IncidenciaSelectorData? incidenciaSeleccionada;
 
   final bool isLoadingIncidentes;
   final String? incidentesError;
+
+  final VoidCallback onSeleccionarIncidencia;
+  final VoidCallback onLimpiarIncidencia;
+
+  // Clasificadores
+  final ClasificadorArbolData? clasificadorArbol;
+  final bool isLoadingClasificador;
+  final String? clasificadorError;
+  final VoidCallback onReloadClasificador;
 
   const ContextoGeneralidadesStep({
     super.key,
     required this.formKey,
     required this.controller,
-    this.incidentesRecientes = const [],
-    this.isLoadingIncidentes = false,
-    this.incidentesError,
-    required this.onReloadIncidentes,
-    this.patrullajeActivo,
+    required this.patrullajeActivo,
     required this.isLoadingPatrullaje,
     required this.onReloadPatrullaje,
+    required this.incidenciaSeleccionada,
+    required this.isLoadingIncidentes,
+    required this.incidentesError,
+    required this.onSeleccionarIncidencia,
+    required this.onLimpiarIncidencia,
+
+    // Clasificadores
+    required this.clasificadorArbol,
+    required this.isLoadingClasificador,
+    required this.clasificadorError,
+    required this.onReloadClasificador,
   });
 
   @override
@@ -58,17 +72,17 @@ class ContextoGeneralidadesStep extends StatelessWidget {
 
           const SizedBox(height: 16),
 
-          // Incidencias recientes
+          // Incidencia relacionada
           if (controller.modoRegistro == ModoRegistroOcurrencia.incidencia)
             _SectionCard(
               title: 'Incidencia relacionada',
               icon: Icons.report_outlined,
-              child: _IncidenciasRecientesField(
-                controller: controller,
-                incidentes: incidentesRecientes,
+              child: _IncidenciaSeleccionadaField(
+                incidencia: incidenciaSeleccionada,
                 isLoading: isLoadingIncidentes,
                 errorMessage: incidentesError,
-                onReload: onReloadIncidentes,
+                onSeleccionar: onSeleccionarIncidencia,
+                onLimpiar: onLimpiarIncidencia,
               ),
             )
           else
@@ -85,36 +99,49 @@ class ContextoGeneralidadesStep extends StatelessWidget {
           const SizedBox(height: 16),
 
           // Clasificación
+          const SizedBox(height: 16),
+
           _SectionCard(
-            title: 'Clasificación',
+            title: 'Código clasificador',
             icon: Icons.account_tree_outlined,
-            child: TextFormField(
-              controller: controller.codigoController,
-              keyboardType: TextInputType.number,
-              maxLength: 6,
-              decoration: const InputDecoration(
-                labelText: 'Código de ocurrencia *',
-                hintText: 'Ejemplo: 030103',
-                helperText: 'Código del clasificador estandarizado.',
-                prefixIcon: Icon(Icons.tag_rounded),
-                border: OutlineInputBorder(),
-              ),
-              validator: (value) {
-                final code = value?.trim() ?? '';
-
-                if (code.isEmpty) {
-                  return 'Selecciona o ingresa el código de ocurrencia.';
-                }
-
-                if (!RegExp(r'^\d{6}$').hasMatch(code)) {
-                  return 'El código debe tener 6 dígitos.';
-                }
-
-                return null;
-              },
+            child: ClasificadorOcurrenciaSelector(
+              arbol: clasificadorArbol,
+              controller: controller,
+              isLoading: isLoadingClasificador,
+              errorMessage: clasificadorError,
+              onReload: onReloadClasificador,
             ),
           ),
 
+          // _SectionCard(
+          //   title: 'Clasificación',
+          //   icon: Icons.account_tree_outlined,
+          //   child: TextFormField(
+          //     controller: controller.codigoController,
+          //     keyboardType: TextInputType.number,
+          //     maxLength: 6,
+          //     decoration: const InputDecoration(
+          //       labelText: 'Código de ocurrencia *',
+          //       hintText: 'Ejemplo: 030103',
+          //       helperText: 'Código del clasificador estandarizado.',
+          //       prefixIcon: Icon(Icons.tag_rounded),
+          //       border: OutlineInputBorder(),
+          //     ),
+          //     validator: (value) {
+          //       final code = value?.trim() ?? '';
+
+          //       if (code.isEmpty) {
+          //         return 'Selecciona o ingresa el código de ocurrencia.';
+          //       }
+
+          //       if (!RegExp(r'^\d{6}$').hasMatch(code)) {
+          //         return 'El código debe tener 6 dígitos.';
+          //       }
+
+          //       return null;
+          //     },
+          //   ),
+          // ),
           const SizedBox(height: 16),
 
           // _PatrullajeContextCard(
@@ -309,168 +336,141 @@ class _ModoRegistroCard extends StatelessWidget {
 // ==========================================================================
 // SELECCIÓN DE INCIDENCIA
 // ==========================================================================
-class _IncidenciasRecientesField extends StatelessWidget {
-  final OcurrenciaFormController controller;
-
-  final List<OcurrenciaIncidenteSeleccionado> incidentes;
+class _IncidenciaSeleccionadaField extends StatelessWidget {
+  final IncidenciaSelectorData? incidencia;
 
   final bool isLoading;
   final String? errorMessage;
-  final VoidCallback onReload;
 
-  const _IncidenciasRecientesField({
-    required this.controller,
-    required this.incidentes,
+  final VoidCallback onSeleccionar;
+  final VoidCallback onLimpiar;
+
+  const _IncidenciaSeleccionadaField({
+    required this.incidencia,
     required this.isLoading,
     required this.errorMessage,
-    required this.onReload,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return FormField<int>(
-      initialValue: controller.incidenteSeleccionado?.id,
-      validator: (_) {
-        if (controller.modoRegistro == ModoRegistroOcurrencia.incidencia &&
-            controller.incidenteSeleccionado == null) {
-          return 'Selecciona una incidencia reciente.';
-        }
-
-        return null;
-      },
-      builder: (field) {
-        if (isLoading) {
-          return const Padding(
-            padding: EdgeInsets.symmetric(vertical: 20),
-            child: Center(child: CircularProgressIndicator()),
-          );
-        }
-
-        if (errorMessage != null) {
-          return Column(
-            children: [
-              _MessageBox(
-                icon: Icons.error_outline_rounded,
-                message: errorMessage!,
-                color: Theme.of(context).colorScheme.error,
-              ),
-              const SizedBox(height: 10),
-              OutlinedButton.icon(
-                onPressed: onReload,
-                icon: const Icon(Icons.refresh_rounded),
-                label: const Text('Reintentar'),
-              ),
-              if (field.hasError) ...[
-                const SizedBox(height: 8),
-                _FieldError(message: field.errorText!),
-              ],
-            ],
-          );
-        }
-
-        if (incidentes.isEmpty) {
-          return Column(
-            children: [
-              const _MessageBox(
-                icon: Icons.report_off_outlined,
-                message:
-                    'No se encontraron incidencias recientes. '
-                    'Puedes actualizar el listado o utilizar '
-                    'el registro manual.',
-                color: Colors.orange,
-              ),
-              const SizedBox(height: 10),
-              OutlinedButton.icon(
-                onPressed: onReload,
-                icon: const Icon(Icons.refresh_rounded),
-                label: const Text('Actualizar'),
-              ),
-              if (field.hasError) ...[
-                const SizedBox(height: 8),
-                _FieldError(message: field.errorText!),
-              ],
-            ],
-          );
-        }
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            ...incidentes.map((incidente) {
-              final selected =
-                  controller.incidenteSeleccionado?.id == incidente.id;
-
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: _IncidenciaCard(
-                  incidencia: incidente,
-                  selected: selected,
-                  onTap: () {
-                    controller.seleccionarIncidente(incidente);
-
-                    field.didChange(incidente.id);
-                  },
-                ),
-              );
-            }),
-            if (field.hasError) _FieldError(message: field.errorText!),
-          ],
-        );
-      },
-    );
-  }
-}
-
-class _IncidenciaCard extends StatelessWidget {
-  final OcurrenciaIncidenteSeleccionado incidencia;
-
-  final bool selected;
-  final VoidCallback onTap;
-
-  const _IncidenciaCard({
-    required this.incidencia,
-    required this.selected,
-    required this.onTap,
+    required this.onSeleccionar,
+    required this.onLimpiar,
   });
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    final fecha = incidencia.fecha != null
-        ? DateFormat(
-            'dd/MM/yyyy · HH:mm',
-            'es_PE',
-          ).format(incidencia.fecha!.toLocal())
-        : 'Fecha no disponible';
+    if (incidencia != null) {
+      return _IncidenciaSeleccionadaCard(
+        incidencia: incidencia!,
+        onCambiar: onSeleccionar,
+        onLimpiar: onLimpiar,
+      );
+    }
 
-    return Material(
-      color: selected
-          ? colorScheme.primaryContainer.withValues(alpha: 0.65)
-          : colorScheme.surface,
-      borderRadius: BorderRadius.circular(14),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
-        child: Container(
-          padding: const EdgeInsets.all(13),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              width: selected ? 2 : 1,
-              color: selected
-                  ? colorScheme.primary
-                  : colorScheme.outlineVariant,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Selecciona una incidencia registrada previamente para relacionarla con esta ocurrencia.',
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            color: colorScheme.onSurfaceVariant,
+            height: 1.35,
+          ),
+        ),
+
+        if (errorMessage != null) ...[
+          const SizedBox(height: 12),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: colorScheme.errorContainer,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  Icons.error_outline,
+                  color: colorScheme.onErrorContainer,
+                  size: 20,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    errorMessage!,
+                    style: TextStyle(color: colorScheme.onErrorContainer),
+                  ),
+                ),
+              ],
             ),
           ),
-          child: Row(
+        ],
+
+        const SizedBox(height: 14),
+
+        SizedBox(
+          width: double.infinity,
+          child: FilledButton.icon(
+            onPressed: isLoading ? null : onSeleccionar,
+            icon: isLoading
+                ? SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: colorScheme.onPrimary,
+                    ),
+                  )
+                : const Icon(Icons.search_rounded),
+            label: Text(
+              isLoading ? 'Cargando incidencias...' : 'Seleccionar incidencia',
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _IncidenciaSeleccionadaCard extends StatelessWidget {
+  final IncidenciaSelectorData incidencia;
+  final VoidCallback onCambiar;
+  final VoidCallback onLimpiar;
+
+  const _IncidenciaSeleccionadaCard({
+    required this.incidencia,
+    required this.onCambiar,
+    required this.onLimpiar,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: colorScheme.primaryContainer.withValues(alpha: 0.45),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: colorScheme.primary.withValues(alpha: 0.35)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              CircleAvatar(
-                backgroundColor: colorScheme.errorContainer,
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: colorScheme.primary,
+                  borderRadius: BorderRadius.circular(12),
+                ),
                 child: Icon(
-                  Icons.report_problem_outlined,
-                  color: colorScheme.onErrorContainer,
+                  _getIncidenciaIcon(incidencia.tipo),
+                  color: colorScheme.onPrimary,
                 ),
               ),
               const SizedBox(width: 12),
@@ -482,63 +482,326 @@ class _IncidenciaCard extends StatelessWidget {
                       children: [
                         Expanded(
                           child: Text(
-                            incidencia.titulo,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontWeight: FontWeight.w700),
-                          ),
-                        ),
-                        if (selected)
-                          Icon(
-                            Icons.check_circle_rounded,
-                            color: colorScheme.primary,
-                          ),
-                      ],
-                    ),
-                    if (incidencia.tipo != null) ...[
-                      const SizedBox(height: 5),
-                      Text(
-                        _formatEnum(incidencia.tipo!),
-                        style: Theme.of(context).textTheme.labelMedium
-                            ?.copyWith(
-                              color: colorScheme.primary,
-                              fontWeight: FontWeight.w600,
+                            _formatTipoIncidencia(incidencia.tipo),
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
                             ),
-                      ),
-                    ],
-                    const SizedBox(height: 7),
-                    Row(
-                      children: [
-                        const Icon(Icons.schedule_rounded, size: 15),
-                        const SizedBox(width: 5),
-                        Expanded(
-                          child: Text(
-                            fecha,
-                            style: Theme.of(context).textTheme.bodySmall,
                           ),
                         ),
+                        _IncidenciaEstadoBadge(estado: incidencia.estado),
                       ],
                     ),
-                    if (incidencia.descripcion != null) ...[
-                      const SizedBox(height: 7),
-                      Text(
-                        incidencia.descripcion!,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.bodySmall,
+                    const SizedBox(height: 4),
+                    Text(
+                      'Incidencia #${incidencia.id}',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
                       ),
-                    ],
+                    ),
                   ],
                 ),
               ),
             ],
           ),
+          const SizedBox(height: 12),
+          Text(
+            incidencia.descripcion,
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.bodyMedium,
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _IncidenciaInfoChip(
+                icon: Icons.schedule_outlined,
+                label: _formatFechaHora(incidencia.fechaHora),
+              ),
+              _IncidenciaInfoChip(
+                icon: Icons.image_outlined,
+                label: '${incidencia.totalEvidencias} evidencias',
+              ),
+              if (incidencia.patrullajeId != null)
+                _IncidenciaInfoChip(
+                  icon: Icons.route_outlined,
+                  label: 'Patrullaje ${incidencia.patrullajeId}',
+                ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: onCambiar,
+                  icon: const Icon(Icons.swap_horiz_rounded),
+                  label: const Text('Cambiar'),
+                ),
+              ),
+              const SizedBox(width: 10),
+              IconButton.outlined(
+                onPressed: onLimpiar,
+                tooltip: 'Quitar incidencia',
+                icon: const Icon(Icons.close_rounded),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+IconData _getIncidenciaIcon(String tipo) {
+  switch (tipo) {
+    case 'ROBO':
+      return Icons.local_police_outlined;
+
+    case 'ACCIDENTE':
+      return Icons.car_crash_outlined;
+
+    case 'INCENDIO':
+      return Icons.local_fire_department_outlined;
+
+    case 'VIOLENCIA':
+      return Icons.warning_amber_rounded;
+
+    case 'SOSPECHOSO':
+      return Icons.visibility_outlined;
+
+    default:
+      return Icons.report_outlined;
+  }
+}
+
+String _formatTipoIncidencia(String tipo) {
+  switch (tipo) {
+    case 'ROBO':
+      return 'Robo';
+
+    case 'ACCIDENTE':
+      return 'Accidente';
+
+    case 'INCENDIO':
+      return 'Incendio';
+
+    case 'VIOLENCIA':
+      return 'Violencia';
+
+    case 'SOSPECHOSO':
+      return 'Actividad sospechosa';
+
+    default:
+      return 'Otro';
+  }
+}
+
+String _formatFechaHora(DateTime date) {
+  final local = date.toLocal();
+
+  String twoDigits(int value) {
+    return value.toString().padLeft(2, '0');
+  }
+
+  return '${twoDigits(local.day)}/'
+      '${twoDigits(local.month)}/'
+      '${local.year} · '
+      '${twoDigits(local.hour)}:'
+      '${twoDigits(local.minute)}';
+}
+
+class _IncidenciaEstadoBadge extends StatelessWidget {
+  final String estado;
+
+  const _IncidenciaEstadoBadge({required this.estado});
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    final Color background;
+    final Color foreground;
+    final String label;
+
+    switch (estado) {
+      case 'REPORTADO':
+        background = colorScheme.errorContainer;
+        foreground = colorScheme.onErrorContainer;
+        label = 'Reportado';
+        break;
+
+      case 'EN_PROCESO':
+        background = colorScheme.tertiaryContainer;
+        foreground = colorScheme.onTertiaryContainer;
+        label = 'En proceso';
+        break;
+
+      case 'ATENDIDO':
+        background = colorScheme.primaryContainer;
+        foreground = colorScheme.onPrimaryContainer;
+        label = 'Atendido';
+        break;
+
+      case 'CERRADO':
+        background = colorScheme.secondaryContainer;
+        foreground = colorScheme.onSecondaryContainer;
+        label = 'Cerrado';
+        break;
+
+      default:
+        background = colorScheme.surfaceContainerHighest;
+        foreground = colorScheme.onSurfaceVariant;
+        label = estado;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(99),
+      ),
+      child: Text(
+        label,
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+          color: foreground,
+          fontWeight: FontWeight.w600,
         ),
       ),
     );
   }
 }
 
+// class _IncidenciaOptionCard extends StatelessWidget {
+//   final IncidenciaSelectorData incidencia;
+//   final bool selected;
+//   final VoidCallback onTap;
+
+//   const _IncidenciaOptionCard({
+//     required this.incidencia,
+//     required this.selected,
+//     required this.onTap,
+//   });
+
+//   @override
+//   Widget build(BuildContext context) {
+//     final theme = Theme.of(context);
+//     final colorScheme = theme.colorScheme;
+
+//     return Material(
+//       color: selected
+//           ? colorScheme.primaryContainer
+//           : colorScheme.surfaceContainerLow,
+//       borderRadius: BorderRadius.circular(16),
+//       child: InkWell(
+//         onTap: onTap,
+//         borderRadius: BorderRadius.circular(16),
+//         child: Container(
+//           padding: const EdgeInsets.all(14),
+//           decoration: BoxDecoration(
+//             borderRadius: BorderRadius.circular(16),
+//             border: Border.all(
+//               color: selected
+//                   ? colorScheme.primary
+//                   : colorScheme.outlineVariant,
+//               width: selected ? 1.5 : 1,
+//             ),
+//           ),
+//           child: Row(
+//             crossAxisAlignment: CrossAxisAlignment.start,
+//             children: [
+//               Container(
+//                 width: 42,
+//                 height: 42,
+//                 decoration: BoxDecoration(
+//                   color: colorScheme.primaryContainer,
+//                   borderRadius: BorderRadius.circular(12),
+//                 ),
+//                 child: Icon(
+//                   _getIncidenciaIcon(incidencia.tipo),
+//                   color: colorScheme.primary,
+//                 ),
+//               ),
+//               const SizedBox(width: 12),
+//               Expanded(
+//                 child: Column(
+//                   crossAxisAlignment: CrossAxisAlignment.start,
+//                   children: [
+//                     Row(
+//                       children: [
+//                         Expanded(
+//                           child: Text(
+//                             _formatTipoIncidencia(incidencia.tipo),
+//                             style: theme.textTheme.titleSmall?.copyWith(
+//                               fontWeight: FontWeight.bold,
+//                             ),
+//                           ),
+//                         ),
+//                         _IncidenciaEstadoBadge(estado: incidencia.estado),
+//                       ],
+//                     ),
+//                     const SizedBox(height: 5),
+//                     Text(
+//                       incidencia.descripcion,
+//                       maxLines: 2,
+//                       overflow: TextOverflow.ellipsis,
+//                     ),
+//                     const SizedBox(height: 8),
+//                     Text(
+//                       _formatFechaHora(incidencia.fechaHora),
+//                       style: theme.textTheme.bodySmall?.copyWith(
+//                         color: colorScheme.onSurfaceVariant,
+//                       ),
+//                     ),
+//                   ],
+//                 ),
+//               ),
+//               const SizedBox(width: 6),
+//               Icon(
+//                 selected
+//                     ? Icons.check_circle_rounded
+//                     : Icons.chevron_right_rounded,
+//                 color: selected
+//                     ? colorScheme.primary
+//                     : colorScheme.onSurfaceVariant,
+//               ),
+//             ],
+//           ),
+//         ),
+//       ),
+//     );
+//   }
+// }
+
+class _IncidenciaInfoChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+
+  const _IncidenciaInfoChip({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        borderRadius: BorderRadius.circular(99),
+        border: Border.all(color: colorScheme.outlineVariant),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 15, color: colorScheme.primary),
+          const SizedBox(width: 5),
+          Text(label, style: Theme.of(context).textTheme.labelSmall),
+        ],
+      ),
+    );
+  }
+}
 // ==========================================================================
 // REGISTRO MANUAL
 // ==========================================================================
@@ -951,28 +1214,28 @@ class _MessageBox extends StatelessWidget {
   }
 }
 
-class _FieldError extends StatelessWidget {
-  final String message;
+// class _FieldError extends StatelessWidget {
+//   final String message;
 
-  const _FieldError({required this.message});
+//   const _FieldError({required this.message});
 
-  @override
-  Widget build(BuildContext context) {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Padding(
-        padding: const EdgeInsets.only(left: 12),
-        child: Text(
-          message,
-          style: TextStyle(
-            color: Theme.of(context).colorScheme.error,
-            fontSize: 12,
-          ),
-        ),
-      ),
-    );
-  }
-}
+//   @override
+//   Widget build(BuildContext context) {
+//     return Align(
+//       alignment: Alignment.centerLeft,
+//       child: Padding(
+//         padding: const EdgeInsets.only(left: 12),
+//         child: Text(
+//           message,
+//           style: TextStyle(
+//             color: Theme.of(context).colorScheme.error,
+//             fontSize: 12,
+//           ),
+//         ),
+//       ),
+//     );
+//   }
+// }
 
 class _InformacionCard extends StatelessWidget {
   const _InformacionCard();
@@ -990,19 +1253,19 @@ class _InformacionCard extends StatelessWidget {
   }
 }
 
-String _formatEnum(String value) {
-  final normalized = value.replaceAll('_', ' ').toLowerCase();
+// String _formatEnum(String value) {
+//   final normalized = value.replaceAll('_', ' ').toLowerCase();
 
-  return normalized
-      .split(' ')
-      .map(
-        (word) => word.isEmpty
-            ? ''
-            : '${word[0].toUpperCase()}'
-                  '${word.substring(1)}',
-      )
-      .join(' ');
-}
+//   return normalized
+//       .split(' ')
+//       .map(
+//         (word) => word.isEmpty
+//             ? ''
+//             : '${word[0].toUpperCase()}'
+//                   '${word.substring(1)}',
+//       )
+//       .join(' ');
+// }
 
 // class _PatrullajeContextCard extends StatelessWidget {
 //   final PatrullajeData? patrullaje;

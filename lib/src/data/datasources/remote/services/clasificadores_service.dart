@@ -44,9 +44,7 @@ class ClasificadoresService {
       if (HttpServiceHelper.isSuccess(response.statusCode)) {
         final apiResponse = ApiResponse<ClasificadorArbolData>.fromJson(
           body,
-          (rawData) => ClasificadorArbolData.fromJson(
-            Map<String, dynamic>.from(rawData),
-          ),
+          (rawData) => ClasificadorArbolData.fromJson(rawData),
         );
 
         return Success<ApiResponse<ClasificadorArbolData>>(apiResponse);
@@ -145,9 +143,10 @@ class ClasificadoresService {
       }
 
       // 4.- Return Error
-      return HttpServiceHelper.buildError<
-        ApiResponse<ClasificadorPaginated>
-      >(body, response.statusCode);
+      return HttpServiceHelper.buildError<ApiResponse<ClasificadorPaginated>>(
+        body,
+        response.statusCode,
+      );
     } catch (error) {
       return ErrorData<ApiResponse<ClasificadorPaginated>>(
         message: 'Ocurrió un error al obtener los clasificadores paginados.',

@@ -225,19 +225,47 @@ class AtencionUbicacionStep extends StatelessWidget {
                       },
                     ),
                     const SizedBox(height: 14),
-                    TextFormField(
-                      controller:
-                          controller.relacionVictimaVictimarioController,
-                      textCapitalization: TextCapitalization.sentences,
-                      maxLines: 3,
+
+                    DropdownButtonFormField<String>(
+                      initialValue: controller.relacionVictimaVictimario,
+                      isExpanded: true,
                       decoration: const InputDecoration(
                         labelText: 'Relación víctima-victimario',
-                        hintText:
-                            'Ejemplo: familiar, vecino, desconocido, pareja...',
-                        alignLabelWithHint: true,
-                        prefixIcon: Icon(Icons.people_outline_rounded),
+                        hintText: 'Selecciona una relación',
+                        prefixIcon: Icon(Icons.people_outline),
                         border: OutlineInputBorder(),
                       ),
+                      items: const [
+                        DropdownMenuItem(
+                          value: 'ESPOSA_EX_ESPOSA',
+                          child: Text('Esposa / exesposa'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'PAREJA_EX_PAREJA',
+                          child: Text('Pareja / expareja'),
+                        ),
+                        DropdownMenuItem(value: 'PADRE', child: Text('Padre')),
+                        DropdownMenuItem(value: 'MADRE', child: Text('Madre')),
+                        DropdownMenuItem(
+                          value: 'FAMILIAR',
+                          child: Text('Familiar'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'CONOCIDO',
+                          child: Text('Conocido'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'DESCONOCIDO',
+                          child: Text('Desconocido'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'NO_APLICA',
+                          child: Text('No aplica'),
+                        ),
+                      ],
+                      onChanged: (value) {
+                        controller.setRelacionVictimaVictimario(value);
+                      },
                     ),
                   ],
                 ),

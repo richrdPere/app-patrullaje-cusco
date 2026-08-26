@@ -1,8 +1,7 @@
 import 'package:equatable/equatable.dart';
 
 // Models
-import 'package:sis_patrullaje_cusco/src/data/models/ocurrencias/ocurrencia_create_req.dart';
-import 'package:sis_patrullaje_cusco/src/data/models/ocurrencias/ocurrencia_query_params.dart';
+import 'package:sis_patrullaje_cusco/src/data/models/models.dart';
 
 abstract class OcurrenciaEvent extends Equatable {
   const OcurrenciaEvent();
@@ -34,11 +33,12 @@ class CreateOcurrencia extends OcurrenciaEvent {
 
 class GetOcurrenciasPaginado extends OcurrenciaEvent {
   final OcurrenciaQueryParams params;
+  final bool refresh;
 
-  const GetOcurrenciasPaginado({required this.params});
+  const GetOcurrenciasPaginado({required this.params, this.refresh = false});
 
   @override
-  List<Object?> get props => [params];
+  List<Object?> get props => [params, refresh];
 }
 
 // *********************************************************
@@ -67,12 +67,77 @@ class GetOcurrenciaPdf extends OcurrenciaEvent {
   List<Object?> get props => [ocurrenciaId];
 }
 
+// *********************************************************
+// 5. OBTENER INCIDENCIAS DISPONIBLES PARA EL SELECTOR
+// *********************************************************
+
+class GetIncidenciasSelector extends OcurrenciaEvent {
+  final IncidenciasSelectorQueryParams params;
+  final bool refresh;
+
+  const GetIncidenciasSelector({required this.params, this.refresh = false});
+
+  @override
+  List<Object?> get props => [params, refresh];
+}
+
+// *********************************************************
+// 6. CARGAR MÁS INCIDENCIAS DEL SELECTOR
+// *********************************************************
+
+class LoadMoreIncidenciasSelector extends OcurrenciaEvent {
+  const LoadMoreIncidenciasSelector();
+}
+
+// ============================================================
+// SELECCIÓN DE INCIDENCIA
+// ============================================================
+
+// *********************************************************
+// 7. SELECCIONAR INCIDENCIA
+// *********************************************************
+
+class SelectIncidenciaOcurrencia extends OcurrenciaEvent {
+  final IncidenciaSelectorData incidencia;
+
+  const SelectIncidenciaOcurrencia({required this.incidencia});
+
+  @override
+  List<Object?> get props => [incidencia];
+}
+
+// *********************************************************
+// 8. LIMPIAR INCIDENCIA SELECCIONADA
+// *********************************************************
+
+class ClearSelectedIncidenciaOcurrencia extends OcurrenciaEvent {
+  const ClearSelectedIncidenciaOcurrencia();
+}
+
+// *********************************************************
+// 9. REMOVER INCIDENCIA DEL SELECTOR
+// *********************************************************
+
+/// Remueve localmente una incidencia después de que haya sido
+/// asociada correctamente a una ocurrencia.
+///
+/// El backend continuará siendo la fuente oficial y volverá a
+/// excluirla cuando el selector sea consultado nuevamente.
+class RemoveIncidenciaFromSelector extends OcurrenciaEvent {
+  final int incidenciaId;
+
+  const RemoveIncidenciaFromSelector({required this.incidenciaId});
+
+  @override
+  List<Object?> get props => [incidenciaId];
+}
+
 // ============================================================
 // LIMPIEZA DE RESPUESTAS
 // ============================================================
 
 // *********************************************************
-// 5. LIMPIAR RESPUESTA DE CREACIÓN
+// 10. LIMPIAR RESPUESTA DE CREACIÓN
 // *********************************************************
 
 class ClearOcurrenciaCreateResponse extends OcurrenciaEvent {
@@ -80,7 +145,7 @@ class ClearOcurrenciaCreateResponse extends OcurrenciaEvent {
 }
 
 // *********************************************************
-// 6. LIMPIAR DETALLE
+// 11. LIMPIAR DETALLE
 // *********************************************************
 
 class ClearOcurrenciaDetailResponse extends OcurrenciaEvent {
@@ -88,7 +153,7 @@ class ClearOcurrenciaDetailResponse extends OcurrenciaEvent {
 }
 
 // *********************************************************
-// 7. LIMPIAR PDF
+// 12. LIMPIAR PDF
 // *********************************************************
 
 class ClearOcurrenciaPdfResponse extends OcurrenciaEvent {
@@ -96,11 +161,31 @@ class ClearOcurrenciaPdfResponse extends OcurrenciaEvent {
 }
 
 // *********************************************************
-// 8. LIMPIAR LISTADO PAGINADO
+// 13. LIMPIAR LISTADO PAGINADO
 // *********************************************************
 
 class ClearOcurrenciaPaginatedResponse extends OcurrenciaEvent {
   const ClearOcurrenciaPaginatedResponse();
+}
+
+// *********************************************************
+// 14. LIMPIAR SELECTOR DE INCIDENCIAS
+// *********************************************************
+
+/// Limpia la respuesta, el listado, los parámetros y la
+/// incidencia seleccionada.
+class ClearIncidenciasSelector extends OcurrenciaEvent {
+  const ClearIncidenciasSelector();
+}
+
+// *********************************************************
+// 15. LIMPIAR SOLO EL ERROR DEL SELECTOR
+// *********************************************************
+
+/// Conserva el listado previamente cargado y elimina únicamente
+/// la respuesta de error del selector.
+class ClearIncidenciasSelectorError extends OcurrenciaEvent {
+  const ClearIncidenciasSelectorError();
 }
 
 // ============================================================
@@ -108,7 +193,7 @@ class ClearOcurrenciaPaginatedResponse extends OcurrenciaEvent {
 // ============================================================
 
 // *********************************************************
-// 9. INICIALIZAR STEPS
+// 16. INICIALIZAR STEPS
 // *********************************************************
 
 class InitializeOcurrenciaForm extends OcurrenciaEvent {
@@ -116,7 +201,7 @@ class InitializeOcurrenciaForm extends OcurrenciaEvent {
 }
 
 // *********************************************************
-// 10. IR A UN STEP
+// 17. IR A UN STEP
 // *********************************************************
 
 class GoToOcurrenciaFormStep extends OcurrenciaEvent {
@@ -129,7 +214,7 @@ class GoToOcurrenciaFormStep extends OcurrenciaEvent {
 }
 
 // *********************************************************
-// 11. SIGUIENTE STEP
+// 18. SIGUIENTE STEP
 // *********************************************************
 
 class NextOcurrenciaFormStep extends OcurrenciaEvent {
@@ -137,7 +222,7 @@ class NextOcurrenciaFormStep extends OcurrenciaEvent {
 }
 
 // *********************************************************
-// 12. STEP ANTERIOR
+// 19. STEP ANTERIOR
 // *********************************************************
 
 class PreviousOcurrenciaFormStep extends OcurrenciaEvent {
@@ -145,7 +230,7 @@ class PreviousOcurrenciaFormStep extends OcurrenciaEvent {
 }
 
 // *********************************************************
-// 13. MARCAR STEP COMO COMPLETADO
+// 20. MARCAR STEP COMO COMPLETADO
 // *********************************************************
 
 class CompleteOcurrenciaFormStep extends OcurrenciaEvent {
@@ -158,7 +243,7 @@ class CompleteOcurrenciaFormStep extends OcurrenciaEvent {
 }
 
 // *********************************************************
-// 14. REINICIAR NAVEGACIÓN DEL FORMULARIO
+// 21. REINICIAR NAVEGACIÓN DEL FORMULARIO
 // *********************************************************
 
 class ResetOcurrenciaForm extends OcurrenciaEvent {
@@ -166,9 +251,28 @@ class ResetOcurrenciaForm extends OcurrenciaEvent {
 }
 
 // *********************************************************
-// 15. RESTABLECER EL BLOC
+// 22. RESTABLECER EL BLOC
 // *********************************************************
 
 class ResetOcurrenciaState extends OcurrenciaEvent {
   const ResetOcurrenciaState();
+}
+
+// *********************************************************
+// 23. LOCATION
+// *********************************************************
+class GetOcurrenciaCurrentLocation extends OcurrenciaEvent {
+  const GetOcurrenciaCurrentLocation();
+}
+
+class ClearOcurrenciaLocation extends OcurrenciaEvent {
+  const ClearOcurrenciaLocation();
+}
+
+class OpenOcurrenciaLocationSettings extends OcurrenciaEvent {
+  const OpenOcurrenciaLocationSettings();
+}
+
+class OpenOcurrenciaAppSettings extends OcurrenciaEvent {
+  const OpenOcurrenciaAppSettings();
 }

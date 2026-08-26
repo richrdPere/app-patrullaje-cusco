@@ -407,6 +407,7 @@ abstract class AppModule {
     getOcurrenciaByIdUC: GetOcurrenciaByIdUC(ocurrenciasRepository),
     getOcurrenciaPdfUC: GetOcurrenciaPdfUC(ocurrenciasRepository),
     getOcurrenciasPaginadoUC: GetOcurrenciasPaginadoUC(ocurrenciasRepository),
+    getIncidenciasSelectorUC: GetIncidenciasSelectorUC(ocurrenciasRepository),
   );
 
   // =============================================================

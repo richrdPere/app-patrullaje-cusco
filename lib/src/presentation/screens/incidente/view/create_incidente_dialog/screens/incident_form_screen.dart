@@ -5,7 +5,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:path/path.dart' as path;
 
 import 'package:sis_patrullaje_cusco/src/data/models/models.dart';
-import 'package:sis_patrullaje_cusco/src/data/models/patrullaje/patrullaje_data.dart';
 import 'package:sis_patrullaje_cusco/src/domain/utils/Resource.dart';
 
 import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/home/home_bloc.dart';

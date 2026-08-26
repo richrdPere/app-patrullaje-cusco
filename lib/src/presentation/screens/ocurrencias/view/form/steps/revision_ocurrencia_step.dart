@@ -73,13 +73,31 @@ class _RevisionOcurrenciaStepState extends State<RevisionOcurrenciaStep> {
                         ? 'Desde incidente'
                         : 'Registro manual',
                   ),
-                  if (controller.incidenteSeleccionado != null)
+                  if (controller.incidenciaSeleccionada != null) ...[
                     _ReviewRow(
-                      label: 'Incidente seleccionado',
+                      label: 'Incidencia seleccionada',
                       value:
-                          '#${controller.incidenteSeleccionado!.id} - '
-                          '${controller.incidenteSeleccionado!.titulo}',
+                          '#${controller.incidenciaSeleccionada!.id} - '
+                          '${_formatTipoIncidencia(controller.incidenciaSeleccionada!.tipo)}',
+                      required: true,
                     ),
+                    _ReviewRow(
+                      label: 'Descripción de la incidencia',
+                      value: controller.incidenciaSeleccionada!.descripcion,
+                    ),
+                    _ReviewRow(
+                      label: 'Estado de la incidencia',
+                      value: _humanize(
+                        controller.incidenciaSeleccionada!.estado,
+                      ),
+                    ),
+                    _ReviewRow(
+                      label: 'Fecha de la incidencia',
+                      value: _formatDateTime(
+                        controller.incidenciaSeleccionada!.fechaHora,
+                      ),
+                    ),
+                  ],
                   _ReviewRow(
                     label: 'Código de ocurrencia',
                     value: controller.codigoController.text,
@@ -164,10 +182,9 @@ class _RevisionOcurrenciaStepState extends State<RevisionOcurrenciaStep> {
                   ),
                   _ReviewRow(
                     label: 'Relación víctima-victimario',
-                    value: _firstNonEmpty([
-                      controller.relacionVictimaVictimarioController.text,
+                    value: _formatRelacion(
                       controller.relacionVictimaVictimario,
-                    ]),
+                    ),
                   ),
                   _ReviewRow(
                     label: 'Tipo de lugar',
@@ -620,10 +637,10 @@ class _SystemRelationChips extends StatelessWidget {
           icon: Icons.directions_car_outlined,
           label: 'Unidad #${controller.unidadId}',
         ),
-      if (controller.incidenteSeleccionado != null)
+      if (controller.incidenciaSeleccionada != null)
         _ReviewChip(
           icon: Icons.report_problem_outlined,
-          label: 'Incidente #${controller.incidenteSeleccionado!.id}',
+          label: 'Incidente #${controller.incidenciaSeleccionada!.id}',
         ),
     ];
 
@@ -1038,12 +1055,102 @@ String _joinValues(List<String?> values) {
       .join(' · ');
 }
 
-String _firstNonEmpty(List<String?> values) {
-  for (final value in values) {
-    if (value != null && value.trim().isNotEmpty) {
-      return value.trim();
-    }
+// String _firstNonEmpty(List<String?> values) {
+//   for (final value in values) {
+//     if (value != null && value.trim().isNotEmpty) {
+//       return value.trim();
+//     }
+//   }
+
+//   return '';
+// }
+
+String _formatTipoIncidencia(String tipo) {
+  switch (tipo) {
+    case 'ROBO':
+      return 'Robo';
+
+    case 'ACCIDENTE':
+      return 'Accidente';
+
+    case 'INCENDIO':
+      return 'Incendio';
+
+    case 'VIOLENCIA':
+      return 'Violencia';
+
+    case 'SOSPECHOSO':
+      return 'Actividad sospechosa';
+
+    case 'OTRO':
+      return 'Otro';
+
+    default:
+      return _humanize(tipo);
+  }
+}
+
+// String _formatTurno(String turno) {
+//   switch (turno) {
+//     case 'MANANA':
+//       return 'Mañana';
+
+//     case 'TARDE':
+//       return 'Tarde';
+
+//     case 'NOCHE':
+//       return 'Noche';
+
+//     default:
+//       return _humanize(turno);
+//   }
+// }
+
+String _formatRelacion(String? relacion) {
+  switch (relacion) {
+    case 'ESPOSA_EX_ESPOSA':
+      return 'Esposa / exesposa';
+
+    case 'PAREJA_EX_PAREJA':
+      return 'Pareja / expareja';
+
+    case 'PADRE':
+      return 'Padre';
+
+    case 'MADRE':
+      return 'Madre';
+
+    case 'FAMILIAR':
+      return 'Familiar';
+
+    case 'CONOCIDO':
+      return 'Conocido';
+
+    case 'DESCONOCIDO':
+      return 'Desconocido';
+
+    case 'NO_APLICA':
+      return 'No aplica';
+
+    case null:
+    case '':
+      return 'No especificado';
+
+    default:
+      return _humanize(relacion);
+  }
+}
+
+String _formatDateTime(DateTime date) {
+  final local = date.toLocal();
+
+  String twoDigits(int value) {
+    return value.toString().padLeft(2, '0');
   }
 
-  return '';
+  return '${twoDigits(local.day)}/'
+      '${twoDigits(local.month)}/'
+      '${local.year} '
+      '${twoDigits(local.hour)}:'
+      '${twoDigits(local.minute)}';
 }

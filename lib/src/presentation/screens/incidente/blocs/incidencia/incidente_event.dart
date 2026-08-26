@@ -1,8 +1,6 @@
 import 'dart:io';
 
 import 'package:equatable/equatable.dart';
-import 'package:sis_patrullaje_cusco/src/data/models/incidencia/mis_incidencias_query_params.dart';
-import 'package:sis_patrullaje_cusco/src/data/models/incidencia/register_incidencia_req.dart';
 import 'package:sis_patrullaje_cusco/src/data/models/models.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/incidente/enums/incidente_tab_enum.dart';
 
@@ -329,4 +327,32 @@ class ExpandirSheetIncidenteEvent extends IncidenteEvent {
 
 class ContraerSheetIncidenteEvent extends IncidenteEvent {
   const ContraerSheetIncidenteEvent();
+}
+
+// ======================================================
+// SELECTOR DE INCIDENCIAS PARA OCURRENCIA
+// ======================================================
+
+/// Obtiene incidencias que pueden asociarse a una ocurrencia.
+class ObtenerIncidenciasSeleccionablesEvent extends IncidenteEvent {
+  final MisIncidenciasQueryParams params;
+  final bool refresh;
+
+  const ObtenerIncidenciasSeleccionablesEvent({
+    required this.params,
+    this.refresh = false,
+  });
+
+  @override
+  List<Object?> get props => [params, refresh];
+}
+
+/// Carga la siguiente página del selector.
+class CargarMasIncidenciasSeleccionablesEvent extends IncidenteEvent {
+  const CargarMasIncidenciasSeleccionablesEvent();
+}
+
+/// Limpia el listado utilizado por el selector.
+class LimpiarIncidenciasSeleccionablesEvent extends IncidenteEvent {
+  const LimpiarIncidenciasSeleccionablesEvent();
 }

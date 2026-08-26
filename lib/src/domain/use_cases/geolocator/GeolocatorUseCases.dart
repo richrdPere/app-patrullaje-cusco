@@ -1,11 +1,4 @@
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/geolocator/geolocator_use_cases/CheckLocationPermissionUseCase.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/geolocator/geolocator_use_cases/GetCurrentLocationUseCase.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/geolocator/geolocator_use_cases/GetLastKnowLocationUseCase.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/geolocator/geolocator_use_cases/GetLocationStreamUseCase.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/geolocator/geolocator_use_cases/IsLocationServiceEnableUseCase.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/geolocator/geolocator_use_cases/OpenAppSettingsUseCase.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/geolocator/geolocator_use_cases/OpenLocationSettingsUseCase.dart';
-import 'package:sis_patrullaje_cusco/src/domain/use_cases/geolocator/geolocator_use_cases/RequestLocationPermissionUseCase.dart';
+import 'package:sis_patrullaje_cusco/src/domain/use_cases/index_uses_cases.dart';
 
 class GeolocatorUseCases {
   CheckLocationPermissionUseCase checkLocationPermission;

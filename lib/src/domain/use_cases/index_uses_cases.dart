@@ -149,3 +149,4 @@ export 'package:sis_patrullaje_cusco/src/domain/use_cases/ocurrencias/ocurrencia
 export 'package:sis_patrullaje_cusco/src/domain/use_cases/ocurrencias/ocurrencia_uses_cases/GetOcurrenciaPdfUC.dart';
 export 'package:sis_patrullaje_cusco/src/domain/use_cases/ocurrencias/ocurrencia_uses_cases/GetOcurrenciasPaginadoUC.dart';
 export 'package:sis_patrullaje_cusco/src/domain/use_cases/ocurrencias/OcurrenciaUsesCases.dart';
+export 'package:sis_patrullaje_cusco/src/domain/use_cases/ocurrencias/ocurrencia_uses_cases/GetIncidenciasSelectorUC.dart';

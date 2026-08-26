@@ -3,10 +3,11 @@ import 'package:sis_patrullaje_cusco/src/domain/repositories/index_repository.da
 
 import 'package:sis_patrullaje_cusco/src/domain/utils/Resource.dart';
 
-class GetOcurrenciaPdfUC {
+class GetIncidenciasSelectorUC {
   final OcurrenciasRepository ocurrenciasRepository;
-  GetOcurrenciaPdfUC(this.ocurrenciasRepository);
+  GetIncidenciasSelectorUC(this.ocurrenciasRepository);
 
-  Future<Resource<OcurrenciaPdfData>> run({required int ocurrenciaId}) =>
-      ocurrenciasRepository.getOcurrenciaPdf(ocurrenciaId: ocurrenciaId);
+  Future<Resource<ApiResponse<IncidenciasSelectorPaginated>>> run({
+    required IncidenciasSelectorQueryParams params,
+  }) => ocurrenciasRepository.getIncidenciasSelector(params: params);
 }

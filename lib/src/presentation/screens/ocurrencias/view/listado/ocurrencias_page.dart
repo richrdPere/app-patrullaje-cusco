@@ -19,6 +19,30 @@ import 'package:sis_patrullaje_cusco/src/presentation/screens/ocurrencias/view/l
 class OcurrenciasPage extends StatelessWidget {
   const OcurrenciasPage({super.key});
 
+  Future<void> _openCreateForm(BuildContext context) async {
+    final created = await context.pushNamed<bool>('ocurrencia_crear');
+
+    if (!context.mounted || created != true) {
+      return;
+    }
+
+    context.read<OcurrenciaBloc>().add(
+      const GetOcurrenciasPaginado(
+        params: OcurrenciaQueryParams(page: 1, limit: 20),
+        refresh: true,
+      ),
+    );
+
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        const SnackBar(
+          content: Text('Ocurrencia registrada correctamente.'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocListener<OcurrenciaBloc, OcurrenciaState>(
@@ -41,6 +65,7 @@ class OcurrenciasPage extends StatelessWidget {
                     context.read<OcurrenciaBloc>().add(
                       const GetOcurrenciasPaginado(
                         params: OcurrenciaQueryParams(page: 1, limit: 20),
+                        refresh: true,
                       ),
                     );
                   },
@@ -54,8 +79,7 @@ class OcurrenciasPage extends StatelessWidget {
         body: const SafeArea(child: OcurrenciasContent()),
         floatingActionButton: FloatingActionButton.extended(
           onPressed: () {
-            context.pushNamed('ocurrencia_crear');
-          
+            _openCreateForm(context);
           },
           icon: const Icon(Icons.add_rounded),
           label: const Text('Registrar'),

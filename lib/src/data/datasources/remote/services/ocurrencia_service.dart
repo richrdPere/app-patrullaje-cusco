@@ -14,12 +14,7 @@ import 'package:sis_patrullaje_cusco/src/data/datasources/remote/services/helper
 import 'package:sis_patrullaje_cusco/src/domain/utils/Resource.dart';
 
 // Models
-import 'package:sis_patrullaje_cusco/src/data/models/common/api_response.dart';
-import 'package:sis_patrullaje_cusco/src/data/models/ocurrencias/ocurrencia_create_req.dart';
-import 'package:sis_patrullaje_cusco/src/data/models/ocurrencias/ocurrencia_detalle_data.dart';
-import 'package:sis_patrullaje_cusco/src/data/models/ocurrencias/ocurrencia_paginated.dart';
-import 'package:sis_patrullaje_cusco/src/data/models/ocurrencias/ocurrencia_pdf_data.dart';
-import 'package:sis_patrullaje_cusco/src/data/models/ocurrencias/ocurrencia_query_params.dart';
+import 'package:sis_patrullaje_cusco/src/data/models/models.dart';
 
 class OcurrenciaService {
   String get API_BASE => '${url_backend.Environment.mainUrl}/ocurrencias';
@@ -28,6 +23,8 @@ class OcurrenciaService {
   String get API_GET_OCURRENCIAS_PAGINADO => '$API_BASE/paginado';
   String get API_GET_OCURRENCIAS_DETALLE => '$API_BASE/detalle/';
   String get API_GENERATE_OCURRENCIA_PDF => API_BASE;
+  String get API_GET_INCIDENCIAS_SELECTOR_OCURRENCIA =>
+      '$API_BASE/incidencias-selector';
 
   // *********************************************************
   // 1.- Crear ocurrencia
@@ -254,6 +251,51 @@ class OcurrenciaService {
     } catch (error) {
       return ErrorData<OcurrenciaPdfData>(
         message: 'Ocurrió un error al generar el PDF de la ocurrencia.',
+        error: error.toString(),
+      );
+    }
+  }
+
+  // *********************************************************
+  // 5.- Obtener incidencias disponibles para una ocurrencia
+  // *********************************************************
+  Future<Resource<ApiResponse<IncidenciasSelectorPaginated>>>
+  getIncidenciasSelector({
+    required String token,
+    required IncidenciasSelectorQueryParams params,
+  }) async {
+    try {
+      // 1.- URL + query params
+      final uri = Uri.parse(
+        API_GET_INCIDENCIAS_SELECTOR_OCURRENCIA,
+      ).replace(queryParameters: params.toQueryParameters());
+
+      // 2.- Petición HTTP
+      final response = await http
+          .get(uri, headers: HttpServiceHelper.getHeaders(token: token))
+          .timeout(const Duration(seconds: 30));
+
+      final body = HttpServiceHelper.decodeResponse(response);
+
+      // 3.- Return JSON
+      if (HttpServiceHelper.isSuccess(response.statusCode)) {
+        final apiResponse = ApiResponse<IncidenciasSelectorPaginated>.fromJson(
+          body,
+          (rawData) => IncidenciasSelectorPaginated.fromJson(
+            Map<String, dynamic>.from(rawData as Map),
+          ),
+        );
+
+        return Success<ApiResponse<IncidenciasSelectorPaginated>>(apiResponse);
+      }
+
+      // 4.- Return Error
+      return HttpServiceHelper.buildError<
+        ApiResponse<IncidenciasSelectorPaginated>
+      >(body, response.statusCode);
+    } catch (error) {
+      return ErrorData<ApiResponse<IncidenciasSelectorPaginated>>(
+        message: 'Ocurrió un error al obtener las incidencias disponibles.',
         error: error.toString(),
       );
     }

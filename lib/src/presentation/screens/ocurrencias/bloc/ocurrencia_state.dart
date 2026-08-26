@@ -1,10 +1,7 @@
 import 'package:equatable/equatable.dart';
 
 // Models
-import 'package:sis_patrullaje_cusco/src/data/models/common/api_response.dart';
-import 'package:sis_patrullaje_cusco/src/data/models/ocurrencias/ocurrencia_detalle_data.dart';
-import 'package:sis_patrullaje_cusco/src/data/models/ocurrencias/ocurrencia_paginated.dart';
-import 'package:sis_patrullaje_cusco/src/data/models/ocurrencias/ocurrencia_pdf_data.dart';
+import 'package:sis_patrullaje_cusco/src/data/models/models.dart';
 
 // Resource
 import 'package:sis_patrullaje_cusco/src/domain/utils/Resource.dart';
@@ -25,6 +22,44 @@ class OcurrenciaState extends Equatable {
 
   /// Respuesta del PDF.
   final Resource<OcurrenciaPdfData> pdfResponse;
+
+  /// Respuesta del selector de incidencias disponibles.
+  final Resource<ApiResponse<IncidenciasSelectorPaginated>>
+  incidenciasSelectorResponse;
+
+  // ==========================================================
+  // SELECTOR DE INCIDENCIAS
+  // ==========================================================
+
+  /// Listado acumulado de incidencias disponibles.
+  ///
+  /// Es independiente de [incidenciasSelectorResponse] porque
+  /// permite acumular los elementos al cargar más páginas.
+  final List<IncidenciaSelectorData> incidenciasSelector;
+
+  /// Parámetros utilizados en la última consulta.
+  final IncidenciasSelectorQueryParams? incidenciasSelectorParams;
+
+  /// Página actualmente cargada.
+  final int incidenciasSelectorPage;
+
+  /// Cantidad de elementos solicitados por página.
+  final int incidenciasSelectorLimit;
+
+  /// Cantidad total de incidencias disponibles.
+  final int incidenciasSelectorTotalItems;
+
+  /// Cantidad total de páginas.
+  final int incidenciasSelectorTotalPages;
+
+  /// Indica si existe una siguiente página.
+  final bool incidenciasSelectorHasMore;
+
+  /// Indica si se está cargando una página adicional.
+  final bool isLoadingMoreIncidenciasSelector;
+
+  /// Incidencia seleccionada en el step de generalidades.
+  final IncidenciaSelectorData? selectedIncidencia;
 
   // ==========================================================
   // FORMULARIO POR STEPS
@@ -50,6 +85,16 @@ class OcurrenciaState extends Equatable {
     required this.paginatedResponse,
     required this.detailResponse,
     required this.pdfResponse,
+    required this.incidenciasSelectorResponse,
+    this.incidenciasSelector = const [],
+    this.incidenciasSelectorParams,
+    this.incidenciasSelectorPage = 1,
+    this.incidenciasSelectorLimit = 20,
+    this.incidenciasSelectorTotalItems = 0,
+    this.incidenciasSelectorTotalPages = 0,
+    this.incidenciasSelectorHasMore = true,
+    this.isLoadingMoreIncidenciasSelector = false,
+    this.selectedIncidencia,
     this.currentFormStep = 0,
     this.totalFormSteps = 5,
     this.completedFormSteps = const [],
@@ -58,12 +103,24 @@ class OcurrenciaState extends Equatable {
   // ==========================================================
   // ESTADO INICIAL
   // ==========================================================
+
   factory OcurrenciaState.initial() {
     return OcurrenciaState(
       createResponse: Initial<ApiResponse<OcurrenciaDetalleData>>(),
       paginatedResponse: Initial<ApiResponse<OcurrenciaPaginated>>(),
       detailResponse: Initial<ApiResponse<OcurrenciaDetalleData>>(),
       pdfResponse: Initial<OcurrenciaPdfData>(),
+      incidenciasSelectorResponse:
+          Initial<ApiResponse<IncidenciasSelectorPaginated>>(),
+      incidenciasSelector: const [],
+      incidenciasSelectorParams: null,
+      incidenciasSelectorPage: 1,
+      incidenciasSelectorLimit: 20,
+      incidenciasSelectorTotalItems: 0,
+      incidenciasSelectorTotalPages: 0,
+      incidenciasSelectorHasMore: true,
+      isLoadingMoreIncidenciasSelector: false,
+      selectedIncidencia: null,
       currentFormStep: 0,
       totalFormSteps: 5,
       completedFormSteps: const [],
@@ -73,14 +130,30 @@ class OcurrenciaState extends Equatable {
   // ==========================================================
   // COPY WITH
   // ==========================================================
+
   OcurrenciaState copyWith({
     Resource<ApiResponse<OcurrenciaDetalleData>>? createResponse,
     Resource<ApiResponse<OcurrenciaPaginated>>? paginatedResponse,
     Resource<ApiResponse<OcurrenciaDetalleData>>? detailResponse,
     Resource<OcurrenciaPdfData>? pdfResponse,
+    Resource<ApiResponse<IncidenciasSelectorPaginated>>?
+    incidenciasSelectorResponse,
+    List<IncidenciaSelectorData>? incidenciasSelector,
+    IncidenciasSelectorQueryParams? incidenciasSelectorParams,
+    int? incidenciasSelectorPage,
+    int? incidenciasSelectorLimit,
+    int? incidenciasSelectorTotalItems,
+    int? incidenciasSelectorTotalPages,
+    bool? incidenciasSelectorHasMore,
+    bool? isLoadingMoreIncidenciasSelector,
+    IncidenciaSelectorData? selectedIncidencia,
     int? currentFormStep,
     int? totalFormSteps,
     List<int>? completedFormSteps,
+
+    // Limpiezas explícitas
+    bool clearIncidenciasSelectorParams = false,
+    bool clearSelectedIncidencia = false,
     bool clearCompletedFormSteps = false,
   }) {
     return OcurrenciaState(
@@ -88,6 +161,28 @@ class OcurrenciaState extends Equatable {
       paginatedResponse: paginatedResponse ?? this.paginatedResponse,
       detailResponse: detailResponse ?? this.detailResponse,
       pdfResponse: pdfResponse ?? this.pdfResponse,
+      incidenciasSelectorResponse:
+          incidenciasSelectorResponse ?? this.incidenciasSelectorResponse,
+      incidenciasSelector: incidenciasSelector ?? this.incidenciasSelector,
+      incidenciasSelectorParams: clearIncidenciasSelectorParams
+          ? null
+          : incidenciasSelectorParams ?? this.incidenciasSelectorParams,
+      incidenciasSelectorPage:
+          incidenciasSelectorPage ?? this.incidenciasSelectorPage,
+      incidenciasSelectorLimit:
+          incidenciasSelectorLimit ?? this.incidenciasSelectorLimit,
+      incidenciasSelectorTotalItems:
+          incidenciasSelectorTotalItems ?? this.incidenciasSelectorTotalItems,
+      incidenciasSelectorTotalPages:
+          incidenciasSelectorTotalPages ?? this.incidenciasSelectorTotalPages,
+      incidenciasSelectorHasMore:
+          incidenciasSelectorHasMore ?? this.incidenciasSelectorHasMore,
+      isLoadingMoreIncidenciasSelector:
+          isLoadingMoreIncidenciasSelector ??
+          this.isLoadingMoreIncidenciasSelector,
+      selectedIncidencia: clearSelectedIncidencia
+          ? null
+          : selectedIncidencia ?? this.selectedIncidencia,
       currentFormStep: currentFormStep ?? this.currentFormStep,
       totalFormSteps: totalFormSteps ?? this.totalFormSteps,
       completedFormSteps: clearCompletedFormSteps
@@ -99,6 +194,7 @@ class OcurrenciaState extends Equatable {
   // ==========================================================
   // GETTERS DE CARGA
   // ==========================================================
+
   bool get isCreating {
     return createResponse is Loading;
   }
@@ -115,13 +211,67 @@ class OcurrenciaState extends Equatable {
     return pdfResponse is Loading;
   }
 
+  /// Carga inicial o refresh del selector.
+  bool get isLoadingIncidenciasSelector {
+    return incidenciasSelectorResponse
+        is Loading<ApiResponse<IncidenciasSelectorPaginated>>;
+  }
+
   bool get hasAnyLoading {
-    return isCreating || isLoadingPaginated || isLoadingDetail || isLoadingPdf;
+    return isCreating ||
+        isLoadingPaginated ||
+        isLoadingDetail ||
+        isLoadingPdf ||
+        isLoadingIncidenciasSelector ||
+        isLoadingMoreIncidenciasSelector;
+  }
+
+  // ==========================================================
+  // GETTERS DEL SELECTOR DE INCIDENCIAS
+  // ==========================================================
+
+  /// Indica si existen incidencias disponibles.
+  bool get hasIncidenciasSelector {
+    return incidenciasSelector.isNotEmpty;
+  }
+
+  /// Indica si el selector no tiene resultados.
+  bool get isIncidenciasSelectorEmpty {
+    return !isLoadingIncidenciasSelector && incidenciasSelector.isEmpty;
+  }
+
+  /// Indica si existe una incidencia seleccionada.
+  bool get hasSelectedIncidencia {
+    return selectedIncidencia != null;
+  }
+
+  /// ID que debe enviarse en CreateOcurrenciaRequest.
+  int? get selectedIncidenciaId {
+    return selectedIncidencia?.id;
+  }
+
+  /// Indica si se puede cargar la siguiente página.
+  bool get canLoadMoreIncidenciasSelector {
+    return incidenciasSelectorHasMore &&
+        !isLoadingIncidenciasSelector &&
+        !isLoadingMoreIncidenciasSelector;
+  }
+
+  /// Indica si se está cargando el selector y todavía
+  /// no existen resultados visibles.
+  bool get showIncidenciasSelectorLoading {
+    return isLoadingIncidenciasSelector && incidenciasSelector.isEmpty;
+  }
+
+  /// Indica si ocurrió un error y no existen datos previos.
+  bool get showIncidenciasSelectorError {
+    return incidenciasSelectorError != null && incidenciasSelector.isEmpty;
   }
 
   // ==========================================================
   // GETTERS DEL FORMULARIO
   // ==========================================================
+
   bool get isFirstFormStep {
     return currentFormStep == 0;
   }
@@ -212,6 +362,7 @@ class OcurrenciaState extends Equatable {
   // ==========================================================
   // DATOS EXITOSOS: CREACIÓN
   // ==========================================================
+
   ApiResponse<OcurrenciaDetalleData>? get createdOcurrencia {
     final resource = createResponse;
 
@@ -234,6 +385,7 @@ class OcurrenciaState extends Equatable {
   // ==========================================================
   // DATOS EXITOSOS: LISTADO
   // ==========================================================
+
   ApiResponse<OcurrenciaPaginated>? get paginatedOcurrencias {
     final resource = paginatedResponse;
 
@@ -251,6 +403,7 @@ class OcurrenciaState extends Equatable {
   // ==========================================================
   // DATOS EXITOSOS: DETALLE
   // ==========================================================
+
   ApiResponse<OcurrenciaDetalleData>? get ocurrenciaDetail {
     final resource = detailResponse;
 
@@ -268,6 +421,7 @@ class OcurrenciaState extends Equatable {
   // ==========================================================
   // DATOS EXITOSOS: PDF
   // ==========================================================
+
   OcurrenciaPdfData? get ocurrenciaPdf {
     final resource = pdfResponse;
 
@@ -279,8 +433,38 @@ class OcurrenciaState extends Equatable {
   }
 
   // ==========================================================
+  // DATOS EXITOSOS: SELECTOR DE INCIDENCIAS
+  // ==========================================================
+
+  ApiResponse<IncidenciasSelectorPaginated>?
+  get incidenciasSelectorApiResponse {
+    final resource = incidenciasSelectorResponse;
+
+    if (resource is Success<ApiResponse<IncidenciasSelectorPaginated>>) {
+      return resource.data;
+    }
+
+    return null;
+  }
+
+  /// Contenido paginado de la última petición.
+  ///
+  /// Para mostrar el listado en pantalla se debe utilizar
+  /// [incidenciasSelector], porque contiene las páginas
+  /// acumuladas.
+  IncidenciasSelectorPaginated? get incidenciasSelectorPaginatedData {
+    return incidenciasSelectorApiResponse?.data;
+  }
+
+  bool get incidenciasSelectorSuccess {
+    return incidenciasSelectorResponse
+        is Success<ApiResponse<IncidenciasSelectorPaginated>>;
+  }
+
+  // ==========================================================
   // ERRORES
   // ==========================================================
+
   String? get createError {
     final resource = createResponse;
 
@@ -321,15 +505,36 @@ class OcurrenciaState extends Equatable {
     return null;
   }
 
+  String? get incidenciasSelectorError {
+    final resource = incidenciasSelectorResponse;
+
+    if (resource is ErrorData<ApiResponse<IncidenciasSelectorPaginated>>) {
+      return resource.message;
+    }
+
+    return null;
+  }
+
   // ==========================================================
   // EQUATABLE
   // ==========================================================
+
   @override
   List<Object?> get props => [
     createResponse,
     paginatedResponse,
     detailResponse,
     pdfResponse,
+    incidenciasSelectorResponse,
+    incidenciasSelector,
+    incidenciasSelectorParams,
+    incidenciasSelectorPage,
+    incidenciasSelectorLimit,
+    incidenciasSelectorTotalItems,
+    incidenciasSelectorTotalPages,
+    incidenciasSelectorHasMore,
+    isLoadingMoreIncidenciasSelector,
+    selectedIncidencia,
     currentFormStep,
     totalFormSteps,
     completedFormSteps,

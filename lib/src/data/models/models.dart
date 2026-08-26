@@ -21,6 +21,11 @@ export 'package:sis_patrullaje_cusco/src/data/models/alertas/alerta%20activa/ale
 export 'package:sis_patrullaje_cusco/src/data/models/alertas/alerta_data.dart';
 
 // =======================================================
+// PATRULLAJES
+// =======================================================
+export 'package:sis_patrullaje_cusco/src/data/models/patrullaje/patrullaje_data.dart';
+
+// =======================================================
 // INCIDENCIAS
 // =======================================================
 export 'package:sis_patrullaje_cusco/src/data/models/incidencia/archivos/agregar_archivos_data.dart';
@@ -49,3 +54,20 @@ export 'package:sis_patrullaje_cusco/src/data/models/historial_patrullaje/histor
 export 'package:sis_patrullaje_cusco/src/data/models/historial_patrullaje/historial_patrullaje_data.dart';
 export 'package:sis_patrullaje_cusco/src/data/models/historial_patrullaje/siguiente%20turno/sigt_turno_data.dart';
 export 'package:sis_patrullaje_cusco/src/data/models/historial_patrullaje/siguiente%20turno/sigt_turno_query_params.dart';
+
+// =======================================================
+// CLASIFICADORES
+// =======================================================
+export 'package:sis_patrullaje_cusco/src/data/models/clasificadores/clasificador_arbol_data.dart';
+
+// =======================================================
+// OCURRENCIAS
+// =======================================================
+export 'package:sis_patrullaje_cusco/src/data/models/ocurrencias/ocurrencia_create_req.dart';
+export 'package:sis_patrullaje_cusco/src/data/models/ocurrencias/ocurrencia_detalle_data.dart';
+export 'package:sis_patrullaje_cusco/src/data/models/ocurrencias/ocurrencia_paginated.dart';
+export 'package:sis_patrullaje_cusco/src/data/models/ocurrencias/ocurrencia_pdf_data.dart';
+export 'package:sis_patrullaje_cusco/src/data/models/ocurrencias/ocurrencia_query_params.dart';
+export 'package:sis_patrullaje_cusco/src/data/models/ocurrencias/selector-incidencias/incidencias_selector_paginated.dart';
+export 'package:sis_patrullaje_cusco/src/data/models/ocurrencias/selector-incidencias/incidencias_selector_query_params.dart';
+export 'package:sis_patrullaje_cusco/src/data/models/ocurrencias/selector-incidencias/incidencias_selector_data.dart';

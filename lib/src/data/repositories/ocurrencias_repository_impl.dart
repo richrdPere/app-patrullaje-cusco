@@ -1,5 +1,7 @@
 // Services
 import 'package:sis_patrullaje_cusco/src/data/datasources/remote/index_service.dart';
+import 'package:sis_patrullaje_cusco/src/data/models/ocurrencias/selector-incidencias/incidencias_selector_paginated.dart';
+import 'package:sis_patrullaje_cusco/src/data/models/ocurrencias/selector-incidencias/incidencias_selector_query_params.dart';
 
 // Repository
 import 'package:sis_patrullaje_cusco/src/domain/repositories/index_repository.dart';
@@ -92,6 +94,25 @@ class OcurrenciasRepositoryImpl implements OcurrenciasRepository {
     return ocurrenciaService.getOcurrenciaPdf(
       token: token,
       ocurrenciaId: ocurrenciaId,
+    );
+  }
+
+  // *********************************************************
+  // 5.- Obtener incidencias disponibles para una ocurrencia
+  // *********************************************************
+  @override
+  Future<Resource<ApiResponse<IncidenciasSelectorPaginated>>>
+  getIncidenciasSelector({
+    required IncidenciasSelectorQueryParams params,
+  }) async {
+    final token = await authRepository.getToken();
+    if (token == null) {
+      return ErrorData(error: "No existe una sesión iniciada.", message: '');
+    }
+
+    return ocurrenciaService.getIncidenciasSelector(
+      token: token,
+      params: params,
     );
   }
 }

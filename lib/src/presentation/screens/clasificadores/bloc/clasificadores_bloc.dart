@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 // Models
@@ -37,6 +38,10 @@ class ClasificadoresBloc
     GetClasificadorArbol event,
     Emitter<ClasificadoresState> emit,
   ) async {
+    if (state.isLoadingArbol) {
+      return;
+    }
+
     emit(
       state.copyWith(
         clasificadorArbolResponse:
@@ -44,9 +49,28 @@ class ClasificadoresBloc
       ),
     );
 
-    final response = await clasificadoresUsesCases.getClasificadorArbolUC.run();
+    try {
+      final response = await clasificadoresUsesCases.getClasificadorArbolUC
+          .run();
 
-    emit(state.copyWith(clasificadorArbolResponse: response));
+      debugPrint('Arbol: $response');
+
+      emit(state.copyWith(clasificadorArbolResponse: response));
+    } catch (error, stackTrace) {
+      debugPrint('Error obteniendo árbol: $error');
+
+      debugPrintStack(stackTrace: stackTrace);
+
+      emit(
+        state.copyWith(
+          clasificadorArbolResponse:
+              ErrorData<ApiResponse<ClasificadorArbolData>>(
+                message: 'No se pudo obtener el árbol de clasificadores.',
+                error: error.toString(),
+              ),
+        ),
+      );
+    }
   }
 
   // *********************************************************
