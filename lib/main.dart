@@ -12,7 +12,8 @@ import 'package:sis_patrullaje_cusco/injection.dart';
 import 'package:sis_patrullaje_cusco/firebase_options.dart';
 
 // Core
-import 'package:sis_patrullaje_cusco/src/config/core/auth_listener.dart';
+import 'package:sis_patrullaje_cusco/src/config/core/listeners/auth_listener.dart';
+import 'package:sis_patrullaje_cusco/src/config/core/listeners/patrullaje_runtime_listener.dart';
 
 // Routes
 import 'package:sis_patrullaje_cusco/src/config/router/app_router.dart';
@@ -66,12 +67,16 @@ class MyApp extends StatelessWidget {
     return MultiBlocProvider(
       providers: blocProviders,
       child: AuthListener(
-        child: MaterialApp.router(
-          builder: FToastBuilder(),
-          routerConfig: appRouter,
-          debugShowCheckedModeBanner: false,
-          title: 'Sistema Patrullaje',
-          theme: AppTheme(selectedColor: 0).getTheme(),
+        child: NotificationListener(
+          child: PatrullajeRuntimeListener(
+            child: MaterialApp.router(
+              builder: FToastBuilder(),
+              routerConfig: appRouter,
+              debugShowCheckedModeBanner: false,
+              title: 'Sistema Patrullaje',
+              theme: AppTheme(selectedColor: 0).getTheme(),
+            ),
+          ),
         ),
       ),
     );

@@ -320,6 +320,25 @@ class ClearTemporaryMapDataEvent extends MapaEvent {
   const ClearTemporaryMapDataEvent();
 }
 
+/// Restablece el mapa a la ubicación actual del sereno.
+///
+/// Este evento:
+/// - Elimina la ruta dibujada.
+/// - Elimina el destino seleccionado.
+/// - Conserva la zona asignada.
+/// - Conserva el marcador de tracking.
+/// - Restaura la ubicación del sereno como origen.
+/// - Reactiva el seguimiento automático de la cámara.
+/// - Centra nuevamente el mapa.
+class ResetMapEvent extends MapaEvent {
+  final double zoom;
+
+  const ResetMapEvent({this.zoom = 17});
+
+  @override
+  List<Object?> get props => [zoom];
+}
+
 /// Registra el controlador creado por el widget GoogleMap.
 ///
 /// El controlador se almacena internamente en MapaBloc y no forma

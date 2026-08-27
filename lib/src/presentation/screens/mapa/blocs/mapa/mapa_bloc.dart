@@ -32,6 +32,8 @@ class MapaBloc extends Bloc<MapaEvent, MapaState> {
   // Evita ejecutar varias consultas de geocodificación simultáneas.
   bool _isLoadingAddress = false;
 
+  static const double _trackingZoom = 17;
+
   MapaBloc(
     this.geolocatorUseCases,
     this.geocodingUsesCases,
@@ -110,6 +112,7 @@ class MapaBloc extends Bloc<MapaEvent, MapaState> {
     // ======================================================
 
     on<ClearTemporaryMapDataEvent>(_onClearTemporaryMapData);
+    on<ResetMapEvent>(_onResetMap);
   }
 
   // ======================================================
@@ -120,7 +123,10 @@ class MapaBloc extends Bloc<MapaEvent, MapaState> {
     emit(state.copyWith(status: MapaStatus.loading, errorMessage: null));
 
     try {
-      // 1. Verificar si el servicio GPS está activo.
+      // ====================================================
+      // 1. VERIFICAR SERVICIO DE UBICACIÓN
+      // ====================================================
+
       final serviceEnabled = await geolocatorUseCases.isLocationServiceEnable
           .run();
 
@@ -138,15 +144,24 @@ class MapaBloc extends Bloc<MapaEvent, MapaState> {
         return;
       }
 
-      // 2. Verificar el permiso actual.
+      // ====================================================
+      // 2. VERIFICAR PERMISO
+      // ====================================================
+
       var permission = await geolocatorUseCases.checkLocationPermission.run();
 
-      // 3. Solicitarlo únicamente si fue denegado.
+      // ====================================================
+      // 3. SOLICITAR PERMISO
+      // ====================================================
+
       if (permission == LocationPermissionStatus.denied) {
         permission = await geolocatorUseCases.requestLocationPermission.run();
       }
 
-      // 4. Validar que el permiso permita acceder a la ubicación.
+      // ====================================================
+      // 4. VALIDAR PERMISO
+      // ====================================================
+
       if (!_isPermissionGranted(permission)) {
         emit(
           state.copyWith(
@@ -160,7 +175,75 @@ class MapaBloc extends Bloc<MapaEvent, MapaState> {
         return;
       }
 
-      // 5. Intentar recuperar una ubicación rápida almacenada.
+      // ====================================================
+      // 5. REVISAR TRACKING EXISTENTE
+      // ====================================================
+
+      /*
+     * Si MapaPage ya sincronizó TrackingBloc con MapaBloc,
+     * esta será la ubicación más reciente del sereno.
+     */
+      final trackingLocation = state.trackingLocation;
+
+      /*
+     * Elimina cualquier marcador rojo generado anteriormente.
+     * El marcador tracking no se elimina.
+     */
+      final markers = Map<MarkerId, Marker>.from(state.markers)
+        ..remove(const MarkerId('current_location'));
+
+      // ====================================================
+      // 6. TRACKING YA DISPONIBLE
+      // ====================================================
+
+      if (trackingLocation != null) {
+        emit(
+          state.copyWith(
+            status: MapaStatus.success,
+            isLocationServiceEnabled: true,
+            permissionStatus: permission,
+
+            /*
+           * No reemplazamos trackingLocation.
+           * Se utiliza como referencia visual principal.
+           */
+            cameraTargetLocation: trackingLocation,
+
+            cameraPosition: CameraPosition(
+              target: LatLng(
+                trackingLocation.latitud,
+                trackingLocation.longitud,
+              ),
+              zoom: 17,
+            ),
+
+            pickUpLocation: state.pickUpLocation ?? trackingLocation,
+
+            pickUpDescription: state.pickUpDescription.trim().isNotEmpty
+                ? state.pickUpDescription
+                : 'Mi ubicación actual',
+
+            markers: markers,
+            isAutoCentering: true,
+            errorMessage: null,
+          ),
+        );
+
+        /*
+       * Centra inmediatamente la cámara en el sereno.
+       *
+       * No se ejecuta FindCurrentPositionEvent porque el
+       * tracking ya contiene una ubicación más reciente.
+       */
+        add(CenterMapOnLocationEvent(location: trackingLocation, zoom: 17));
+
+        return;
+      }
+
+      // ====================================================
+      // 7. OBTENER ÚLTIMA UBICACIÓN CONOCIDA
+      // ====================================================
+
       final lastKnownLocation = await geolocatorUseCases.getLastKnowLocation
           .run(tipo: 'MANUAL');
 
@@ -171,11 +254,30 @@ class MapaBloc extends Bloc<MapaEvent, MapaState> {
           permissionStatus: permission,
           currentLocation: lastKnownLocation,
           cameraTargetLocation: lastKnownLocation,
+          markers: markers,
           errorMessage: null,
         ),
       );
 
-      // 6. Obtener una ubicación actual más precisa.
+      /*
+     * Si existe una posición conocida, la usamos para
+     * mostrar rápidamente una zona correcta del mapa.
+     */
+      if (lastKnownLocation != null) {
+        add(CenterMapOnLocationEvent(location: lastKnownLocation, zoom: 17));
+      }
+
+      // ====================================================
+      // 8. OBTENER UBICACIÓN PRECISA
+      // ====================================================
+
+      /*
+     * Solamente se solicita una ubicación puntual cuando
+     * todavía no existe una ubicación de tracking.
+     *
+     * _onFindCurrentPosition tampoco debe crear el marcador
+     * current_location.
+     */
       add(const FindCurrentPositionEvent(tipo: 'MANUAL'));
     } catch (error) {
       emit(
@@ -190,7 +292,6 @@ class MapaBloc extends Bloc<MapaEvent, MapaState> {
   // ======================================================
   // 2. REGISTRO DEL CONTROLADOR
   // ======================================================
-
   Future<void> _onMapControllerCreated(
     MapControllerCreatedEvent event,
     Emitter<MapaState> emit,
@@ -207,7 +308,6 @@ class MapaBloc extends Bloc<MapaEvent, MapaState> {
   // ======================================================
   // 3. OBTENER UBICACIÓN ACTUAL
   // ======================================================
-
   Future<void> _onFindCurrentPosition(
     FindCurrentPositionEvent event,
     Emitter<MapaState> emit,
@@ -274,7 +374,6 @@ class MapaBloc extends Bloc<MapaEvent, MapaState> {
   // ======================================================
   // 4. USAR UBICACIÓN ACTUAL COMO ORIGEN
   // ======================================================
-
   Future<void> _onUseCurrentLocation(
     UseCurrentLocationEvent event,
     Emitter<MapaState> emit,
@@ -293,10 +392,12 @@ class MapaBloc extends Bloc<MapaEvent, MapaState> {
 
       final placemark = await _getPlacemarkSafely(location);
 
-      final marker = _createCurrentLocationMarker(location);
+      // final marker = _createCurrentLocationMarker(location);
 
+      // final markers = Map<MarkerId, Marker>.from(state.markers)
+      //   ..[marker.markerId] = marker;
       final markers = Map<MarkerId, Marker>.from(state.markers)
-        ..[marker.markerId] = marker;
+        ..remove(const MarkerId('current_location'));
 
       emit(
         state.copyWith(
@@ -309,7 +410,7 @@ class MapaBloc extends Bloc<MapaEvent, MapaState> {
           // Al cambiar el origen, limpiamos ruta y destino.
           destinationLocation: null,
           destinationDescription: '',
-          routePoints: const [],
+          routePoints: const <LocationEntity>[],
           polylines: const <PolylineId, Polyline>{},
           routeStatus: MapaRouteStatus.initial,
           routeErrorMessage: null,
@@ -780,25 +881,76 @@ class MapaBloc extends Bloc<MapaEvent, MapaState> {
     UpdateTrackingLocationEvent event,
     Emitter<MapaState> emit,
   ) async {
-    final marker = Marker(
+    final location = event.location;
+
+    /*
+   * Marcador único que representa la posición en tiempo real
+   * del sereno durante el patrullaje.
+   */
+    final trackingMarker = Marker(
       markerId: const MarkerId('tracking'),
-      position: LatLng(event.location.latitud, event.location.longitud),
+      position: LatLng(location.latitud, location.longitud),
+      icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
       infoWindow: InfoWindow(
-        title: 'Mi ubicación',
-        snippet: _trackingMarkerDescription(event.location),
+        title: 'Sereno en movimiento',
+        snippet: _trackingMarkerDescription(location),
       ),
-      anchor: const Offset(0.5, 0.5),
+      anchor: const Offset(0.5, 1),
+      flat: true,
+
+      /*
+     * Si LocationEntity contiene rumbo, puedes habilitar:
+     *
+     * rotation: location.heading ?? 0,
+     */
     );
 
     final markers = Map<MarkerId, Marker>.from(state.markers)
-      ..[marker.markerId] = marker;
+      /*
+     * Cuando existe tracking, current_location queda desactualizado
+     * y produciría un segundo marcador.
+     */
+      ..remove(const MarkerId('current_location'))
+      /*
+     * Al utilizar siempre el mismo MarkerId, Google Maps actualiza
+     * su posición en lugar de agregar un marcador nuevo.
+     */
+      ..[trackingMarker.markerId] = trackingMarker;
 
-    emit(state.copyWith(trackingLocation: event.location, markers: markers));
+    emit(state.copyWith(trackingLocation: location, markers: markers));
 
+    /*
+   * Si el modo seguimiento está activado, la cámara acompaña
+   * cada nueva posición recibida desde TrackingBloc.
+   */
     if (state.isAutoCentering) {
-      await _animateCamera(location: event.location, zoom: 17);
+      await _animateCamera(location: location, zoom: _trackingZoom);
     }
   }
+  // Future<void> _onUpdateTrackingLocation(
+  //   UpdateTrackingLocationEvent event,
+  //   Emitter<MapaState> emit,
+  // ) async {
+  //   final marker = Marker(
+  //     markerId: const MarkerId('tracking'),
+  //     position: LatLng(event.location.latitud, event.location.longitud),
+  //     icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
+  //     infoWindow: InfoWindow(
+  //       title: 'Sereno en movimiento', // 'Mi ubicación',
+  //       snippet: _trackingMarkerDescription(event.location),
+  //     ),
+  //     anchor: const Offset(0.5, 0.5),
+  //   );
+
+  //   final markers = Map<MarkerId, Marker>.from(state.markers)
+  //     ..[marker.markerId] = marker;
+
+  //   emit(state.copyWith(trackingLocation: event.location, markers: markers));
+
+  //   if (state.isAutoCentering) {
+  //     await _animateCamera(location: event.location, zoom: 17);
+  //   }
+  // }
 
   // ======================================================
   // 19. OBTENER DIRECCIÓN
@@ -976,6 +1128,86 @@ class MapaBloc extends Bloc<MapaEvent, MapaState> {
       await controller.animateCamera(CameraUpdate.newLatLngBounds(bounds, 80));
     } catch (_) {
       // Puede fallar si GoogleMap todavía no terminó su layout.
+    }
+  }
+
+  // ======================================================
+  // 21. RESTABLECER MAPA
+  // ======================================================
+
+  Future<void> _onResetMap(ResetMapEvent event, Emitter<MapaState> emit) async {
+    /*
+   * Se prioriza la ubicación de tracking porque representa
+   * la posición más reciente durante el patrullaje.
+   */
+    final initialLocation = state.displayedLocation;
+
+    /*
+   * Conservamos solamente los marcadores relacionados
+   * con la posición del sereno.
+   */
+    final persistentMarkers = <MarkerId, Marker>{};
+
+    final trackingMarker = state.markers[const MarkerId('tracking')];
+    final currentLocationMarker =
+        state.markers[const MarkerId('current_location')];
+
+    if (trackingMarker != null) {
+      persistentMarkers[trackingMarker.markerId] = trackingMarker;
+    } else if (currentLocationMarker != null) {
+      persistentMarkers[currentLocationMarker.markerId] = currentLocationMarker;
+    }
+
+    final cameraPosition = initialLocation == null
+        ? state.cameraPosition
+        : CameraPosition(
+            target: LatLng(initialLocation.latitud, initialLocation.longitud),
+            zoom: event.zoom,
+            bearing: 0,
+          );
+
+    emit(
+      state.copyWith(
+        // Estado general
+        status: MapaStatus.success,
+        errorMessage: null,
+
+        // Cámara
+        cameraPosition: cameraPosition,
+        cameraTargetLocation: initialLocation,
+
+        // Se restaura la ubicación actual como origen.
+        pickUpLocation: initialLocation,
+        pickUpDescription: initialLocation == null ? '' : 'Mi ubicación actual',
+
+        // Se elimina el destino.
+        destinationLocation: null,
+        destinationDescription: '',
+
+        // Se elimina la dirección del destino anterior.
+        placemarkData: null,
+        geocodingStatus: MapaGeocodingStatus.initial,
+        geocodingErrorMessage: null,
+
+        // Se elimina el camino dibujado.
+        routePoints: const <LocationEntity>[],
+        polylines: const <PolylineId, Polyline>{},
+        routeStatus: MapaRouteStatus.initial,
+        routeErrorMessage: null,
+
+        // Se conservan los elementos permanentes.
+        markers: persistentMarkers,
+
+        // Se restablecen los controles.
+        isPickingLocation: false,
+        isAutoCentering: true,
+
+        locationErrorMessage: null,
+      ),
+    );
+
+    if (initialLocation != null) {
+      await _animateCamera(location: initialLocation, zoom: event.zoom);
     }
   }
 

@@ -90,6 +90,7 @@ class _MapaContentState extends State<MapaContent> {
         _buildPickingModeButton(context),
         _buildAutoCenterButton(context),
 
+        // if (_canResetMap) _buildResetMapButton(context),
         if (state.isPickingLocation) _buildConfirmLocationButton(context),
 
         if (!state.isPickingLocation) _buildAlertButton(context),
@@ -143,7 +144,16 @@ class _MapaContentState extends State<MapaContent> {
       // ==================================================
       // UBICACIÓN DEL DISPOSITIVO
       // ==================================================
-      myLocationEnabled: state.canAccessLocation,
+      /*
+      * La ubicación se representa mediante el marcador personalizado
+      * administrado por MapaBloc.
+      *
+      * Se desactiva el indicador nativo para evitar mostrar:
+      * - El punto azul de Google Maps.
+      * - El marcador current_location.
+      * - El marcador tracking.
+      */
+      myLocationEnabled: false,
       myLocationButtonEnabled: false,
 
       // ==================================================
@@ -334,22 +344,51 @@ class _MapaContentState extends State<MapaContent> {
   // BOTÓN: AUTOCENTRADO
   // ======================================================
   Widget _buildAutoCenterButton(BuildContext context) {
+    final isFollowing = state.isAutoCentering;
+    final location = state.displayedLocation;
+    final canFollow = location != null;
+
     return Positioned(
       bottom: state.isPickingLocation ? 260 : 240,
       right: 20,
-      child: FloatingActionButton.small(
+      child: FloatingActionButton(
         heroTag: 'btnAutoCenter',
-        tooltip: state.isAutoCentering
-            ? 'Desactivar seguimiento de cámara'
-            : 'Activar seguimiento de cámara',
-        backgroundColor: state.isAutoCentering ? Colors.blue : Colors.white,
-        elevation: 5,
-        onPressed: () {
-          context.read<MapaBloc>().add(const ToggleAutoCenterEvent());
-        },
+        tooltip: isFollowing
+            ? 'Dejar de seguir mi movimiento'
+            : 'Seguir mi movimiento',
+        backgroundColor: isFollowing ? Colors.blue : Colors.white,
+        foregroundColor: isFollowing ? Colors.white : Colors.blue,
+        elevation: 6,
+        onPressed: !canFollow
+            ? null
+            : () {
+                final mapaBloc = context.read<MapaBloc>();
+
+                if (isFollowing) {
+                  mapaBloc.add(const SetAutoCenterEvent(enabled: false));
+
+                  return;
+                }
+
+                /*
+               * Activa el seguimiento para las próximas
+               * ubicaciones emitidas por TrackingBloc.
+               */
+                mapaBloc.add(const SetAutoCenterEvent(enabled: true));
+
+                /*
+               * Centra inmediatamente el mapa sin esperar
+               * el siguiente punto GPS.
+               */
+                mapaBloc.add(
+                  CenterMapOnLocationEvent(location: location, zoom: 17),
+                );
+              },
         child: Icon(
-          state.isAutoCentering ? Icons.gps_fixed : Icons.gps_not_fixed,
-          color: state.isAutoCentering ? Colors.white : Colors.black87,
+          isFollowing
+              ? Icons.directions_walk_rounded
+              : Icons.person_pin_circle_outlined,
+          size: 28,
         ),
       ),
     );

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:sis_patrullaje_cusco/src/domain/entities/location_permission_status.dart';
+// import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/tracking/tracking_bloc.dart';
+// import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/tracking/tracking_state.dart';
 
 import 'package:sis_patrullaje_cusco/src/presentation/screens/mapa/blocs/alerta/alerta_bloc.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/mapa/blocs/alerta/alerta_state.dart';
@@ -36,9 +38,9 @@ class _MapaPageState extends State<MapaPage> {
       final mapaBloc = context.read<MapaBloc>();
 
       /*
-       * Evita inicializar nuevamente el mapa cuando el BLoC
-       * ya fue cargado desde un BlocProvider superior.
-       */
+     * Evita inicializar nuevamente el mapa cuando el BLoC
+     * ya fue cargado desde un BlocProvider superior.
+     */
       if (mapaBloc.state.status == MapaStatus.initial) {
         mapaBloc.add(const MapaInitEvent());
       }
@@ -136,7 +138,6 @@ class _MapaPageState extends State<MapaPage> {
   // ======================================================
   // LISTENER: ESTADO GENERAL
   // ======================================================
-
   void _listenMapaStatus(BuildContext context, MapaState state) {
     if (state.status != MapaStatus.error) return;
 

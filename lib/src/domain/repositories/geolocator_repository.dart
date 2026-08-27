@@ -34,23 +34,3 @@ abstract class GeolocatorRepository {
   });
 }
 
-// abstract class GeolocatorRepository {
-//   Future<Position> findPosition();
-//   Future<BitmapDescriptor> createMarkerFromAsset(String path);
-//   Marker getMarker(
-//     String markerId,
-//     double lat,
-//     double lng,
-//     String title,
-//     String content,
-//     BitmapDescriptor imageMarker,
-//   );
-
-//   Future<PlacemarkData?> getPlacemarkData(CameraPosition cameraPosition);
-//   Future<List<LatLng>> getPolyline(
-//     LatLng pickUpLatLng,
-//     LatLng destinationLatLng,
-//   );
-
-//   Stream<LocationEntity> getLocationStream();
-// }
