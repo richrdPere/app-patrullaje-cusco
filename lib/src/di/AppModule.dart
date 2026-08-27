@@ -301,6 +301,7 @@ abstract class AppModule {
       TrackingUseCases(
         getLocationStream: GetLocationUseCase(trackingRepository),
         sendLocation: SendLocationUserUseCase(trackingRepository),
+        syncPendingLocations: SyncPendingLocationsUC(trackingRepository),
       );
 
   // - Alert

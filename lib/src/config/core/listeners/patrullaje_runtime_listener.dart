@@ -9,6 +9,8 @@ import 'package:sis_patrullaje_cusco/src/domain/entities/patrullaje_entity.dart'
 import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/home/home_bloc.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/home/home_event.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/home/home_state.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/socket/socket_bloc.dart';
+import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/socket/socket_state.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/home/blocs/tracking/tracking_state.dart';
 import 'package:sis_patrullaje_cusco/src/presentation/screens/home/enums/patrullaje_enum.dart';
 
@@ -29,8 +31,6 @@ class PatrullajeRuntimeListener extends StatefulWidget {
 }
 
 class _PatrullajeRuntimeListenerState extends State<PatrullajeRuntimeListener> {
-  
-  
   @override
   void initState() {
     super.initState();
@@ -94,6 +94,20 @@ class _PatrullajeRuntimeListenerState extends State<PatrullajeRuntimeListener> {
         ),
 
         // ==================================================
+        // CONEXIÓN SOCKET
+        // ==================================================
+        BlocListener<SocketBloc, SocketState>(
+          listenWhen: (previous, current) {
+            /*
+           * Se ejecuta cuando el socket pasa de cualquier
+           * estado a conectado.
+           */
+            return !previous.isConnected && current.isConnected;
+          },
+          listener: _listenSocketConnected,
+        ),
+
+        // ==================================================
         // TTACKING ACTIVO
         // ==================================================
         BlocListener<TrackingBloc, TrackingState>(
@@ -128,6 +142,39 @@ class _PatrullajeRuntimeListenerState extends State<PatrullajeRuntimeListener> {
     _stopRuntime();
   }
 
+  // ======================================================
+  // SOCKET CONECTADO O RECONECTADO
+  // ======================================================
+
+  void _listenSocketConnected(BuildContext context, SocketState socketState) {
+    if (!socketState.isConnected) {
+      return;
+    }
+
+    debugPrint(
+      '🟢 PatrullajeRuntimeListener detectó '
+      'Socket.IO conectado.',
+    );
+
+    /*
+   * Revalida el patrullaje actual.
+   *
+   * Si el tracking todavía no había comenzado,
+   * se iniciará. Si ya estaba funcionando para
+   * el mismo patrullaje, _startTracking no lo duplica.
+   */
+    final homeState = context.read<HomeBloc>().state;
+
+    _reconcilePatrullaje(homeState);
+
+    /*
+   * Solicita sincronizar las ubicaciones guardadas
+   * en sp_ubicaciones_pendientes.
+   *
+   * Este evento debe añadirse a TrackingBloc.
+   */
+    context.read<TrackingBloc>().add(const SyncPendingTrackingLocationsEvent());
+  }
   // ======================================================
   // COORDINAR PATRULLAJE
   // ======================================================
@@ -209,6 +256,9 @@ class _PatrullajeRuntimeListenerState extends State<PatrullajeRuntimeListener> {
       return;
     }
 
+    debugPrint("========================================");
+    debugPrint("LOCATION: $location");
+    debugPrint("========================================");
     context.read<MapaBloc>().add(
       UpdateTrackingLocationEvent(location: location),
     );

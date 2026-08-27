@@ -51,3 +51,4 @@ class SocketConnectionError extends SocketEvent {
   @override
   List<Object?> get props => [message];
 }
+

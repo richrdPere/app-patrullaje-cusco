@@ -22,6 +22,7 @@ class TrackingBloc extends Bloc<TrackingEvent, TrackingState> {
     on<StartTrackingEvent>(_onStartTracking);
     on<StopTrackingEvent>(_onStopTracking);
     on<LocationUpdatedEvent>(_onLocationUpdated);
+    on<SyncPendingTrackingLocationsEvent>(_onSyncPendingTrackingLocations);
 
     // =====================================================
     // STREAM GPS
@@ -482,6 +483,38 @@ class TrackingBloc extends Bloc<TrackingEvent, TrackingState> {
     }
 
     return message;
+  }
+
+  Future<void> _onSyncPendingTrackingLocations(
+    SyncPendingTrackingLocationsEvent event,
+    Emitter<TrackingState> emit,
+  ) async {
+    /*
+   * La conexión puede haberse perdido nuevamente
+   * antes de comenzar la sincronización.
+   */
+    try {
+      debugPrint(
+        '🔄 Sincronizando ubicaciones '
+        'pendientes de tracking...',
+      );
+
+      final result = await trackingUseCases.syncPendingLocations.run();
+
+      debugPrint(
+        '🏁 Sincronización de tracking terminada. '
+        'sincronizadas=${result.synchronized}, '
+        'fallidas=${result.failed}, '
+        'pendientes=${result.pending}.',
+      );
+    } catch (error, stackTrace) {
+      debugPrint(
+        '❌ Error sincronizando ubicaciones '
+        'pendientes: $error',
+      );
+
+      debugPrintStack(stackTrace: stackTrace);
+    }
   }
 
   // =====================================================

@@ -112,3 +112,10 @@ class TrackingSendFailedEvent extends TrackingEvent {
   @override
   List<Object?> get props => [message];
 }
+
+// =====================================================
+// SINCRONIZAR UBICACIONES PENDIENTES
+// =====================================================
+class SyncPendingTrackingLocationsEvent extends TrackingEvent {
+  const SyncPendingTrackingLocationsEvent();
+}

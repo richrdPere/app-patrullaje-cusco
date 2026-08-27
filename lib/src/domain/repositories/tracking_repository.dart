@@ -1,3 +1,4 @@
+import 'package:sis_patrullaje_cusco/src/data/models/tracking/tracking_sync_result.dart';
 import 'package:sis_patrullaje_cusco/src/domain/entities/location_entity.dart';
 import 'package:sis_patrullaje_cusco/src/domain/entities/tracking_send_result.dart';
 
@@ -11,4 +12,6 @@ abstract class TrackingRepository {
     LocationEntity location,
     int patrullajeId,
   );
+
+  Future<TrackingSyncResult> syncPendingLocations({int limit = 100});
 }
